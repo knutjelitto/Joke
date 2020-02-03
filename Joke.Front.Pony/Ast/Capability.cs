@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class Capability : Base
+    public class Capability : Type
     {
         public Capability(ISpan span, RefCapability cap)
             : base (span)

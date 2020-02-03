@@ -7,7 +7,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class UnionType : Type
     {
-        public UnionType(ISpan span, IEnumerable<Type> types)
+        public UnionType(ISpan span, IReadOnlyList<Type> types)
             : base(span)
         {
             Types = types.ToArray();

@@ -17,6 +17,17 @@ namespace Joke.Front
             scanner.Skip();
         }
 
+        public bool Skip(char ch)
+        {
+            scanner.Skip();
+            if (scanner.Current < scanner.Limit && scanner.At() == ch)
+            {
+                scanner.Current += 1;
+                return true;
+            }
+            return false;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char At()
         {
@@ -119,6 +130,11 @@ namespace Joke.Front
                 }
             }
             return false;
+        }
+
+        public bool Check(string str)
+        {
+            return scanner.Check(str);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
