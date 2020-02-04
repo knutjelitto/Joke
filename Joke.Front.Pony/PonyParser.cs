@@ -18,34 +18,29 @@ namespace Joke.Front.Pony
 
         private Ast.Unit Unit()
         {
-            Skip();
-
-            var start = scanner.Current;
             var items = new List<Ast.Item>();
 
-            while (true)
+            while (scanner.Current < scanner.Limit)
             {
-                var kw = TryKeyword();
+                var (start, prefix) = KeywordPrefix();
 
-                if (kw != null)
+                switch (prefix)
                 {
-                    if (kw.Is("class"))
-                    {
+                    case "class":
                         items.Add(Class());
-                    }
-                }
-                else
-                {
-                    break;
+                        break;
+                    default:
+                        scanner.Current = start;
+                        throw new NotImplementedException();
                 }
             }
 
-            return new Ast.Unit(scanner.Span(start), items);
+            return new Ast.Unit(scanner.Span(0), items);
         }
 
         private Ast.Class Class()
         {
-            var cap = TryRefCapablility();
+            var cap = TryCapability();
 
             Skip();
 
@@ -53,37 +48,79 @@ namespace Joke.Front.Pony
 
             var docStrings = DocStrings().ToArray();
 
-            var members = ClassMembers().ToArray();
+            var members = ClassMembers();
 
             throw new NotImplementedException();
         }
 
-        private IEnumerable<Ast.Member> ClassMembers()
+        private IReadOnlyList<Ast.Member> ClassMembers()
         {
-            while (true)
+            var done = false;
+
+            var members = new List<Ast.Member>();
+
+            while (!done)
             {
-                Skip();
+                var (start, prefix) = KeywordPrefix();
 
-                var keyword = TryKeyword();
-
-                if (keyword != null)
+                switch(prefix)
                 {
-                    if (keyword.Is("let"))
-                    {
-                        yield return Let();
-                        continue;
-                    }
-                    else
-                    {
-                        throw new NotImplementedException();
-                    }
+                    case "let":
+                        members.Add(LetMember());
+                        break;
+                    case "new":
+                        members.Add(NewMember());
+                        break;
+                    default:
+                        scanner.Current = start;
+                        done = true;
+                        break;
                 }
-
-                throw new NotImplementedException();
             }
+
+            return members;
         }
 
-        private Ast.Member Let()
+        private Ast.Member NewMember()
+        {
+            var cap = TryCapability();
+            var name = Identifier();
+            var typeParameters = TryTypeParameters();
+            var parameters = Parameters();
+
+            var start = scanner.Current;
+
+            return new Ast.NewMember(scanner.Span(start));
+        }
+
+        private IReadOnlyList<Ast.Parameter> Parameters()
+        {
+            Skip();
+
+            var start = scanner.Current;
+            var parameters = new List<Ast.Parameter>();
+
+            Match('(');
+            Skip();
+            if (At() != ')')
+            {
+                do
+                {
+                    parameters.Add(Parameter());
+                }
+                while (SkipMatch(','));
+            }
+            Match(')');
+
+            return parameters;
+        }
+
+        private Ast.Parameter Parameter()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Member LetMember()
         {
             Skip();
 
@@ -134,46 +171,61 @@ namespace Joke.Front.Pony
             Skip();
             if (Check("this"))
             {
-                TryRefCapablility();
+                TryCapability();
             }
             
             return null;
         }
 
-        private Ast.Capability? TryCapability()
+        private (int, string) KeywordPrefix(bool hash = false)
         {
             Skip();
-
             var start = scanner.Current;
-            var kw = TryKeyword();
-
-            if (kw != null)
+            if (hash && At() == '#')
             {
-                if (kw.Is("iso"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Iso);
-                }
-                else if (kw.Is("val"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Val);
-                }
-                else if (kw.Is("ref"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Ref);
-                }
-                else if (kw.Is("box"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Box);
-                }
-                else if (kw.Is("trn"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Trn);
-                }
-                else if (kw.Is("tag"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Tag);
-                }
+                Match();
             }
+            while (scanner.IsLetter())
+            {
+                Match();
+            }
+
+            return (start, scanner.Span(start).ToString());
+        }
+
+        private Ast.Capability? TryCapability()
+        {
+            (var start, var prefix) = KeywordPrefix();
+
+            switch (prefix)
+            {
+                case "iso": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Iso);
+                case "val": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Val);
+                case "ref": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Ref);
+                case "box": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Box);
+                case "trn": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Trn);
+                case "tag": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Tag);
+            };
+
+            scanner.Current = start;
+
+            return null;
+        }
+
+        private Ast.Capability? TryHashCapability()
+        {
+            (var start, var prefix) = KeywordPrefix(true);
+
+            switch (prefix)
+            {
+                case "#any": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashAny);
+                case "#read": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashRead);
+                case "#send": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashSend);
+                case "#share": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashShare);
+                case "#alias": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashAlias);
+            }
+
+            scanner.Current = start;
 
             return null;
         }
@@ -191,7 +243,8 @@ namespace Joke.Front.Pony
                     types.Add(InfixType());
                 }
 
-                SkipMatch(')');
+                Skip();
+                Match(')');
 
                 return new Ast.GroupedType(scanner.Span(start), types);
             }
@@ -279,13 +332,54 @@ namespace Joke.Front.Pony
         {
             if (SkipMatch('{'))
             {
+                var start = scanner.Current - 1;
+
                 var capability = TryCapability();
-                var name = TryIdentifier();
-                var parameters = TryTypeParameters();
+                var identifier = TryIdentifier();
+                var typeParameters = TryTypeParameters();
+                
+                Skip();
+                Match('(');
+
+                IReadOnlyList<Ast.Type>? argumentTypes = Array.Empty<Ast.Type>();
+
+                if (!SkipMatch(')'))
+                {
+                    argumentTypes = TypeList();
+                    Skip();
+                    Match(')');
+                }
+
+                Ast.Type? @return = null;
+                if (SkipMatch(':'))
+                {
+                    @return = Type();
+                }
+
                 SkipMatch('}');
+
+                var cap = TryCapability();
+                if (cap == null)
+                {
+                    cap = TryHashCapability();
+                }
+
+                return new Ast.LambdaType(
+                    scanner.Span(start),
+                    capability,
+                    identifier,
+                    typeParameters,
+                    argumentTypes,
+                    @return,
+                    cap);
             }
 
             return null;
+        }
+
+        private Ast.Type BareLambdaType()
+        {
+            throw new NotImplementedException();
         }
 
         private IReadOnlyList<Ast.TypeParameter> TryTypeParameters()
@@ -301,7 +395,8 @@ namespace Joke.Front.Pony
                     parameters.Add(TypeParameter());
                 }
 
-                SkipMatch(']');
+                Skip();
+                Match(']');
             }
 
             return parameters;
@@ -324,56 +419,21 @@ namespace Joke.Front.Pony
 
             if (SkipMatch('='))
             {
-                @default = TypeArgument();
+                @default = Type();
             }
 
             return new Ast.TypeParameter(scanner.Span(start), identifier, constraint, @default);
         }
 
-
-
-        private Ast.Type BareLambdaType()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Type FunType()
-        {
-            Match("{");
-            Skip();
-            var types = TypeArguments("(", ")").ToArray();
-            Skip();
-            Match("}");
-            throw new NotImplementedException();
-        }
-
         private IReadOnlyList<Ast.Type> TypeList()
         {
-            var arguments = new List<Ast.Type>() { TypeArgument() };
+            var arguments = new List<Ast.Type>() { Type() };
             while (SkipMatch(','))
             {
-                arguments.Add(TypeArgument());
+                arguments.Add(Type());
             }
 
             return arguments;
-        }
-
-        private IReadOnlyList<Ast.Type> TypeArguments(string begin, string end)
-        {
-            Match(begin);
-
-            var arguments = new List<Ast.Type>() { TypeArgument() };
-            while (SkipMatch(','))
-            {
-                arguments.Add(TypeArgument());
-            }
-            Match(end);
-            return arguments;
-        }
-
-        private Ast.Type TypeArgument()
-        {
-            return Type();
         }
 
         private IEnumerable<Ast.DocString> DocStrings()
@@ -411,44 +471,6 @@ namespace Joke.Front.Pony
             return new Ast.DocString(scanner.Span(start));
         }
 
-        private Ast.Capability? TryRefCapablility()
-        {
-            Skip();
-
-            var start = scanner.Current;
-            var kw = TryKeyword();
-
-            if (kw != null)
-            {
-                if (kw.Is("iso"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Iso);
-                }
-                else if (kw.Is("val"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Val);
-                }
-                else if (kw.Is("ref"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Ref);
-                }
-                else if (kw.Is("box"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Box);
-                }
-                else if (kw.Is("trn"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Trn);
-                }
-                else if (kw.Is("tag"))
-                {
-                    return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Tag);
-                }
-            }
-
-            return null;
-        }
-
         private Ast.Identifier? TryIdentifier()
         {
             if (scanner.IsLetter_())
@@ -460,7 +482,14 @@ namespace Joke.Front.Pony
                 }
                 while (scanner.IsLetterOrDigit_());
 
-                return new Ast.Identifier(scanner.Span(start));
+                var span = scanner.Span(start);
+
+                if (!Keywords.IsKeyword(span))
+                {
+                    return new Ast.Identifier(scanner.Span(start));
+                }
+
+                scanner.Current = start;
             }
 
             return null;

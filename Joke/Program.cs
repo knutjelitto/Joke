@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.IO;
 using Joke.Front;
 using Joke.Front.Joke;
 using Joke.Front.Pony;
@@ -13,6 +13,7 @@ namespace Joke
         internal static void Main(string[] args)
         {
             //EnsureSources();
+            //EnumeratePonies();
             PonyParse();
 
             Console.Write("(almost) any key ... ");
@@ -54,6 +55,16 @@ namespace Joke
         private static DirRef PonyBuiltin()
         {
             return DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages").Dir("builtin");
+        }
+
+        private static void EnumeratePonies()
+        {
+            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");
+
+            foreach (var pony in Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories))
+            {
+                Console.WriteLine($"{pony}");
+            }
         }
 
         private static void EnsureSources()

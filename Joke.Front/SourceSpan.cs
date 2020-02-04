@@ -16,5 +16,10 @@ namespace Joke.Front
         public readonly int Length;
 
         public ReadOnlySpan<char> Value => Source.Content.AsSpan(Start, Length);
+
+        public override string ToString()
+        {
+            return Source.Content.Substring(Start, Length);
+        }
     }
 }

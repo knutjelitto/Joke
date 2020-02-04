@@ -53,6 +53,15 @@ namespace Joke.Front
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Match()
+        {
+            if (scanner.Current < scanner.Limit)
+            {
+                scanner.Current += 1;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char Match(char ch)
         {
             if (scanner.Match(ch))
