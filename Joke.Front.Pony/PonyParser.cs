@@ -106,14 +106,24 @@ namespace Joke.Front.Pony
         {
             var atom = AtomType();
 
-            return UnionType();
+            if (atom == null)
+            {
+                throw new NotImplementedException();
+            }
+
+            return atom;
         }
 
         private Ast.Type? AtomType()
         {
             Ast.Type? type;
 
-            type = TryThisType() ?? TryCapability();
+            type = TryThisType()
+                ?? TryCapability()
+                ?? TryGroupedType()
+                ?? TryNominalType()
+                ?? TryLambdaType()
+                ;
 
 
             return type;
@@ -124,12 +134,13 @@ namespace Joke.Front.Pony
             Skip();
             if (Check("this"))
             {
-                TryRefCapablility()
+                TryRefCapablility();
             }
-            throw new NotImplementedException();
+            
+            return null;
         }
 
-        private Ast.Type? TryCapability()
+        private Ast.Capability? TryCapability()
         {
             Skip();
 
@@ -169,18 +180,18 @@ namespace Joke.Front.Pony
 
         private Ast.Type? TryGroupedType()
         {
-            if (Skip('('))
+            if (SkipMatch('('))
             {
                 var start = scanner.Current - 1;
 
                 var types = new List<Ast.Type>() { InfixType() };
 
-                while (Skip(','))
+                while (SkipMatch(','))
                 {
                     types.Add(InfixType());
                 }
 
-                Skip(')');
+                SkipMatch(')');
 
                 return new Ast.GroupedType(scanner.Span(start), types);
             }
@@ -200,7 +211,7 @@ namespace Joke.Front.Pony
 
             var intersections = new List<Ast.Type>() { IntersectionType() };
 
-            while (Skip('|'))
+            while (SkipMatch('|'))
             {
                 intersections.Add(IntersectionType());
             }
@@ -219,7 +230,7 @@ namespace Joke.Front.Pony
 
             var primaries = new List<Ast.Type>() { Type() };
 
-            while (Skip('&'))
+            while (SkipMatch('&'))
             {
                 primaries.Add(Type());
             }
@@ -231,54 +242,98 @@ namespace Joke.Front.Pony
         }
 
 
-        private Ast.Type Nominal()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Type LambdaType()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Type BareLambdaType()
-        {
-            throw new NotImplementedException();
-        }
-        private Ast.Type PrimaryType()
+        private Ast.Type? TryNominalType()
         {
             Skip();
 
-            var id = TryIdentifier();
+            var start = scanner.Current;
 
+            var id = TryIdentifier();
             if (id != null)
             {
-                IEnumerable<Ast.Type> arguments = Enumerable.Empty<Ast.Type>();
-
-                if (At() == '[')
+                if (SkipMatch('.'))
                 {
-                    arguments = TypeArguments("[", "]");
+                    var id2 = Identifier();
+
+                    id = new Ast.QualifiedIdentifier(scanner.Span(id.Span.Start), id, Enumerable.Repeat(id2, 1).ToArray());
                 }
 
-                return new Ast.TypeName(id.Span, id, arguments);
+                IReadOnlyList<Ast.Type> arguments = Array.Empty<Ast.Type>();
 
+                if (SkipMatch('['))
+                {
+                    arguments = TypeList();
+
+                    SkipMatch(']');
+                }
+
+                var capability = TryCapability();
+
+                return new Ast.NominalType(scanner.Span(start), id, arguments, capability);
             }
-            if (At() == '{')
+
+            return null;
+        }
+
+        private Ast.Type? TryLambdaType()
+        {
+            if (SkipMatch('{'))
             {
-                var funType = FunType();
-
-                return funType;
+                var capability = TryCapability();
+                var name = TryIdentifier();
+                var parameters = TryTypeParameters();
+                SkipMatch('}');
             }
-            if (At() == '(')
+
+            return null;
+        }
+
+        private IReadOnlyList<Ast.TypeParameter> TryTypeParameters()
+        {
+            var parameters = new List<Ast.TypeParameter>();
+
+            if (SkipMatch('['))
             {
-                Match("(");
-                var type = CapType();
-                Skip();
-                Match(")");
+                parameters.Add(TypeParameter());
 
-                return type;
+                while (SkipMatch(','))
+                {
+                    parameters.Add(TypeParameter());
+                }
+
+                SkipMatch(']');
             }
 
+            return parameters;
+        }
+
+        private Ast.TypeParameter TypeParameter()
+        {
+            var start = scanner.Current;
+
+            var identifier = Identifier();
+
+            Ast.Type? constraint = null;
+
+            if (SkipMatch(':'))
+            {
+                constraint = Type();
+            }
+
+            Ast.Type? @default = null;
+
+            if (SkipMatch('='))
+            {
+                @default = TypeArgument();
+            }
+
+            return new Ast.TypeParameter(scanner.Span(start), identifier, constraint, @default);
+        }
+
+
+
+        private Ast.Type BareLambdaType()
+        {
             throw new NotImplementedException();
         }
 
@@ -292,21 +347,28 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private IEnumerable<Ast.Type> TypeArguments(string begin, string end)
+        private IReadOnlyList<Ast.Type> TypeList()
+        {
+            var arguments = new List<Ast.Type>() { TypeArgument() };
+            while (SkipMatch(','))
+            {
+                arguments.Add(TypeArgument());
+            }
+
+            return arguments;
+        }
+
+        private IReadOnlyList<Ast.Type> TypeArguments(string begin, string end)
         {
             Match(begin);
-            while (true)
+
+            var arguments = new List<Ast.Type>() { TypeArgument() };
+            while (SkipMatch(','))
             {
-                Skip();
-                yield return TypeArgument();
-                Skip();
-                if (At() == ',')
-                {
-                    continue;
-                }
-                break;
+                arguments.Add(TypeArgument());
             }
             Match(end);
+            return arguments;
         }
 
         private Ast.Type TypeArgument()
@@ -421,6 +483,8 @@ namespace Joke.Front.Pony
                 {
                     return new Ast.Keyword(scanner.Span(start));
                 }
+
+                scanner.Current = start;
             }
 
             return null;

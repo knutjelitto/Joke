@@ -12,7 +12,7 @@ namespace Joke.Front
         }
 
         public readonly ISource Source;
-        public readonly int Start;
+        public int Start { get; }
         public readonly int Length;
 
         public ReadOnlySpan<char> Value => Source.Content.AsSpan(Start, Length);

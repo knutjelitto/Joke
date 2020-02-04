@@ -120,5 +120,17 @@ namespace Joke.Front
                 'A' <= ch && ch <= 'Z' ||
                 '_' == ch;
         }
+
+        public string Next
+        {
+            get
+            {
+                if (Current < Limit)
+                {
+                    return content.Substring(Current, Math.Min(Limit-Current, 20));
+                }
+                return string.Empty;
+            }
+        }
     }
 }

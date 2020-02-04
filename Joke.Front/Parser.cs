@@ -17,7 +17,7 @@ namespace Joke.Front
             scanner.Skip();
         }
 
-        public bool Skip(char ch)
+        public bool SkipMatch(char ch)
         {
             scanner.Skip();
             if (scanner.Current < scanner.Limit && scanner.At() == ch)
