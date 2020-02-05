@@ -28,6 +28,18 @@ namespace Joke.Front
             return false;
         }
 
+        public bool SkipMatch(string str)
+        {
+            scanner.Skip();
+            if (scanner.Check(str))
+            {
+                scanner.Current += str.Length;
+                return true;
+            }
+
+            return false;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char At()
         {

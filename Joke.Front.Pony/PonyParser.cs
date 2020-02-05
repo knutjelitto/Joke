@@ -46,7 +46,7 @@ namespace Joke.Front.Pony
 
             var id = Identifier();
 
-            var docStrings = DocStrings().ToArray();
+            var docString = TryDocString();
 
             var members = ClassMembers();
 
@@ -88,9 +88,19 @@ namespace Joke.Front.Pony
             var typeParameters = TryTypeParameters();
             var parameters = Parameters();
 
+            Ast.Type? returnType = null;
+
+            if (SkipMatch(':'))
+            {
+                returnType = Type();
+            }
+
+            var errors = SkipMatch('?');
+            var docs = DocString();
+
             var start = scanner.Current;
 
-            return new Ast.NewMember(scanner.Span(start));
+            return new Ast.MethodMember(scanner.Span(start), Ast.MemberKind.New);
         }
 
         private IReadOnlyList<Ast.Parameter> Parameters()
@@ -117,7 +127,20 @@ namespace Joke.Front.Pony
 
         private Ast.Parameter Parameter()
         {
-            throw new NotImplementedException();
+            Skip();
+            var start = scanner.Current;
+
+            var name = Identifier();
+            Skip();
+            Match(':');
+            var type = Type();
+#if TODO
+            if (SkipMatch('='))
+            {
+
+            }
+#endif
+            return new Ast.Parameter(scanner.Span(start), name, type, null);
         }
 
         private Ast.Member LetMember()
@@ -134,9 +157,9 @@ namespace Joke.Front.Pony
 
             var type = Type();
 
-            var docs = DocStrings();
+            var docs = TryDocString();
 
-            return new Ast.LetMember(scanner.Span(start), id, type, docs);
+            return new Ast.FieldMember(scanner.Span(start), Ast.MemberKind.Let, id, type,  docs);
         }
 
         private Ast.Type Type()
@@ -436,16 +459,15 @@ namespace Joke.Front.Pony
             return arguments;
         }
 
-        private IEnumerable<Ast.DocString> DocStrings()
+        private Ast.DocString? TryDocString()
         {
             Skip();
-
-            while (scanner.Check("\"\"\""))
+            if (Check("\"\"\""))
             {
-                yield return DocString();
-
-                Skip();
+                return DocString();
             }
+
+            return null;
         }
 
         private Ast.DocString DocString()
