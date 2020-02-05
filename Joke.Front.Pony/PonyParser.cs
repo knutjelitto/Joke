@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Joke.Front.Pony
@@ -19,6 +20,7 @@ namespace Joke.Front.Pony
         private Ast.Unit Unit()
         {
             var items = new List<Ast.Item>();
+            Ast.DocString? doc = null;
 
             while (scanner.Current < scanner.Limit)
             {
@@ -27,18 +29,29 @@ namespace Joke.Front.Pony
                 switch (prefix)
                 {
                     case "class":
-                        items.Add(Class());
+                        items.Add(Class(Ast.ClassKind.Class));
+                        break;
+                    case "primitive":
+                        items.Add(Class(Ast.ClassKind.Primitive));
                         break;
                     default:
-                        scanner.Current = start;
-                        throw new NotImplementedException();
+                        if (scanner.Check("\"\"\""))
+                        {
+                            doc = DocString();
+                        }
+                        else
+                        {
+                            scanner.Current = start;
+                            throw new NotImplementedException();
+                        }
+                        break;
                 }
             }
 
-            return new Ast.Unit(scanner.Span(0), items);
+            return new Ast.Unit(scanner.Span(0), doc, items);
         }
 
-        private Ast.Class Class()
+        private Ast.Class Class(Ast.ClassKind kind)
         {
             var cap = TryCapability();
 
@@ -69,7 +82,10 @@ namespace Joke.Front.Pony
                         members.Add(LetMember());
                         break;
                     case "new":
-                        members.Add(NewMember());
+                        members.Add(MethodMember(Ast.MemberKind.New));
+                        break;
+                    case "fun":
+                        members.Add(MethodMember(Ast.MemberKind.Fun));
                         break;
                     default:
                         scanner.Current = start;
@@ -81,7 +97,7 @@ namespace Joke.Front.Pony
             return members;
         }
 
-        private Ast.Member NewMember()
+        private Ast.Member MethodMember(Ast.MemberKind kind)
         {
             var cap = TryCapability();
             var name = Identifier();
@@ -96,12 +112,471 @@ namespace Joke.Front.Pony
             }
 
             var errors = SkipMatch('?');
-            var docs = DocString();
+            var docs = TryDocString();
+
+            Ast.Expression? body = null;
+
+            if (SkipMatch("=>"))
+            {
+                var docs2 = TryDocString();
+
+                body = RawSeq();
+
+            }
 
             var start = scanner.Current;
 
-            return new Ast.MethodMember(scanner.Span(start), Ast.MemberKind.New);
+            return new Ast.MethodMember(scanner.Span(start), kind);
         }
+
+        private Ast.Expression RawSeq()
+        {
+            var assignment = Assignment();
+
+            return assignment;
+
+            //TODO:
+            //throw new NotImplementedException();
+        }
+
+        private Ast.Sequence ExprSeq()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence Jump()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Assignment()
+        {
+            var infix = Infix();
+
+            return infix;
+            //TODO:
+            //throw new NotImplementedException();
+        }
+
+        private Ast.Sequence SemiExpr()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence NoSemi()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence Semi()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence NextExprSeq()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence NextAssignment()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Infix()
+        {
+            var term = Term();
+
+            return term;
+            //TODO: throw new NotImplementedException();
+        }
+
+        private Ast.Expression Term()
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            switch (prefix)
+            {
+                case "if":
+                    return Cond();
+                case "ifdef":
+                    return IfDef();
+                case "iftype":
+                case "match":
+                case "while":
+                case "repeat":
+                case "for":
+                case "with":
+                case "try":
+                case "recover":
+                case "consume":
+                    scanner.Current = start;
+                    throw new NotImplementedException();
+
+            }
+
+            if (At() == '#')
+            {
+                return ConstExpr();
+            }
+
+            return Pattern(start, prefix);
+        }
+
+        private Ast.Expression ConstExpr()
+        {
+            var start = scanner.Current;
+
+            Match('#');
+
+            var expression = Postfix();
+
+            return new Ast.Const(scanner.Span(start), expression);
+        }
+
+        private Ast.Expression ParamPattern()
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            return ParamPattern(start, prefix);
+        }
+
+        private Ast.Expression ParamPattern(int start, string prefix)
+        {
+            switch (prefix)
+            {
+                case "var":
+                    return Local(start, Ast.MemberKind.Var);
+                case "let":
+                    return Local(start, Ast.MemberKind.Let);
+                case "embed":
+                    return Local(start, Ast.MemberKind.Embed);
+            }
+
+            return Pattern(start, prefix);
+        }
+
+        private Ast.Expression Pattern()
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            return Pattern(start, prefix);
+        }
+
+        private Ast.Expression Pattern(int start, string prefix)
+        {
+            switch (prefix)
+            {
+                case "addressof":
+                    return Prefix(start, Ast.PrefixOp.AddressOf);
+                case "digestof":
+                    return Prefix(start, Ast.PrefixOp.DigestOf);
+                case "not":
+                    return Prefix(start, Ast.PrefixOp.Not);
+            }
+
+            switch (At())
+            {
+                case '-':
+                    Match();
+                    if (At() == '~')
+                    {
+                        Match();
+                        return Prefix(start, Ast.PrefixOp.NegUnsafe);
+                    }
+                    return Prefix(start, Ast.PrefixOp.Neg);
+            }
+
+            return Postfix(start, prefix);
+        }
+
+        private Ast.Expression Prefix(int start, Ast.PrefixOp op)
+        {
+            var expression = ParamPattern();
+
+            return new Ast.Prefix(scanner.Span(start), op, expression);
+        }
+
+        private Ast.Expression Postfix()
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            return Postfix(start, prefix);
+        }
+
+        private Ast.Expression Postfix(int start, string prefix)
+        {
+            var expression = Atom(start, prefix);
+
+            var done = false;
+            while (!done)
+            {
+                Skip();
+
+                switch (At())
+                {
+                    case '.':
+                        if (At(1) == '>')
+                        {
+                            Chain();
+                        }
+                        else
+                        {
+                            Dot();
+                        }
+                        break;
+                    case '~':
+                        Tilde();
+                        break;
+                    case '(':
+                        expression = Call(expression);
+                        break;
+                    case '[':
+                        Qualify();
+                        break;
+                    default:
+                        done = true;
+                        break;
+                }
+            }
+
+            return expression;
+        }
+
+        private Ast.Expression Dot()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Chain()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Tilde()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Call(Ast.Expression atom)
+        {
+            Match('(');
+            var positional = Positional();
+            var named = Named();
+            Match(')');
+
+            var partial = SkipMatch('?');
+
+            return new Ast.Call(scanner.Span(atom.Span.Start), atom, positional, named);
+        }
+
+        private IReadOnlyList<Ast.Argument> Positional()
+        {
+            var arguments = new List<Ast.Argument>();
+
+            while (!CheckKeyword("where"))
+            {
+                if (At() == ')')
+                {
+                    break;
+                }
+
+                var expr = RawSeq();
+
+                arguments.Add(new Ast.Argument(expr.Span, null, expr));
+
+                if (!SkipMatch(','))
+                {
+                    break;
+                }
+            }
+
+            return arguments;
+        }
+
+        private IReadOnlyList<Ast.Argument> Named()
+        {
+            var arguments = new List<Ast.Argument>();
+
+            if (CheckKeyword("where"))
+            {
+                Match("where");
+
+                Debug.Assert(false);
+
+                arguments.Add(NamedArg());
+
+                while (SkipMatch(','))
+                {
+                    arguments.Add(NamedArg());
+                }
+            }
+
+            return arguments;
+        }
+
+        private Ast.Argument NamedArg()
+        {
+            var name = Identifier();
+            Skip();
+            Match("=");
+            var value = RawSeq();
+
+            return new Ast.Argument(scanner.Span(name.Span.Start), name, value);
+        }
+
+        private Ast.Expression Qualify()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Atom()
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            return Atom(start, prefix);
+        }
+
+        private Ast.Expression Atom(int start, string prefix)
+        {
+            if (prefix.Length == 0)
+            {
+                switch (At())
+                {
+                    case '\"':
+                        return String();
+                    case '(':
+                        return GroupedExpr();
+                    case '[':
+                        return Array();
+                    case '{':
+                        return Lambda();
+                    case '@':
+                        if (At(1) == '{')
+                        {
+                            return BareLambda();
+                        }
+                        return FFI();
+
+                }
+            }
+
+            switch (prefix)
+            {
+                case "this":
+                    return new Ast.This(scanner.Span(start));
+                case "object":
+                    return Object();
+                case "if":
+                    return Cond();
+                case "while":
+                    return WhileLoop();
+            }
+
+            scanner.Current = start;
+
+            return Ref();
+
+        }
+
+        private Ast.Expression Ref()
+        {
+            var name = Identifier();
+
+            return new Ast.Ref(name.Span, name);
+        }
+
+        private Ast.Expression FFI()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression BareLambda()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Lambda()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Array()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression GroupedExpr()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Object()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression? TryLocal()
+        {
+            return null;
+
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Local(int start, Ast.MemberKind kind)
+        {
+            var name = Identifier();
+            Ast.Type? type = null;
+            if (SkipMatch(':'))
+            {
+                type = Type();
+            }
+
+            return new Ast.Local(scanner.Span(start), name, type);
+        }
+
+        private Ast.Expression Cond()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression IfDef()
+        {
+            var condition = Infix();
+
+            MatchKeyword("then");
+
+            var thenExpression = Seq();
+
+            //TODO:
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression Seq()
+        {
+            return RawSeq();
+        }
+
+        private Ast.Expression WhileLoop()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression ForLoop()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence NextInfix()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Sequence AssignOp()
+        {
+            throw new NotImplementedException();
+        }
+
 
         private IReadOnlyList<Ast.Parameter> Parameters()
         {
@@ -134,13 +609,19 @@ namespace Joke.Front.Pony
             Skip();
             Match(':');
             var type = Type();
-#if TODO
+            Ast.Expression? defaultArg = null;
+
             if (SkipMatch('='))
             {
-
+                defaultArg = DefaultArg();
             }
-#endif
-            return new Ast.Parameter(scanner.Span(start), name, type, null);
+
+            return new Ast.Parameter(scanner.Span(start), name, type, defaultArg);
+        }
+
+        private Ast.Expression DefaultArg()
+        {
+            return Infix();
         }
 
         private Ast.Member LetMember()
@@ -200,6 +681,50 @@ namespace Joke.Front.Pony
             return null;
         }
 
+        private (int, string) IdAlike(bool hash = false)
+        {
+            Skip();
+            var start = scanner.Current;
+            if (hash && At() == '#')
+            {
+                Match();
+            }
+            if (scanner.IsLetter_())
+            {
+                Match();
+                while (scanner.IsLetterOrDigit_())
+                {
+                    Match();
+                }
+            }
+
+            return (start, scanner.Span(start).ToString());
+        }
+
+        private void MatchKeyword(string keyword)
+        {
+            var (start, prefix) = IdAlike();
+
+            if (prefix != keyword)
+            {
+                scanner.Current = start;
+
+                throw new NotImplementedException();
+            }
+        }
+
+        private bool CheckKeyword(string keyword)
+        {
+            var (start, prefix) = IdAlike();
+
+            var check = prefix == keyword;
+
+            scanner.Current = start;
+
+            return check;
+        }
+
+
         private (int, string) KeywordPrefix(bool hash = false)
         {
             Skip();
@@ -208,7 +733,7 @@ namespace Joke.Front.Pony
             {
                 Match();
             }
-            while (scanner.IsLetter())
+            while (scanner.IsLetter_())
             {
                 Match();
             }
@@ -334,7 +859,7 @@ namespace Joke.Front.Pony
                     id = new Ast.QualifiedIdentifier(scanner.Span(id.Span.Start), id, Enumerable.Repeat(id2, 1).ToArray());
                 }
 
-                IReadOnlyList<Ast.Type> arguments = Array.Empty<Ast.Type>();
+                IReadOnlyList<Ast.Type> arguments = System.Array.Empty<Ast.Type>();
 
                 if (SkipMatch('['))
                 {
@@ -364,7 +889,7 @@ namespace Joke.Front.Pony
                 Skip();
                 Match('(');
 
-                IReadOnlyList<Ast.Type>? argumentTypes = Array.Empty<Ast.Type>();
+                IReadOnlyList<Ast.Type>? argumentTypes = System.Array.Empty<Ast.Type>();
 
                 if (!SkipMatch(')'))
                 {
@@ -470,6 +995,34 @@ namespace Joke.Front.Pony
             return null;
         }
 
+        private Ast.Expression String()
+        {
+            if (Check("\"\"\""))
+            {
+                return DocString();
+            }
+
+            //TODO: not properly implemented
+            var start = scanner.Current;
+
+            Match("\"");
+            while (true)
+            {
+                if (At() != '\"')
+                {
+                    MatchAny();
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            Match("\"");
+
+            return new Ast.String(scanner.Span(start));
+        }
+
         private Ast.DocString DocString()
         {
             //TODO: not properly implemented
@@ -509,30 +1062,6 @@ namespace Joke.Front.Pony
                 if (!Keywords.IsKeyword(span))
                 {
                     return new Ast.Identifier(scanner.Span(start));
-                }
-
-                scanner.Current = start;
-            }
-
-            return null;
-        }
-
-        private Ast.Keyword? TryKeyword()
-        {
-            if (scanner.IsLetter_())
-            {
-                var start = scanner.Current;
-                do
-                {
-                    MatchAny();
-                }
-                while (scanner.IsLetter_());
-
-                var span = scanner.Span(start);
-
-                if (Keywords.IsKeyword(span))
-                {
-                    return new Ast.Keyword(scanner.Span(start));
                 }
 
                 scanner.Current = start;

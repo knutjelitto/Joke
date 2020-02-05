@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using Joke.Front;
 using Joke.Front.Joke;
@@ -22,15 +23,10 @@ namespace Joke
 
         private static void PonyParse()
         {
-            var builtin = PonyBuiltin();
-
-            foreach (var ponyFile in builtin.Files())
+            foreach (var ponyFile in EnumeratePonies())
             {
-                if (ponyFile.FileName.EndsWith("env.pony"))
-                {
                     PonyParse(ponyFile);
                     break;
-                }
             }
         }
 
@@ -57,13 +53,13 @@ namespace Joke
             return DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages").Dir("builtin");
         }
 
-        private static void EnumeratePonies()
+        private static IEnumerable<FileRef> EnumeratePonies()
         {
-            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");
+            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages");
 
             foreach (var pony in Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories))
             {
-                Console.WriteLine($"{pony}");
+                yield return FileRef.From(pony);
             }
         }
 
