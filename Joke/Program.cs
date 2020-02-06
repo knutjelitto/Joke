@@ -47,9 +47,19 @@ namespace Joke
 
                 return true;
             }
-            catch (NotImplementedException)
+            catch (NotImplementedException e)
             {
-                Console.WriteLine($"can't continue @{scanner.Current}");
+                var (line, col) = source.GetLineCol(scanner.Current);
+
+                var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $" - {e.Message}";
+                Console.WriteLine($"({line},{col}): can't continue @{scanner.Current}{msg}");
+                var arrow = new string('-', col-1) + "^";
+                Console.WriteLine($" |{source.GetLine(line-1).ToString()}");
+                Console.WriteLine($" |{source.GetLine(line).ToString()}");
+                Console.WriteLine($" |{arrow}");
+                Console.WriteLine($" |{source.GetLine(line+1).ToString()}");
+                var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
+                Console.WriteLine($"{at}");
 
                 return false;
             }

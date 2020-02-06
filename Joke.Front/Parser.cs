@@ -12,6 +12,11 @@ namespace Joke.Front
             this.scanner = scanner;
         }
 
+        public void Eat(int n = 1)
+        {
+            scanner.Eat(n);
+        }
+
         public void Skip()
         {
             scanner.Skip();

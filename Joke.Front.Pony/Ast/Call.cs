@@ -6,8 +6,8 @@ namespace Joke.Front.Pony.Ast
 {
     public class Call : Postfix
     {
-        public Call(ISpan span, Expression atom, IReadOnlyList<Argument> positional, IReadOnlyList<Argument> named)
-            : base(span, atom)
+        public Call(ISpan span, Expression postfixed, IReadOnlyList<Argument> positional, IReadOnlyList<Argument> named)
+            : base(span, postfixed)
         {
             Positional = positional;
             Named = named;

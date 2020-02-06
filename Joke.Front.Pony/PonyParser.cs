@@ -53,17 +53,21 @@ namespace Joke.Front.Pony
 
         private Ast.Class Class(Ast.ClassKind kind)
         {
+            Skip();
+
+            var start = scanner.Current;
+
             var cap = TryCapability();
 
             Skip();
 
-            var id = Identifier();
+            var name = Identifier();
 
             var docString = TryDocString();
 
             var members = ClassMembers();
 
-            throw new NotImplementedException();
+            return new Ast.Class(scanner.Span(start), kind, cap, name, docString, members);
         }
 
         private IReadOnlyList<Ast.Member> ClassMembers()
@@ -162,6 +166,8 @@ namespace Joke.Front.Pony
                     return new Ast.Jump(scanner.Span(start), Ast.JumpKind.CompileError, value);
             }
 
+            scanner.Current = start;
+
             return null;
         }
 
@@ -186,9 +192,20 @@ namespace Joke.Front.Pony
             {
                 SemiExpr();
             }
+            else if (At() != ',')
+            {
+                try
+                {
+                    NoSemi();
+                }
+                catch
+                {
+                    return assign;
+                }
+            }
             else
             {
-                NoSemi();
+                return assign;
             }
 
             throw new NotImplementedException();
@@ -239,8 +256,239 @@ namespace Joke.Front.Pony
         {
             var term = Term();
 
+            var done = false;
+            while (!done)
+            {
+                var rhs = TryBinOp(term);
+                if (rhs != null)
+                {
+                    term = rhs;
+                }
+                else
+                {
+                    done = true;
+                }
+            }
+
             return term;
-            //TODO: throw new NotImplementedException();
+        }
+
+        private Ast.Expression? TryBinOp(Ast.Expression lhs)
+        {
+            Skip();
+
+            var start = scanner.Current;
+            var op = Ast.InfixOp.NONE;
+
+            switch (At())
+            {
+                case 'a':
+                case '+':
+                    if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.PlusUnsafe;
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Plus;
+                    }
+                    break;
+                case '-':
+                    if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.MinusUnsafe;
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Minus;
+                    }
+                    break;
+                case '*':
+                    if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.MultiplyUnsafe;
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Multiply;
+                    }
+                    break;
+                case '/':
+                    if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.DivideUnsafe;
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Divide;
+                    }
+                    break;
+                case '%':
+                    if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.RemUnsafe;
+                    }
+                    else if (At(1) == '%')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.ModUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.Mod;
+                        }
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Rem;
+                    }
+                    break;
+                case '=':
+                    if (At(1) == '=')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.EqUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.Eq;
+                        }
+                    }
+                    break;
+                case '!':
+                    if (At(1) == '=')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.NeUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.Ne;
+                        }
+                    }
+                    break;
+                case '<':
+                    if (At(1) == '<')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.LShiftUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.LShift;
+                        }
+                    }
+                    else if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.LtUnsafe;
+                    }
+                    else if (At(1) == '=')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.LeUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.Le;
+                        }
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Lt;
+                    }
+                    break;
+                case '>':
+                    if (At(1) == '>')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.RShiftUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.RShift;
+                        }
+                    }
+                    else if (At(1) == '~')
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.GtUnsafe;
+                    }
+                    else if (At(1) == '=')
+                    {
+                        if (At(2) == '~')
+                        {
+                            Eat(3);
+                            op = Ast.InfixOp.GeUnsafe;
+                        }
+                        else
+                        {
+                            Eat(2);
+                            op = Ast.InfixOp.Ge;
+                        }
+                    }
+                    else
+                    {
+                        Eat(1);
+                        op = Ast.InfixOp.Gt;
+                    }
+                    break;
+                default:
+                    if (CheckKeyword("and"))
+                    {
+                        Eat(3);
+                        op = Ast.InfixOp.And;
+                    }
+                    if (CheckKeyword("or"))
+                    {
+                        Eat(2);
+                        op = Ast.InfixOp.Or;
+                    }
+                    if (CheckKeyword("xor"))
+                    {
+                        Eat(3);
+                        op = Ast.InfixOp.Xor;
+                    }
+                    break;
+
+            }
+
+            if (op != Ast.InfixOp.NONE)
+            {
+                var rhs = Term();
+
+                return new Ast.Infix()
+            }
+            throw new NotImplementedException()
         }
 
         private Ast.Expression Term()
@@ -250,9 +498,9 @@ namespace Joke.Front.Pony
             switch (prefix)
             {
                 case "if":
-                    return Cond();
+                    return Cond(start);
                 case "ifdef":
-                    return IfDef();
+                    return IfDef(start);
                 case "iftype":
                 case "match":
                 case "while":
@@ -374,7 +622,7 @@ namespace Joke.Front.Pony
                         }
                         else
                         {
-                            Dot();
+                            expression = Dot(expression);
                         }
                         break;
                     case '~':
@@ -395,9 +643,15 @@ namespace Joke.Front.Pony
             return expression;
         }
 
-        private Ast.Expression Dot()
+        private Ast.Postfix Dot(Ast.Expression postfixed)
         {
-            throw new NotImplementedException();
+            var start = scanner.Current;
+
+            Match('.');
+
+            var memberName = Identifier();
+
+            return new Ast.Dot(scanner.Span(start), postfixed, memberName);
         }
 
         private Ast.Expression Chain()
@@ -520,7 +774,7 @@ namespace Joke.Front.Pony
                 case "object":
                     return Object();
                 case "if":
-                    return Cond();
+                    return Cond(start);
                 case "while":
                     return WhileLoop();
             }
@@ -587,21 +841,47 @@ namespace Joke.Front.Pony
             return new Ast.Local(scanner.Span(start), name, type);
         }
 
-        private Ast.Expression Cond()
+        private Ast.Expression Cond(int start)
         {
-            throw new NotImplementedException();
+            return Iff(start, RawSeq);
         }
 
-        private Ast.Expression IfDef()
+
+        private Ast.Expression IfDef(int start)
         {
-            var condition = Infix();
+            return Iff(start, Infix);
+        }
 
+        private Ast.Expression Iff(int start, Func<Ast.Expression> parseCondition)
+        {
+            var condition = parseCondition();
             MatchKeyword("then");
-
             var thenExpression = Seq();
 
-            //TODO:
-            throw new NotImplementedException();
+            var iffs = new List<Ast.IfThen>();
+
+            iffs.Add(new Ast.IfThen(scanner.Span(start), condition, thenExpression));
+
+            while (true)
+            {
+                var (_, prefix) = KeywordPrefix();
+
+                switch (prefix)
+                {
+                    case "elseif":
+                        condition = parseCondition();
+                        MatchKeyword("then");
+                        thenExpression = Seq();
+                        iffs.Add(new Ast.IfThen(scanner.Span(start), condition, thenExpression));
+                        break;
+                    case "else":
+                        thenExpression = Seq();
+                        MatchKeyword("end");
+                        return new Ast.IfThenElse(scanner.Span(start), iffs, thenExpression);
+                    case "end":
+                        return new Ast.IfThenElse(scanner.Span(start), iffs, null);
+                }
+            }
         }
 
         private Ast.Expression Seq()
@@ -777,11 +1057,11 @@ namespace Joke.Front.Pony
         }
 
 
-        private (int, string) KeywordPrefix(bool hash = false)
+        private (int, string) KeywordPrefix(bool withHash = false)
         {
             Skip();
             var start = scanner.Current;
-            if (hash && At() == '#')
+            if (withHash && At() == '#')
             {
                 Match();
             }

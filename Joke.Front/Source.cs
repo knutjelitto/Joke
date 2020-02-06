@@ -40,7 +40,7 @@ namespace Joke.Front
             return new Source(name, content);
         }
 
-        public static ISource FromFile(FileRef file)
+        public static Source FromFile(FileRef file)
         {
             return new Source(file, file.GetContent());
         }

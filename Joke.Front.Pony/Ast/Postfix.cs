@@ -6,12 +6,12 @@ namespace Joke.Front.Pony.Ast
 {
     public class Postfix : Expression
     {
-        public Postfix(ISpan span, Expression atom)
+        public Postfix(ISpan span, Expression postfixed)
             : base(span)
         {
-            Atom = atom;
+            Postfixed = postfixed;
         }
 
-        public Expression Atom { get; }
+        public Expression Postfixed { get; }
     }
 }

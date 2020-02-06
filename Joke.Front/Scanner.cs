@@ -44,6 +44,15 @@ namespace Joke.Front
                 content[Current] == ' ';
         }
 
+        public void Eat(int n)
+        {
+            while (n > 0 && Current < Limit)
+            {
+                Current += 1;
+                n -= 1;
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Match(char what)
         {
