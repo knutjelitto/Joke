@@ -25,12 +25,15 @@ namespace Joke
         {
             foreach (var ponyFile in EnumeratePonies())
             {
-                    PonyParse(ponyFile);
+                if (!PonyParse(ponyFile))
+                {
                     break;
+                }
+                break;
             }
         }
 
-        private static void PonyParse(FileRef ponyFile)
+        private static bool PonyParse(FileRef ponyFile)
         {
             Console.WriteLine($"{ponyFile}");
 
@@ -41,10 +44,14 @@ namespace Joke
             try
             {
                 parser.Parse();
+
+                return true;
             }
             catch (NotImplementedException)
             {
                 Console.WriteLine($"can't continue @{scanner.Current}");
+
+                return false;
             }
         }
 
