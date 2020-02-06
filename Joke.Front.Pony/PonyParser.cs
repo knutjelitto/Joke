@@ -131,16 +131,66 @@ namespace Joke.Front.Pony
 
         private Ast.Expression RawSeq()
         {
-            var assignment = Assignment();
-
-            return assignment;
-
-            //TODO:
-            //throw new NotImplementedException();
+            return TryJump() ?? ExprSeq();
         }
 
-        private Ast.Sequence ExprSeq()
+        private Ast.Expression? TryJump()
         {
+            var (start, prefix) = KeywordPrefix();
+
+            Ast.Expression? value;
+
+            switch (prefix)
+            {
+                case "return":
+                    value = TryRawSeq();
+                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Return, value);
+                case "break":
+                    value = TryRawSeq();
+                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Break, value);
+                case "continue":
+                    value = TryRawSeq();
+                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Continue, value);
+                case "error":
+                    value = TryRawSeq();
+                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Error, value);
+                case "compile_intrinsic":
+                    value = TryRawSeq();
+                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.CompileIntrinsic, value);
+                case "compile_error":
+                    value = TryRawSeq();
+                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.CompileError, value);
+            }
+
+            return null;
+        }
+
+        private Ast.Expression? TryRawSeq()
+        {
+            try
+            {
+                return RawSeq();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private Ast.Expression ExprSeq()
+        {
+            var assign = Assignment();
+
+            Skip();
+            if (At() == ';')
+            {
+                SemiExpr();
+            }
+            else
+            {
+                NoSemi();
+            }
+
             throw new NotImplementedException();
         }
 
@@ -163,17 +213,19 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private Ast.Sequence NoSemi()
+        private Ast.Expression NoSemi()
         {
+            return TryJump() ?? NextExprSeq();
+        }
+
+        private Ast.Expression NextExprSeq()
+        {
+            var assign = NextAssignment();
+
             throw new NotImplementedException();
         }
 
         private Ast.Sequence Semi()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Sequence NextExprSeq()
         {
             throw new NotImplementedException();
         }
