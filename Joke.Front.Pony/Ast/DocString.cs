@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class DocString : Literal
+    public class DocString : String
     {
         public DocString(ISpan span)
             : base(span)

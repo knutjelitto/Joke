@@ -34,11 +34,13 @@ namespace Joke.Front
 
         public virtual bool CanSkip()
         {
-            return
-                content[Current] == '\t' ||
-                content[Current] == '\n' ||
-                content[Current] == '\r' ||
-                content[Current] == ' ';
+            return Current < Limit &&
+                (
+                    content[Current] == '\t' ||
+                    content[Current] == '\n' ||
+                    content[Current] == '\r' ||
+                    content[Current] == ' '
+                );
         }
 
         public void Eat(int n)
@@ -50,7 +52,7 @@ namespace Joke.Front
             }
         }
 
-        public bool Match(char what)
+        public bool Check(char what)
         {
             return Current < Limit && content[Current] == what;
         }

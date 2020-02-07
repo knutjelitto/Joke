@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Joke.Front.Pony.Ast
 {
     public class Sequence : Expression
     {
-        public Sequence(ISpan span, IReadOnlyList<Expression> expressions)
+        public Sequence(ISpan span, Expression first, Expression rest)
             : base(span)
         {
-            Expressions = expressions;
+            First = first;
+            Rest = rest;
         }
 
-        public IReadOnlyList<Expression> Expressions { get; }
+        public Expression First { get; }
+        public Expression Rest { get; }
     }
 }

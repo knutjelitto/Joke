@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class Identifier : Base
+    public class Identifier : Expression
     {
         public Identifier(ISpan span)
             : base(span)

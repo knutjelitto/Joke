@@ -24,7 +24,7 @@ namespace Joke.Front
         public bool SkipMatch(char ch)
         {
             scanner.Skip();
-            if (scanner.Current < scanner.Limit && scanner.At() == ch)
+            if (scanner.Current < scanner.Limit && Check(ch))
             {
                 scanner.Current += 1;
                 return true;
@@ -65,17 +65,9 @@ namespace Joke.Front
             throw new NotImplementedException();
         }
 
-        public void Match()
-        {
-            if (scanner.Current < scanner.Limit)
-            {
-                scanner.Current += 1;
-            }
-        }
-
         public char Match(char ch)
         {
-            if (scanner.Match(ch))
+            if (Check(ch))
             {
                 var match = scanner.At();
                 scanner.Current += 1;
@@ -154,7 +146,7 @@ namespace Joke.Front
 
         public bool Check(char ch)
         {
-            return At() == ch;
+            return scanner.Check(ch);
         }
 
         public bool Check(string str)

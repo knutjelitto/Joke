@@ -17,6 +17,13 @@ namespace Joke.Front.Pony
             return Unit();
         }
 
+        private enum IN
+        {
+            Plain,
+            Next,
+            Case
+        }
+
         private Ast.Unit Unit()
         {
             var items = new List<Ast.Item>();
@@ -26,6 +33,11 @@ namespace Joke.Front.Pony
             {
                 var (start, prefix) = KeywordPrefix();
 
+                if (start >= scanner.Limit)
+                {
+                    break;
+                }
+
                 switch (prefix)
                 {
                     case "class":
@@ -33,6 +45,12 @@ namespace Joke.Front.Pony
                         break;
                     case "primitive":
                         items.Add(Class(Ast.ClassKind.Primitive));
+                        break;
+                    case "type":
+                        items.Add(Class(Ast.ClassKind.Type));
+                        break;
+                    case "use":
+                        items.Add(Use());
                         break;
                     default:
                         if (scanner.Check("\"\"\""))
@@ -51,6 +69,50 @@ namespace Joke.Front.Pony
             return new Ast.Unit(Span(0), doc, items);
         }
 
+        private Ast.Use Use()
+        {
+            Skip();
+
+            var start = scanner.Current;
+
+            var name = TryIdentifier();
+
+            if (name != null)
+            {
+                Skip();
+                Match('=');
+            }
+
+            Skip();
+            if (Check('@'))
+            {
+                Eat();
+                Ast.Expression? ffiName = null;
+                if (Check('"'))
+                {
+                    ffiName = String();
+                }
+                else
+                {
+                    ffiName = Identifier();
+                }
+                var typeArgs = TypeArgs();
+                Skip();
+                var parameters = Parameters();
+                var partial = SkipMatch('?');
+
+                return new Ast.UseFfi(Span(start), name, ffiName, typeArgs, parameters, partial);
+            }
+            else if (Check('"'))
+            {
+                var url = String();
+
+                return new Ast.UseUrl(Span(start), name, url);
+            }
+
+            throw new NotImplementedException();
+        }
+
         private Ast.Class Class(Ast.ClassKind kind)
         {
             Skip();
@@ -62,6 +124,16 @@ namespace Joke.Front.Pony
             Skip();
 
             var name = Identifier();
+
+            var typeArguments = TryTypeArgs();
+
+            Ast.Type? type = null;
+
+            if (CheckKeyword("is"))
+            {
+                Eat(2);
+                type = Type();
+            }
 
             var docString = TryDocString();
 
@@ -83,7 +155,13 @@ namespace Joke.Front.Pony
                 switch(prefix)
                 {
                     case "let":
-                        members.Add(LetMember());
+                        members.Add(FieldMember(start, Ast.MemberKind.Let));
+                        break;
+                    case "var":
+                        members.Add(FieldMember(start, Ast.MemberKind.Var));
+                        break;
+                    case "embed":
+                        members.Add(FieldMember(start, Ast.MemberKind.Embed));
                         break;
                     case "new":
                         members.Add(MethodMember(Ast.MemberKind.New));
@@ -104,6 +182,7 @@ namespace Joke.Front.Pony
         private Ast.Member MethodMember(Ast.MemberKind kind)
         {
             var cap = TryCapability();
+            Skip();
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = Parameters();
@@ -183,20 +262,24 @@ namespace Joke.Front.Pony
             }
         }
 
-        private Ast.Expression ExprSeq()
+        private Ast.Expression ExprSeq(IN next = IN.Plain)
         {
-            var assign = Assignment();
+            var assign = Assignment(next);
 
             Skip();
-            if (At() == ';')
+            if (Check(';'))
             {
-                SemiExpr();
+                var rest = SemiExpr();
+
+                return new Ast.Sequence(Span(assign.Span.Start), assign, rest);
             }
-            else if (At() != ',')
+            else if (!Check(','))
             {
                 try
                 {
-                    NoSemi();
+                    var rest = NoSemi();
+
+                    return new Ast.Sequence(Span(assign.Span.Start), assign, rest);
                 }
                 catch
                 {
@@ -211,50 +294,37 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private Ast.Sequence Jump()
+        private Ast.Expression Assignment(IN next = IN.Plain) => TryAssignment(next) ?? throw new NotImplementedException();
+
+        private Ast.Expression? TryAssignment(IN next = IN.Plain)
         {
-            throw new NotImplementedException();
+            var lhs = TryInfix(next);
+
+            if (lhs == null)
+            {
+                return null;
+            }
+
+            if (SkipMatch('='))
+            {
+                var rhs = Assignment();
+
+                return new Ast.Assignment(Span(lhs.Span.Start), lhs, rhs);
+            }
+
+            return lhs;
         }
 
-        private Ast.Expression Assignment()
+        private Ast.Expression Infix(IN next = IN.Plain) => TryInfix(next) ?? throw new NotImplementedException();
+
+        private Ast.Expression? TryInfix(IN next = IN.Plain)
         {
-            var infix = Infix();
+            var term = TryTerm(next);
 
-            return infix;
-            //TODO:
-            //throw new NotImplementedException();
-        }
-
-        private Ast.Sequence SemiExpr()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Expression NoSemi()
-        {
-            return TryJump() ?? NextExprSeq();
-        }
-
-        private Ast.Expression NextExprSeq()
-        {
-            var assign = NextAssignment();
-
-            throw new NotImplementedException();
-        }
-
-        private Ast.Sequence Semi()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Sequence NextAssignment()
-        {
-            throw new NotImplementedException();
-        }
-
-        private Ast.Expression Infix()
-        {
-            var term = Term();
+            if (term == null)
+            {
+                return null;
+            }
 
             var done = false;
             while (!done)
@@ -273,6 +343,204 @@ namespace Joke.Front.Pony
             }
 
             return term;
+        }
+
+        private Ast.Expression Term(IN next = IN.Plain) => TryTerm(next) ?? throw new NotImplementedException();
+
+        private Ast.Expression? TryTerm(IN next = IN.Plain)
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            switch (prefix)
+            {
+                case "if":
+                    return Cond(start);
+                case "ifdef":
+                    return IfDef(start);
+                case "match":
+                    return MatchExpression(start);
+                case "iftype":
+                case "while":
+                case "repeat":
+                case "for":
+                case "with":
+                case "try":
+                case "recover":
+                case "consume":
+                    scanner.Current = start;
+                    throw new NotImplementedException();
+
+            }
+
+            scanner.Current = start;
+
+            if (Check('#'))
+            {
+                return ConstExpr();
+            }
+
+            return TryPattern(next);
+        }
+
+        private Ast.Match MatchExpression(int start)
+        {
+            var toMatch = RawSeq();
+            var cases = Cases();
+            Ast.Expression? @else = null;
+            
+            if (CheckKeyword("else"))
+            {
+                Eat(4);
+                @else = RawSeq();
+            }
+
+            MatchKeyword("end");
+
+            return new Ast.Match(Span(start), toMatch, cases, @else);
+        }
+
+        private IReadOnlyList<Ast.Case> Cases()
+        {
+            var cases = new List<Ast.Case>();
+
+            while (true)
+            {
+                var @case = TryCase();
+                if (@case != null)
+                {
+                    cases.Add(@case);
+                }
+                else
+                {
+                    return cases;
+                }
+            }
+        }
+
+        private Ast.Case? TryCase()
+        {
+            Skip();
+            var start = scanner.Current;
+
+            if (Check('|'))
+            {
+                Eat();
+
+                var pattern = TryPattern(IN.Case);
+                Ast.Expression? guard = null;
+                Ast.Expression? body = null;
+                if (SkipMatch("id"))
+                {
+                    guard = RawSeq();
+                }
+                if (SkipMatch("=>"))
+                {
+                    body = RawSeq();
+                }
+
+                return new Ast.Case(Span(start), pattern, guard, body);
+            }
+
+            return null; ;
+        }
+
+        private Ast.Expression ParamPattern(IN next = IN.Plain) => TryParamPattern(next) ?? throw new NotImplementedException();
+
+        private Ast.Expression? TryParamPattern(IN next = IN.Plain)
+        {
+            return TryPrefix() ?? TryPostfix();
+        }
+
+        private Ast.Expression? TryPrefix()
+        {
+            var (start, prefix) = KeywordPrefix();
+
+            switch (prefix)
+            {
+                case "addressof":
+                    return PrefixOp(start, Ast.PrefixOp.AddressOf);
+                case "digestof":
+                    return PrefixOp(start, Ast.PrefixOp.DigestOf);
+                case "not":
+                    return PrefixOp(start, Ast.PrefixOp.Not);
+            }
+
+            switch (At())
+            {
+                case '-':
+                    Eat();
+                    if (Check('~'))
+                    {
+                        Eat();
+                        return PrefixOp(start, Ast.PrefixOp.NegUnsafe);
+                    }
+                    return PrefixOp(start, Ast.PrefixOp.Neg);
+            }
+
+            scanner.Current = start;
+
+            return null;
+        }
+
+        private Ast.Expression Postfix(IN next = IN.Plain) => TryPostfix(next) ?? throw new NotImplementedException();
+
+        private Ast.Expression? TryPostfix(IN next = IN.Plain)
+        {
+            var expression = TryAtom(next);
+
+            if (expression == null)
+            {
+                return null;
+            }
+
+            var done = false;
+            while (!done)
+            {
+                Skip();
+
+                switch (At())
+                {
+                    case '.':
+                        if (At(1) == '>')
+                        {
+                            Chain();
+                        }
+                        else
+                        {
+                            expression = Dot(expression);
+                        }
+                        break;
+                    case '~':
+                        Tilde();
+                        break;
+                    case '(':
+                        expression = Call(expression);
+                        break;
+                    case '[':
+                        Qualify();
+                        break;
+                    default:
+                        done = true;
+                        break;
+                }
+            }
+
+            return expression;
+        }
+
+        private Ast.Sequence SemiExpr()
+        {
+            throw new NotImplementedException();
+        }
+
+        private Ast.Expression NoSemi()
+        {
+            return TryJump() ?? ExprSeq();
+        }
+
+        private Ast.Sequence Semi()
+        {
+            throw new NotImplementedException();
         }
 
         private Ast.Expression? TryBinOp(Ast.Expression lhs)
@@ -494,38 +762,6 @@ namespace Joke.Front.Pony
 
         }
 
-        private Ast.Expression Term()
-        {
-            var (start, prefix) = KeywordPrefix();
-
-            switch (prefix)
-            {
-                case "if":
-                    return Cond(start);
-                case "ifdef":
-                    return IfDef(start);
-                case "iftype":
-                case "match":
-                case "while":
-                case "repeat":
-                case "for":
-                case "with":
-                case "try":
-                case "recover":
-                case "consume":
-                    scanner.Current = start;
-                    throw new NotImplementedException();
-
-            }
-
-            if (At() == '#')
-            {
-                return ConstExpr();
-            }
-
-            return Pattern(start, prefix);
-        }
-
         private Ast.Expression ConstExpr()
         {
             var start = scanner.Current;
@@ -537,114 +773,40 @@ namespace Joke.Front.Pony
             return new Ast.Const(Span(start), expression);
         }
 
-        private Ast.Expression ParamPattern()
+        private Ast.Expression? TryLocal()
         {
             var (start, prefix) = KeywordPrefix();
 
-            return ParamPattern(start, prefix);
-        }
-
-        private Ast.Expression ParamPattern(int start, string prefix)
-        {
             switch (prefix)
             {
                 case "var":
-                    return Local(start, Ast.MemberKind.Var);
+                    return LocalOp(start, Ast.MemberKind.Var);
                 case "let":
-                    return Local(start, Ast.MemberKind.Let);
+                    return LocalOp(start, Ast.MemberKind.Let);
                 case "embed":
-                    return Local(start, Ast.MemberKind.Embed);
+                    return LocalOp(start, Ast.MemberKind.Embed);
             }
 
-            return Pattern(start, prefix);
+            scanner.Current = start;
+
+            return null;
         }
 
-        private Ast.Expression Pattern()
+        private Ast.Expression Pattern(IN next = IN.Plain) => TryPattern(next) ?? throw new NotImplementedException();
+
+
+        private Ast.Expression? TryPattern(IN next = IN.Plain)
         {
-            var (start, prefix) = KeywordPrefix();
-
-            return Pattern(start, prefix);
+            return TryLocal() ?? TryParamPattern(next);
         }
 
-        private Ast.Expression Pattern(int start, string prefix)
-        {
-            switch (prefix)
-            {
-                case "addressof":
-                    return Prefix(start, Ast.PrefixOp.AddressOf);
-                case "digestof":
-                    return Prefix(start, Ast.PrefixOp.DigestOf);
-                case "not":
-                    return Prefix(start, Ast.PrefixOp.Not);
-            }
-
-            switch (At())
-            {
-                case '-':
-                    Match();
-                    if (At() == '~')
-                    {
-                        Match();
-                        return Prefix(start, Ast.PrefixOp.NegUnsafe);
-                    }
-                    return Prefix(start, Ast.PrefixOp.Neg);
-            }
-
-            return Postfix(start, prefix);
-        }
-
-        private Ast.Expression Prefix(int start, Ast.PrefixOp op)
+        private Ast.Expression PrefixOp(int start, Ast.PrefixOp op)
         {
             var expression = ParamPattern();
 
             return new Ast.Prefix(Span(start), op, expression);
         }
 
-        private Ast.Expression Postfix()
-        {
-            var (start, prefix) = KeywordPrefix();
-
-            return Postfix(start, prefix);
-        }
-
-        private Ast.Expression Postfix(int start, string prefix)
-        {
-            var expression = Atom(start, prefix);
-
-            var done = false;
-            while (!done)
-            {
-                Skip();
-
-                switch (At())
-                {
-                    case '.':
-                        if (At(1) == '>')
-                        {
-                            Chain();
-                        }
-                        else
-                        {
-                            expression = Dot(expression);
-                        }
-                        break;
-                    case '~':
-                        Tilde();
-                        break;
-                    case '(':
-                        expression = Call(expression);
-                        break;
-                    case '[':
-                        Qualify();
-                        break;
-                    default:
-                        done = true;
-                        break;
-                }
-            }
-
-            return expression;
-        }
 
         private Ast.Postfix Dot(Ast.Expression postfixed)
         {
@@ -685,7 +847,7 @@ namespace Joke.Front.Pony
 
             while (!CheckKeyword("where"))
             {
-                if (At() == ')')
+                if (Check(')'))
                 {
                     break;
                 }
@@ -739,15 +901,12 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private Ast.Expression Atom()
+        private Ast.Expression Atom(IN next = IN.Plain) => TryAtom(next) ?? throw new NotImplementedException();
+
+        private Ast.Expression? TryAtom(IN next = IN.Plain)
         {
             var (start, prefix) = KeywordPrefix();
 
-            return Atom(start, prefix);
-        }
-
-        private Ast.Expression Atom(int start, string prefix)
-        {
             if (prefix.Length == 0)
             {
                 switch (At())
@@ -794,8 +953,7 @@ namespace Joke.Front.Pony
 
             scanner.Current = start;
 
-            return Ref();
-
+            return TryRef();
         }
 
         private Ast.Expression Number()
@@ -816,11 +974,18 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private Ast.Expression Ref()
-        {
-            var name = Identifier();
+        private Ast.Expression Ref() => TryRef() ?? throw new NotImplementedException();
 
-            return new Ast.Ref(name.Span, name);
+        private Ast.Expression? TryRef()
+        {
+            var name = TryIdentifier();
+
+            if (name != null)
+            {
+                return new Ast.Ref(name.Span, name);
+            }
+
+            return null;
         }
 
         private Ast.Expression FFI()
@@ -844,6 +1009,11 @@ namespace Joke.Front.Pony
             var partial = SkipMatch('?');
 
             return new Ast.FfiCall(Span(start), name, positional, named, partial);
+        }
+
+        private Ast.TypeArguments TypeArgs()
+        {
+            return TryTypeArgs() ?? throw new NotImplementedException();
         }
 
         private Ast.TypeArguments? TryTypeArgs()
@@ -904,15 +1074,9 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private Ast.Expression? TryLocal()
+        private Ast.Expression LocalOp(int start, Ast.MemberKind kind)
         {
-            return null;
-
-            throw new NotImplementedException();
-        }
-
-        private Ast.Expression Local(int start, Ast.MemberKind kind)
-        {
+            Skip();
             var name = Identifier();
             Ast.Type? type = null;
             if (SkipMatch(':'))
@@ -920,7 +1084,7 @@ namespace Joke.Front.Pony
                 type = Type();
             }
 
-            return new Ast.Local(Span(start), name, type);
+            return new Ast.Local(Span(start), kind, name, type);
         }
 
         private Ast.Expression Cond(int start)
@@ -931,7 +1095,7 @@ namespace Joke.Front.Pony
 
         private Ast.Expression IfDef(int start)
         {
-            return Iff(start, Infix);
+            return Iff(start, () => Infix());
         }
 
         private Ast.Expression Iff(int start, Func<Ast.Expression> parseCondition)
@@ -981,16 +1145,10 @@ namespace Joke.Front.Pony
             throw new NotImplementedException();
         }
 
-        private Ast.Sequence NextInfix()
-        {
-            throw new NotImplementedException();
-        }
-
         private Ast.Sequence AssignOp()
         {
             throw new NotImplementedException();
         }
-
 
         private IReadOnlyList<Ast.Parameter> Parameters()
         {
@@ -1038,11 +1196,9 @@ namespace Joke.Front.Pony
             return Infix();
         }
 
-        private Ast.Member LetMember()
+        private Ast.Member FieldMember(int start, Ast.MemberKind kind)
         {
             Skip();
-
-            var start = scanner.Current;
 
             var id = Identifier();
 
@@ -1052,9 +1208,16 @@ namespace Joke.Front.Pony
 
             var type = Type();
 
+            Ast.Expression? value = null;
+
+            if (SkipMatch('='))
+            {
+                value = Infix();
+            }
+
             var docs = TryDocString();
 
-            return new Ast.FieldMember(Span(start), Ast.MemberKind.Let, id, type,  docs);
+            return new Ast.FieldMember(Span(start), kind, id, type, value, docs);
         }
 
         private Ast.Type Type()
@@ -1094,20 +1257,20 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private (int, string) IdAlike(bool hash = false)
+        private (int, string) IdAlike(bool withHash = false)
         {
             Skip();
             var start = scanner.Current;
-            if (hash && At() == '#')
+            if (withHash && Check('#'))
             {
-                Match();
+                Eat();
             }
             if (scanner.IsLetter_())
             {
-                Match();
+                Eat();
                 while (scanner.IsLetterOrDigit_())
                 {
-                    Match();
+                    Eat();
                 }
             }
 
@@ -1137,18 +1300,17 @@ namespace Joke.Front.Pony
             return check;
         }
 
-
         private (int, string) KeywordPrefix(bool withHash = false)
         {
             Skip();
             var start = scanner.Current;
-            if (withHash && At() == '#')
+            if (withHash && Check('#'))
             {
-                Match();
+                Eat();
             }
             while (scanner.IsLetter_())
             {
-                Match();
+                Eat();
             }
 
             return (start, Span(start).ToString());
@@ -1175,18 +1337,26 @@ namespace Joke.Front.Pony
 
         private Ast.Capability? TryHashCapability()
         {
-            (var start, var prefix) = KeywordPrefix(true);
+            Debug.Assert(!scanner.CanSkip());
 
-            switch (prefix)
+            if (Check('#'))
             {
-                case "#any": return new Ast.Capability(Span(start), Ast.RefCapability.HashAny);
-                case "#read": return new Ast.Capability(Span(start), Ast.RefCapability.HashRead);
-                case "#send": return new Ast.Capability(Span(start), Ast.RefCapability.HashSend);
-                case "#share": return new Ast.Capability(Span(start), Ast.RefCapability.HashShare);
-                case "#alias": return new Ast.Capability(Span(start), Ast.RefCapability.HashAlias);
-            }
+                var start = scanner.Current;
 
-            scanner.Current = start;
+                Eat();
+                (var _, var prefix) = KeywordPrefix(true);
+
+                switch (prefix)
+                {
+                    case "any": return new Ast.Capability(Span(start), Ast.RefCapability.HashAny);
+                    case "read": return new Ast.Capability(Span(start), Ast.RefCapability.HashRead);
+                    case "send": return new Ast.Capability(Span(start), Ast.RefCapability.HashSend);
+                    case "share": return new Ast.Capability(Span(start), Ast.RefCapability.HashShare);
+                    case "alias": return new Ast.Capability(Span(start), Ast.RefCapability.HashAlias);
+                }
+
+                scanner.Current = start;
+            }
 
             return null;
         }
@@ -1408,7 +1578,7 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Ast.Expression String()
+        private Ast.String String()
         {
             if (Check("\"\"\""))
             {
@@ -1423,7 +1593,7 @@ namespace Joke.Front.Pony
             {
                 if (At() != '\"')
                 {
-                    MatchAny();
+                    Eat();
                     continue;
                 }
                 else
@@ -1446,18 +1616,21 @@ namespace Joke.Front.Pony
             {
                 if (At() != '\"')
                 {
-                    MatchAny();
+                    Eat();
                     continue;
                 }
                 if (scanner.Check("\"\"\""))
                 {
                     break;
                 }
+                Eat();
             }
             Match("\"\"\"");
 
             return new Ast.DocString(Span(start));
         }
+
+        private Ast.Identifier Identifier() => TryIdentifier() ?? throw new NotImplementedException("identifier expected");
 
         private Ast.Identifier? TryIdentifier()
         {
@@ -1466,9 +1639,14 @@ namespace Joke.Front.Pony
                 var start = scanner.Current;
                 do
                 {
-                    MatchAny();
+                    Eat();
                 }
                 while (scanner.IsLetterOrDigit_());
+
+                while (Check('\''))
+                {
+                    Eat();
+                }
 
                 var span = Span(start);
 
@@ -1481,28 +1659,6 @@ namespace Joke.Front.Pony
             }
 
             return null;
-        }
-
-        private Ast.Identifier Identifier()
-        {
-            if (scanner.IsLetter_())
-            {
-                var start = scanner.Current;
-                do
-                {
-                    MatchAny();
-                }
-                while (scanner.IsLetterOrDigit_());
-
-                var span = Span(start);
-
-                if (!Keywords.IsKeyword(span))
-                {
-                    return new Ast.Identifier(Span(start));
-                }
-            }
-
-            throw new InvalidOperationException($"expected identifier");
         }
     }
 }

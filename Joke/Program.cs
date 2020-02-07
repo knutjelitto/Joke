@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Joke.Front;
-using Joke.Front.Joke;
 using Joke.Front.Pony;
 using Joke.Outside;
 using Joke.Outside.Build;
@@ -23,13 +22,20 @@ namespace Joke
 
         private static void PonyParse()
         {
+            int skip = 4;
+
             foreach (var ponyFile in EnumeratePonies())
             {
+                if (skip > 0)
+                {
+                    skip -= 1;
+                    continue;
+                }
                 if (!PonyParse(ponyFile))
                 {
                     break;
                 }
-                break;
+                //break;
             }
         }
 
