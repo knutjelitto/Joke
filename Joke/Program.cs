@@ -47,7 +47,7 @@ namespace Joke
 
                 return true;
             }
-            catch (NotImplementedException e)
+            catch (Exception e)
             {
                 var (line, col) = source.GetLineCol(scanner.Current);
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace Joke.Front
 {
@@ -25,7 +24,6 @@ namespace Joke.Front
             return new SourceSpan(source, start, Current - start);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Skip()
         {
             while (Current < Limit && CanSkip())
@@ -34,7 +32,6 @@ namespace Joke.Front
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool CanSkip()
         {
             return
@@ -53,31 +50,26 @@ namespace Joke.Front
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Match(char what)
         {
             return Current < Limit && content[Current] == what;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Check(string what)
         {
             return content.AsSpan(Current, what.Length).Equals(what.AsSpan(), StringComparison.Ordinal);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char At()
         {
             return Current < Limit ? content[Current] : NoCharacter;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char At(int offset)
         {
             return Current + offset < Limit ? content[Current + offset] : NoCharacter;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void EnsureMore()
         {
             if (Current < Limit)

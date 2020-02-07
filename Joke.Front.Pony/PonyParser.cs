@@ -48,7 +48,7 @@ namespace Joke.Front.Pony
                 }
             }
 
-            return new Ast.Unit(scanner.Span(0), doc, items);
+            return new Ast.Unit(Span(0), doc, items);
         }
 
         private Ast.Class Class(Ast.ClassKind kind)
@@ -67,7 +67,7 @@ namespace Joke.Front.Pony
 
             var members = ClassMembers();
 
-            return new Ast.Class(scanner.Span(start), kind, cap, name, docString, members);
+            return new Ast.Class(Span(start), kind, cap, name, docString, members);
         }
 
         private IReadOnlyList<Ast.Member> ClassMembers()
@@ -115,7 +115,7 @@ namespace Joke.Front.Pony
                 returnType = Type();
             }
 
-            var errors = SkipMatch('?');
+            var partial = SkipMatch('?');
             var docs = TryDocString();
 
             Ast.Expression? body = null;
@@ -130,7 +130,7 @@ namespace Joke.Front.Pony
 
             var start = scanner.Current;
 
-            return new Ast.MethodMember(scanner.Span(start), kind);
+            return new Ast.MethodMember(Span(start), kind);
         }
 
         private Ast.Expression RawSeq()
@@ -148,22 +148,22 @@ namespace Joke.Front.Pony
             {
                 case "return":
                     value = TryRawSeq();
-                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Return, value);
+                    return new Ast.Jump(Span(start), Ast.JumpKind.Return, value);
                 case "break":
                     value = TryRawSeq();
-                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Break, value);
+                    return new Ast.Jump(Span(start), Ast.JumpKind.Break, value);
                 case "continue":
                     value = TryRawSeq();
-                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Continue, value);
+                    return new Ast.Jump(Span(start), Ast.JumpKind.Continue, value);
                 case "error":
                     value = TryRawSeq();
-                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.Error, value);
+                    return new Ast.Jump(Span(start), Ast.JumpKind.Error, value);
                 case "compile_intrinsic":
                     value = TryRawSeq();
-                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.CompileIntrinsic, value);
+                    return new Ast.Jump(Span(start), Ast.JumpKind.CompileIntrinsic, value);
                 case "compile_error":
                     value = TryRawSeq();
-                    return new Ast.Jump(scanner.Span(start), Ast.JumpKind.CompileError, value);
+                    return new Ast.Jump(Span(start), Ast.JumpKind.CompileError, value);
             }
 
             scanner.Current = start;
@@ -259,6 +259,8 @@ namespace Joke.Front.Pony
             var done = false;
             while (!done)
             {
+                Skip();
+
                 var rhs = TryBinOp(term);
                 if (rhs != null)
                 {
@@ -275,14 +277,13 @@ namespace Joke.Front.Pony
 
         private Ast.Expression? TryBinOp(Ast.Expression lhs)
         {
-            Skip();
+            Debug.Assert(!scanner.CanSkip());
 
             var start = scanner.Current;
             var op = Ast.InfixOp.NONE;
 
             switch (At())
             {
-                case 'a':
                 case '+':
                     if (At(1) == '~')
                     {
@@ -486,9 +487,11 @@ namespace Joke.Front.Pony
             {
                 var rhs = Term();
 
-                return new Ast.Infix()
+                return new Ast.Infix(Span(start), op, lhs, rhs);
             }
-            throw new NotImplementedException()
+
+            return null;
+
         }
 
         private Ast.Expression Term()
@@ -531,7 +534,7 @@ namespace Joke.Front.Pony
 
             var expression = Postfix();
 
-            return new Ast.Const(scanner.Span(start), expression);
+            return new Ast.Const(Span(start), expression);
         }
 
         private Ast.Expression ParamPattern()
@@ -594,7 +597,7 @@ namespace Joke.Front.Pony
         {
             var expression = ParamPattern();
 
-            return new Ast.Prefix(scanner.Span(start), op, expression);
+            return new Ast.Prefix(Span(start), op, expression);
         }
 
         private Ast.Expression Postfix()
@@ -651,7 +654,7 @@ namespace Joke.Front.Pony
 
             var memberName = Identifier();
 
-            return new Ast.Dot(scanner.Span(start), postfixed, memberName);
+            return new Ast.Dot(Span(start), postfixed, memberName);
         }
 
         private Ast.Expression Chain()
@@ -673,7 +676,7 @@ namespace Joke.Front.Pony
 
             var partial = SkipMatch('?');
 
-            return new Ast.Call(scanner.Span(atom.Span.Start), atom, positional, named);
+            return new Ast.Call(Span(atom.Span.Start), atom, positional, named);
         }
 
         private IReadOnlyList<Ast.Argument> Positional()
@@ -728,7 +731,7 @@ namespace Joke.Front.Pony
             Match("=");
             var value = RawSeq();
 
-            return new Ast.Argument(scanner.Span(name.Span.Start), name, value);
+            return new Ast.Argument(Span(name.Span.Start), name, value);
         }
 
         private Ast.Expression Qualify()
@@ -763,14 +766,24 @@ namespace Joke.Front.Pony
                             return BareLambda();
                         }
                         return FFI();
-
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        return Number();
                 }
             }
 
             switch (prefix)
             {
                 case "this":
-                    return new Ast.This(scanner.Span(start));
+                    return new Ast.This(Span(start));
                 case "object":
                     return Object();
                 case "if":
@@ -785,6 +798,24 @@ namespace Joke.Front.Pony
 
         }
 
+        private Ast.Expression Number()
+        {
+            if (CheckDigit())
+            {
+                var start = scanner.Current;
+
+                do
+                {
+                    Eat();
+                }
+                while (CheckDigit());
+
+                return new Ast.Integer(Span(start));
+            }
+
+            throw new NotImplementedException();
+        }
+
         private Ast.Expression Ref()
         {
             var name = Identifier();
@@ -794,7 +825,58 @@ namespace Joke.Front.Pony
 
         private Ast.Expression FFI()
         {
-            throw new NotImplementedException();
+            Debug.Assert(!scanner.CanSkip());
+
+            var start = scanner.Current;
+
+            Match('@');
+
+            var name = Identifier();
+
+            var @return = TryTypeArgs();
+
+            Skip();
+            Match('(');
+            var positional = Positional();
+            var named = Named();
+            Match(')');
+
+            var partial = SkipMatch('?');
+
+            return new Ast.FfiCall(Span(start), name, positional, named, partial);
+        }
+
+        private Ast.TypeArguments? TryTypeArgs()
+        {
+            Skip();
+
+            var start = scanner.Current;
+
+            if (Check('['))
+            {
+                Eat();
+
+                var args = new List<Ast.TypeArgument>();
+
+                do
+                {
+                    args.Add(TypeArg());
+                }
+                while (SkipMatch(','));
+
+                Match(']');
+
+                return new Ast.TypeArguments(Span(start), args);
+            }
+
+            return null;
+        }
+
+        private Ast.TypeArgument TypeArg()
+        {
+            var type = Type();
+
+            return new Ast.TypeArgType(type.Span, type);
         }
 
         private Ast.Expression BareLambda()
@@ -838,7 +920,7 @@ namespace Joke.Front.Pony
                 type = Type();
             }
 
-            return new Ast.Local(scanner.Span(start), name, type);
+            return new Ast.Local(Span(start), name, type);
         }
 
         private Ast.Expression Cond(int start)
@@ -860,7 +942,7 @@ namespace Joke.Front.Pony
 
             var iffs = new List<Ast.IfThen>();
 
-            iffs.Add(new Ast.IfThen(scanner.Span(start), condition, thenExpression));
+            iffs.Add(new Ast.IfThen(Span(start), condition, thenExpression));
 
             while (true)
             {
@@ -872,14 +954,14 @@ namespace Joke.Front.Pony
                         condition = parseCondition();
                         MatchKeyword("then");
                         thenExpression = Seq();
-                        iffs.Add(new Ast.IfThen(scanner.Span(start), condition, thenExpression));
+                        iffs.Add(new Ast.IfThen(Span(start), condition, thenExpression));
                         break;
                     case "else":
                         thenExpression = Seq();
                         MatchKeyword("end");
-                        return new Ast.IfThenElse(scanner.Span(start), iffs, thenExpression);
+                        return new Ast.IfThenElse(Span(start), iffs, thenExpression);
                     case "end":
-                        return new Ast.IfThenElse(scanner.Span(start), iffs, null);
+                        return new Ast.IfThenElse(Span(start), iffs, null);
                 }
             }
         }
@@ -948,7 +1030,7 @@ namespace Joke.Front.Pony
                 defaultArg = DefaultArg();
             }
 
-            return new Ast.Parameter(scanner.Span(start), name, type, defaultArg);
+            return new Ast.Parameter(Span(start), name, type, defaultArg);
         }
 
         private Ast.Expression DefaultArg()
@@ -972,7 +1054,7 @@ namespace Joke.Front.Pony
 
             var docs = TryDocString();
 
-            return new Ast.FieldMember(scanner.Span(start), Ast.MemberKind.Let, id, type,  docs);
+            return new Ast.FieldMember(Span(start), Ast.MemberKind.Let, id, type,  docs);
         }
 
         private Ast.Type Type()
@@ -997,7 +1079,6 @@ namespace Joke.Front.Pony
                 ?? TryNominalType()
                 ?? TryLambdaType()
                 ;
-
 
             return type;
         }
@@ -1030,7 +1111,7 @@ namespace Joke.Front.Pony
                 }
             }
 
-            return (start, scanner.Span(start).ToString());
+            return (start, Span(start).ToString());
         }
 
         private void MatchKeyword(string keyword)
@@ -1070,7 +1151,7 @@ namespace Joke.Front.Pony
                 Match();
             }
 
-            return (start, scanner.Span(start).ToString());
+            return (start, Span(start).ToString());
         }
 
         private Ast.Capability? TryCapability()
@@ -1079,12 +1160,12 @@ namespace Joke.Front.Pony
 
             switch (prefix)
             {
-                case "iso": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Iso);
-                case "val": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Val);
-                case "ref": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Ref);
-                case "box": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Box);
-                case "trn": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Trn);
-                case "tag": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.Tag);
+                case "iso": return new Ast.Capability(Span(start), Ast.RefCapability.Iso);
+                case "val": return new Ast.Capability(Span(start), Ast.RefCapability.Val);
+                case "ref": return new Ast.Capability(Span(start), Ast.RefCapability.Ref);
+                case "box": return new Ast.Capability(Span(start), Ast.RefCapability.Box);
+                case "trn": return new Ast.Capability(Span(start), Ast.RefCapability.Trn);
+                case "tag": return new Ast.Capability(Span(start), Ast.RefCapability.Tag);
             };
 
             scanner.Current = start;
@@ -1098,11 +1179,11 @@ namespace Joke.Front.Pony
 
             switch (prefix)
             {
-                case "#any": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashAny);
-                case "#read": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashRead);
-                case "#send": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashSend);
-                case "#share": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashShare);
-                case "#alias": return new Ast.Capability(scanner.Span(start), Ast.RefCapability.HashAlias);
+                case "#any": return new Ast.Capability(Span(start), Ast.RefCapability.HashAny);
+                case "#read": return new Ast.Capability(Span(start), Ast.RefCapability.HashRead);
+                case "#send": return new Ast.Capability(Span(start), Ast.RefCapability.HashSend);
+                case "#share": return new Ast.Capability(Span(start), Ast.RefCapability.HashShare);
+                case "#alias": return new Ast.Capability(Span(start), Ast.RefCapability.HashAlias);
             }
 
             scanner.Current = start;
@@ -1126,7 +1207,7 @@ namespace Joke.Front.Pony
                 Skip();
                 Match(')');
 
-                return new Ast.GroupedType(scanner.Span(start), types);
+                return new Ast.GroupedType(Span(start), types);
             }
 
             return null;
@@ -1151,7 +1232,7 @@ namespace Joke.Front.Pony
 
             if (intersections.Count > 1)
             {
-                return new Ast.UnionType(scanner.Span(start), intersections);
+                return new Ast.UnionType(Span(start), intersections);
             }
 
             return intersections[0];
@@ -1169,7 +1250,7 @@ namespace Joke.Front.Pony
             }
             if (primaries.Count > 1)
             {
-                return new Ast.IntersectionType(scanner.Span(start), primaries);
+                return new Ast.IntersectionType(Span(start), primaries);
             }
             return primaries[0];
         }
@@ -1188,7 +1269,7 @@ namespace Joke.Front.Pony
                 {
                     var id2 = Identifier();
 
-                    id = new Ast.QualifiedIdentifier(scanner.Span(id.Span.Start), id, Enumerable.Repeat(id2, 1).ToArray());
+                    id = new Ast.QualifiedIdentifier(Span(id.Span.Start), id, Enumerable.Repeat(id2, 1).ToArray());
                 }
 
                 IReadOnlyList<Ast.Type> arguments = System.Array.Empty<Ast.Type>();
@@ -1202,7 +1283,7 @@ namespace Joke.Front.Pony
 
                 var capability = TryCapability();
 
-                return new Ast.NominalType(scanner.Span(start), id, arguments, capability);
+                return new Ast.NominalType(Span(start), id, arguments, capability);
             }
 
             return null;
@@ -1245,7 +1326,7 @@ namespace Joke.Front.Pony
                 }
 
                 return new Ast.LambdaType(
-                    scanner.Span(start),
+                    Span(start),
                     capability,
                     identifier,
                     typeParameters,
@@ -1302,7 +1383,7 @@ namespace Joke.Front.Pony
                 @default = Type();
             }
 
-            return new Ast.TypeParameter(scanner.Span(start), identifier, constraint, @default);
+            return new Ast.TypeParameter(Span(start), identifier, constraint, @default);
         }
 
         private IReadOnlyList<Ast.Type> TypeList()
@@ -1352,7 +1433,7 @@ namespace Joke.Front.Pony
             }
             Match("\"");
 
-            return new Ast.String(scanner.Span(start));
+            return new Ast.String(Span(start));
         }
 
         private Ast.DocString DocString()
@@ -1375,7 +1456,7 @@ namespace Joke.Front.Pony
             }
             Match("\"\"\"");
 
-            return new Ast.DocString(scanner.Span(start));
+            return new Ast.DocString(Span(start));
         }
 
         private Ast.Identifier? TryIdentifier()
@@ -1389,11 +1470,11 @@ namespace Joke.Front.Pony
                 }
                 while (scanner.IsLetterOrDigit_());
 
-                var span = scanner.Span(start);
+                var span = Span(start);
 
                 if (!Keywords.IsKeyword(span))
                 {
-                    return new Ast.Identifier(scanner.Span(start));
+                    return new Ast.Identifier(Span(start));
                 }
 
                 scanner.Current = start;
@@ -1413,11 +1494,11 @@ namespace Joke.Front.Pony
                 }
                 while (scanner.IsLetterOrDigit_());
 
-                var span = scanner.Span(start);
+                var span = Span(start);
 
                 if (!Keywords.IsKeyword(span))
                 {
-                    return new Ast.Identifier(scanner.Span(start));
+                    return new Ast.Identifier(Span(start));
                 }
             }
 

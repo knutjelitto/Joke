@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 namespace Joke.Front
 {
@@ -45,19 +44,16 @@ namespace Joke.Front
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char At()
         {
             return scanner.At();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char At(int offset)
         {
             return scanner.At(offset);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char MatchAny()
         {
             var match = scanner.At();
@@ -69,7 +65,6 @@ namespace Joke.Front
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Match()
         {
             if (scanner.Current < scanner.Limit)
@@ -78,7 +73,6 @@ namespace Joke.Front
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char Match(char ch)
         {
             if (scanner.Match(ch))
@@ -90,7 +84,11 @@ namespace Joke.Front
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected SourceSpan Span(int start)
+        {
+            return scanner.Span(start);
+        }
+
         public void Match(string vs)
         {
             if (scanner.Check(vs))
@@ -111,14 +109,12 @@ namespace Joke.Front
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CheckHexDigit()
         {
             var digit = At();
             return '0' <= digit && digit <= '9' || 'a' <= digit && digit <= 'f' || 'A' <= digit && digit <= 'F';
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char MatchHexDigit()
         {
             if (CheckHexDigit())
@@ -128,14 +124,12 @@ namespace Joke.Front
             throw new NotImplementedException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CheckDigit()
         {
             var digit = At();
             return '0' <= digit && digit <= '9';
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char MatchDigit()
         {
             if (CheckDigit())
@@ -158,12 +152,16 @@ namespace Joke.Front
             return false;
         }
 
+        public bool Check(char ch)
+        {
+            return At() == ch;
+        }
+
         public bool Check(string str)
         {
             return scanner.Check(str);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void EnsureMore()
         {
             scanner.EnsureMore();
