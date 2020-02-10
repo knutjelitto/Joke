@@ -19,28 +19,86 @@ namespace Joke.Front
             Limit = this.content.Length;
         }
 
+        public int Line
+        {
+            get
+            {
+                var (line, _) = source.GetLineCol(Current);
+
+                return line;
+            }
+        }
+
+        public int Col
+        {
+            get
+            {
+                var (_, col) = source.GetLineCol(Current);
+
+                return col;
+            }
+        }
+
         public SourceSpan Span(int start)
         {
             return new SourceSpan(source, start, Current - start);
         }
 
-        public void Skip()
+        public bool Skip()
         {
-            while (Current < Limit && CanSkip())
+            var done = false;
+            var nl = false;
+            while (Current < Limit && !done)
             {
-                Current += 1;
+                switch (content[Current])
+                {
+                    case '\n':
+                        nl = true;
+                        Current += 1;
+                        break;
+                    case '\t':
+                    case '\r':
+                    case ' ':
+                        Current += 1;
+                        break;
+                    case '/':
+                        if (Current + 1 < Limit && content[Current+1] == '/')
+                        {
+                            Current += 2;
+                            while (Current < Limit && content[Current] != '\n')
+                            {
+                                Current += 1;
+                            }
+                            break;
+                        }
+                        Current += 1;
+                        break;
+                    default:
+                        done = true;
+                        break;
+                }
             }
+
+            return nl;
         }
 
         public virtual bool CanSkip()
         {
-            return Current < Limit &&
-                (
-                    content[Current] == '\t' ||
-                    content[Current] == '\n' ||
-                    content[Current] == '\r' ||
-                    content[Current] == ' '
-                );
+            if (Current < Limit)
+            {
+                switch (At())
+                {
+                    case '\t':
+                    case '\n':
+                    case '\r':
+                    case ' ':
+                        return true;
+                    case '/':
+                        return At(1) == '/';
+                }
+            }
+
+            return false;
         }
 
         public void Eat(int n)
@@ -59,7 +117,7 @@ namespace Joke.Front
 
         public bool Check(string what)
         {
-            return content.AsSpan(Current, what.Length).Equals(what.AsSpan(), StringComparison.Ordinal);
+            return Current < Limit && content.AsSpan(Current, what.Length).Equals(what.AsSpan(), StringComparison.Ordinal);
         }
 
         public char At()

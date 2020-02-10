@@ -22,7 +22,7 @@ namespace Joke
 
         private static void PonyParse()
         {
-            int skip = 4;
+            int skip = 17;
 
             foreach (var ponyFile in EnumeratePonies())
             {

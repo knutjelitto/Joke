@@ -16,9 +16,9 @@ namespace Joke.Front
             scanner.Eat(n);
         }
 
-        public void Skip()
+        public bool Skip()
         {
-            scanner.Skip();
+            return scanner.Skip();
         }
 
         public bool SkipMatch(char ch)

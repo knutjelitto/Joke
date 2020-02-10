@@ -6,16 +6,18 @@ namespace Joke.Front.Pony.Ast
 {
     public class NominalType : Type
     {
-        public NominalType(ISpan span, Identifier identifier, IReadOnlyList<Type> arguments, Capability? capability)
+        public NominalType(ISpan span, Identifier identifier, TypeArguments? arguments, Capability? capability, NominalKind kind)
             : base(span)
         {
             Identifier = identifier;
             Arguments = arguments;
             Capability = capability;
+            Kind = kind;
         }
 
         public Identifier Identifier { get; }
-        public IReadOnlyList<Type> Arguments { get; }
+        public TypeArguments? Arguments { get; }
         public Capability? Capability { get; }
+        public NominalKind Kind { get; }
     }
 }

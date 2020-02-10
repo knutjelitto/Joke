@@ -11,9 +11,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front", "Joke.Front\Jo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front.Json", "Joke.Front.Json\Joke.Front.Json.csproj", "{967D1997-B09A-43B9-A379-6CCD8F120E41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Joke.Front.Joke", "Joke.Front.Joke\Joke.Front.Joke.csproj", "{597D800C-F9E5-452D-AA80-76B7A616F9F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front.Joke", "Joke.Front.Joke\Joke.Front.Joke.csproj", "{597D800C-F9E5-452D-AA80-76B7A616F9F0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front.Pony", "Joke.Front.Pony\Joke.Front.Pony.csproj", "{414FB02E-B33D-42EC-AA5B-65C5A9BA7FA7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{054D95FA-AB31-4596-9632-32841C178096}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
