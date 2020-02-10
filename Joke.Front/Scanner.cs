@@ -62,16 +62,32 @@ namespace Joke.Front
                         Current += 1;
                         break;
                     case '/':
-                        if (Current + 1 < Limit && content[Current+1] == '/')
+                        if (Current + 1 < Limit)
                         {
-                            Current += 2;
-                            while (Current < Limit && content[Current] != '\n')
+                            if (content[Current + 1] == '/')
                             {
-                                Current += 1;
+                                Current += 2;
+                                while (Current < Limit && content[Current] != '\n')
+                                {
+                                    Current += 1;
+                                }
+                                break;
                             }
-                            break;
+                            if (content[Current + 1] == '*')
+                            {
+                                Current += 2;
+                                while (Current + 1 < Limit && (content[Current] != '*' || content[Current+1] != '/'))
+                                {
+                                    Current += 1;
+                                }
+                                if (Current + 1 < Limit)
+                                {
+                                    Current += 2;
+                                }
+                                break;
+                            }
                         }
-                        Current += 1;
+                            done = true;
                         break;
                     default:
                         done = true;
@@ -117,7 +133,10 @@ namespace Joke.Front
 
         public bool Check(string what)
         {
-            return Current < Limit && content.AsSpan(Current, what.Length).Equals(what.AsSpan(), StringComparison.Ordinal);
+            return
+                Current + what.Length <= Limit &&
+                content.AsSpan(Current, what.Length)
+                .Equals(what.AsSpan(), StringComparison.Ordinal);
         }
 
         public char At()

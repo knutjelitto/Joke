@@ -48,6 +48,7 @@ namespace Joke.Front.Pony
             "ref",
             "repeat",
             "return",
+            "struct",
             "tag",
             "then",
             "this",

@@ -12,9 +12,9 @@ namespace Joke
     {
         internal static void Main(string[] args)
         {
-            //EnsureSources();
+            EnsureSources();
             //EnumeratePonies();
-            PonyParse();
+            //PonyParse();
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -22,7 +22,7 @@ namespace Joke
 
         private static void PonyParse()
         {
-            int skip = 17;
+            int skip = 0;
 
             foreach (var ponyFile in EnumeratePonies())
             {
@@ -78,7 +78,7 @@ namespace Joke
 
         private static IEnumerable<FileRef> EnumeratePonies()
         {
-            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages");
+            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");//.Dir("packages");
 
             foreach (var pony in Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories))
             {
@@ -101,6 +101,37 @@ namespace Joke
 
             repository = temp.Dir("ponyc");
             GitRunner.Ensure("https://github.com/ponylang/ponyc.git", repository);
+
+            var ponySources = temp.Dir("pony-source");
+            ponySources.Ensure();
+
+            repository = ponySources.Dir("ponyup");
+            GitRunner.Ensure("https://github.com/ponylang/ponyup.git", repository);
+
+            repository = ponySources.Dir("corral");
+            GitRunner.Ensure("https://github.com/ponylang/corral.git", repository);
+
+            repository = ponySources.Dir("pony-stable");
+            GitRunner.Ensure("https://github.com/ponylang/pony-stable.git", repository);
+
+            repository = ponySources.Dir("appdirs");
+            GitRunner.Ensure("https://github.com/ponylang/appdirs.git", repository);
+
+            repository = ponySources.Dir("net_ssl");
+            GitRunner.Ensure("https://github.com/ponylang/net_ssl.git", repository);
+
+            repository = ponySources.Dir("http");
+            GitRunner.Ensure("https://github.com/ponylang/http.git", repository);
+
+            repository = ponySources.Dir("reactive-streams");
+            GitRunner.Ensure("https://github.com/ponylang/reactive-streams.git", repository);
+
+            /*
+             * 
+             * 
+             * 
+             * 
+            */
         }
     }
 }

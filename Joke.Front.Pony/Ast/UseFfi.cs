@@ -6,18 +6,20 @@ namespace Joke.Front.Pony.Ast
 {
     public class UseFfi : Use
     {
-        public UseFfi(ISpan span, Identifier? name, Expression ffiName, TypeArguments typeArguments, IReadOnlyList<Parameter> parameters, Boolean partial)
+        public UseFfi(ISpan span, Identifier? name, ExternIdentifier ffiName, TypeArguments typeArguments, Parameters parameters, Boolean partial, Expression? condition)
             : base(span, name)
         {
             FfiName = ffiName;
             TypeArguments = typeArguments;
             Parameters = parameters;
             Partial = partial;
+            Condition = condition;
         }
 
-        public Expression FfiName { get; }
+        public ExternIdentifier FfiName { get; }
         public TypeArguments TypeArguments { get; }
-        public IReadOnlyList<Parameter> Parameters { get; }
+        public Parameters Parameters { get; }
         public Boolean Partial { get; }
+        public Expression? Condition { get; }
     }
 }

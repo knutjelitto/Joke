@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Array : Expression
     {
-        public Array(ISpan span, Type? type, Expression elements)
+        public Array(ISpan span, Type? type, Expression? elements)
             : base(span)
         {
             Type = type;
@@ -14,6 +14,6 @@ namespace Joke.Front.Pony.Ast
         }
 
         public Type? Type { get; }
-        public Expression Elements { get; }
+        public Expression? Elements { get; }
     }
 }

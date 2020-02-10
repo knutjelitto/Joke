@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Joke.Front
 {
@@ -11,7 +12,7 @@ namespace Joke.Front
             this.scanner = scanner;
         }
 
-        public void Eat(int n = 1)
+        public void Eat(int n)
         {
             scanner.Eat(n);
         }
@@ -26,7 +27,12 @@ namespace Joke.Front
             scanner.Skip();
             if (scanner.Current < scanner.Limit && Check(ch))
             {
-                scanner.Current += 1;
+                var x = scanner.Current;
+
+                scanner.Current = scanner.Current + 1;
+
+                Debug.Assert(x + 1 == scanner.Current);
+
                 return true;
             }
             return false;
@@ -99,6 +105,21 @@ namespace Joke.Front
                 return;
             }
             throw new NotImplementedException();
+        }
+
+        public int GetStart()
+        {
+            return scanner.Current;
+        }
+
+        public void SetStart(int start)
+        {
+            scanner.Current = start;
+        }
+
+        public bool More()
+        {
+            return scanner.Current < scanner.Limit;
         }
 
         public bool CheckHexDigit()

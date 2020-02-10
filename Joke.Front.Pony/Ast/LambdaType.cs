@@ -13,6 +13,7 @@ namespace Joke.Front.Pony.Ast
             IReadOnlyList<TypeParameter> parameters,
             IReadOnlyList<Type> argumentTypes,
             Type? returnType,
+            Boolean partial,
             Capability? capability2)
             : base(span)
         {
@@ -21,6 +22,7 @@ namespace Joke.Front.Pony.Ast
             Parameters = parameters;
             ArgumentTypes = argumentTypes;
             ReturnType = returnType;
+            Partial = partial;
             Capability2 = capability2;
         }
 
@@ -29,6 +31,7 @@ namespace Joke.Front.Pony.Ast
         public IReadOnlyList<TypeParameter> Parameters { get; }
         public IReadOnlyList<Type> ArgumentTypes { get; }
         public Type? ReturnType { get; }
+        public Boolean Partial { get; }
         public Capability? Capability2 { get; }
     }
 }

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class String : Literal
+    public class WithElement : Expression
     {
-        public String(ISpan span)            
+        public WithElement(ISpan span, IdSeq names, Expression initializer)
             : base(span)
         {
         }

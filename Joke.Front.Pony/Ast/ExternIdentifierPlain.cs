@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class String : Literal
+    public class ExternIdentifierPlain : ExternIdentifier
     {
-        public String(ISpan span)            
+        public ExternIdentifierPlain(ISpan span)
             : base(span)
         {
         }
