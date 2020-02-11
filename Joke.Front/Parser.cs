@@ -35,6 +35,19 @@ namespace Joke.Front
             Match(ch);
         }
 
+        public bool TryMatch(char ch)
+        {
+            Debug.Assert(ch != Scanner.NoCharacter);
+
+            if (At() == ch)
+            {
+                scanner.Current += 1;
+
+                return true;
+            }
+            return false;
+        }
+
         public bool TrySkipMatch(char ch)
         {
             Debug.Assert(ch != Scanner.NoCharacter);
@@ -49,10 +62,21 @@ namespace Joke.Front
             return false;
         }
 
+        public bool TryMatch(string str)
+        {
+            if (scanner.Check(str))
+            {
+                scanner.Current += str.Length;
+                return true;
+            }
+
+            return false;
+        }
+
         public bool TrySkipMatch(string str)
         {
             scanner.Skip();
-            if (scanner.TryMatch(str))
+            if (scanner.Check(str))
             {
                 scanner.Current += str.Length;
                 return true;
@@ -100,7 +124,7 @@ namespace Joke.Front
 
         public void Match(string vs)
         {
-            if (scanner.TryMatch(vs))
+            if (scanner.Check(vs))
             {
                 scanner.Current += vs.Length;
                 return;
@@ -186,7 +210,7 @@ namespace Joke.Front
 
         public bool Check(string str)
         {
-            return scanner.TryMatch(str);
+            return scanner.Check(str);
         }
 
         public void EnsureMore()

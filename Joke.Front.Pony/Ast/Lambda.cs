@@ -8,19 +8,19 @@ namespace Joke.Front.Pony.Ast
     {
         public Lambda(ISpan span, 
             bool bare,
-            Capability? recCap,
+            Capability? receiverCap,
             Identifier? name,
-            IReadOnlyList<TypeParameter> typeParameters,
+            TypeParameters typeParameters,
             IReadOnlyList<LambdaParameter> lambdaParameters,
             IReadOnlyList<LambdaCapture> lambdaCaptures,
             Type? @return,
             Boolean partial,
             Expression body,
-            Capability? refCap)
+            Capability? referenceCap)
             : base(span)
         {
             Bare = bare;
-            RecCap = recCap;
+            ReceiverCap = receiverCap;
             Name = name;
             TypeParameters = typeParameters;
             LambdaParameters = lambdaParameters;
@@ -28,18 +28,18 @@ namespace Joke.Front.Pony.Ast
             Return = @return;
             Partial = partial;
             Body = body;
-            RefCap = refCap;
+            ReferenceCap = referenceCap;
         }
 
         public Boolean Bare { get; }
-        public Capability? RecCap { get; }
+        public Capability? ReceiverCap { get; }
         public Identifier? Name { get; }
-        public IReadOnlyList<TypeParameter> TypeParameters { get; }
+        public TypeParameters TypeParameters { get; }
         public IReadOnlyList<LambdaParameter> LambdaParameters { get; }
         public IReadOnlyList<LambdaCapture> LambdaCaptures { get; }
         public Type? Return { get; }
         public Boolean Partial { get; }
         public Expression Body { get; }
-        public Capability? RefCap { get; }
+        public Capability? ReferenceCap { get; }
     }
 }

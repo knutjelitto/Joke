@@ -9,32 +9,32 @@ namespace Joke.Front.Pony.Ast
         public LambdaType(
             ISpan span,
             bool bare,
-            Capability? capability1,
+            Capability? receiverCapability,
             Identifier? identifier,
-            IReadOnlyList<TypeParameter> parameters,
+            TypeParameters parameters,
             IReadOnlyList<Type> argumentTypes,
             Type? returnType,
             Boolean partial,
-            Capability? capability2)
+            Capability? referenceCapbility)
             : base(span)
         {
             Bare = bare;
-            Capability1 = capability1;
+            ReceiverCap = receiverCapability;
             Identifier = identifier;
             Parameters = parameters;
             ArgumentTypes = argumentTypes;
             ReturnType = returnType;
             Partial = partial;
-            Capability2 = capability2;
+            ReferenceCap = referenceCapbility;
         }
 
         public bool Bare { get; }
-        public Capability? Capability1 { get; }
+        public Capability? ReceiverCap { get; }
         public Identifier? Identifier { get; }
-        public IReadOnlyList<TypeParameter> Parameters { get; }
+        public TypeParameters Parameters { get; }
         public IReadOnlyList<Type> ArgumentTypes { get; }
         public Type? ReturnType { get; }
         public Boolean Partial { get; }
-        public Capability? Capability2 { get; }
+        public Capability? ReferenceCap { get; }
     }
 }

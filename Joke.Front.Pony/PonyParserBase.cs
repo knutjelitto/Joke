@@ -16,7 +16,7 @@ namespace Joke.Front.Pony
         /*
          * Matching
          */
-        protected bool CheckAndMatchPunctuation(char ch)
+        protected bool TryMatchPunctuation(char ch)
         {
             Debug.Assert(punctuation.Contains(ch));
 
@@ -60,14 +60,10 @@ namespace Joke.Front.Pony
             return false;
         }
 
-        private (int, string) IdAlike(bool withHash = false)
+        private (int, string) IdAlike()
         {
             Skip();
             var start = GetStart();
-            if (withHash && Check('#'))
-            {
-                Eat(1);
-            }
             if (scanner.IsLetter_())
             {
                 Eat(1);
@@ -105,7 +101,7 @@ namespace Joke.Front.Pony
             return check;
         }
 
-        protected bool CheckAndMatchKeyword(string keyword)
+        protected bool TryMatchKeyword(string keyword)
         {
             var (start, prefix) = IdAlike();
 

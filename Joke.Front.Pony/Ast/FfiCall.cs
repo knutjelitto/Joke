@@ -6,16 +6,16 @@ namespace Joke.Front.Pony.Ast
 {
     public class FfiCall : Expression
     {
-        public FfiCall(ISpan span, ExternIdentifier identifier, IReadOnlyList<Argument> positional, IReadOnlyList<Argument> named, bool partial)
+        public FfiCall(ISpan span, ExternIdentifier name, IReadOnlyList<Argument> positional, IReadOnlyList<Argument> named, bool partial)
             : base(span)
         {
-            Identifier = identifier;
+            Name = name;
             Positional = positional;
             Named = named;
             Partial = partial;
         }
 
-        public ExternIdentifier Identifier { get; }
+        public ExternIdentifier Name { get; }
         public IReadOnlyList<Argument> Positional { get; }
         public IReadOnlyList<Argument> Named { get; }
         public bool Partial { get; }

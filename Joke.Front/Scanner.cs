@@ -8,7 +8,12 @@ namespace Joke.Front
 
         private readonly ISource source;
         protected readonly string content;
-        public int Current;
+        private int current;
+        public int Current
+        {
+            get { return current; }
+            set { current = value; }
+        }
         public int Limit;
 
         public Scanner(ISource source)
@@ -133,7 +138,7 @@ namespace Joke.Front
             return Current < Limit && content[Current] == what;
         }
 
-        public bool TryMatch(string what)
+        public bool Check(string what)
         {
             return
                 Current + what.Length <= Limit &&

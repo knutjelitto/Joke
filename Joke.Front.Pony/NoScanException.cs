@@ -2,9 +2,9 @@
 
 namespace Joke.Front.Pony
 {
-    public class NoParseException : Exception
+    public class NoScanException : Exception
     {
-        public NoParseException(string? message)
+        public NoScanException(string? message)
             : base(message)
         {
         }
