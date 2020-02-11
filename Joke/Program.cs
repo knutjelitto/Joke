@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+
 using Joke.Front;
 using Joke.Front.Pony;
 using Joke.Outside;
@@ -12,9 +14,8 @@ namespace Joke
     {
         internal static void Main(string[] args)
         {
-            EnsureSources();
-            //EnumeratePonies();
-            //PonyParse();
+            //EnsureSources();
+            PonyParse();
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -70,17 +71,15 @@ namespace Joke
                 return false;
             }
         }
-
-        private static DirRef PonyBuiltin()
-        {
-            return DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages").Dir("builtin");
-        }
-
         private static IEnumerable<FileRef> EnumeratePonies()
         {
-            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");//.Dir("packages");
+            //var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages");
+            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");
+            var root2 = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("pony-source");
 
-            foreach (var pony in Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories))
+            foreach (var pony in 
+                Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories).Concat(
+                    Directory.EnumerateFiles(root2, "*.pony", SearchOption.AllDirectories)))
             {
                 yield return FileRef.From(pony);
             }

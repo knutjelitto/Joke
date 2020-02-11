@@ -7,7 +7,8 @@ namespace Joke.Front.Pony.Ast
     public class LambdaType : Type
     {
         public LambdaType(
-            ISpan span, 
+            ISpan span,
+            bool bare,
             Capability? capability1,
             Identifier? identifier,
             IReadOnlyList<TypeParameter> parameters,
@@ -17,6 +18,7 @@ namespace Joke.Front.Pony.Ast
             Capability? capability2)
             : base(span)
         {
+            Bare = bare;
             Capability1 = capability1;
             Identifier = identifier;
             Parameters = parameters;
@@ -26,6 +28,7 @@ namespace Joke.Front.Pony.Ast
             Capability2 = capability2;
         }
 
+        public bool Bare { get; }
         public Capability? Capability1 { get; }
         public Identifier? Identifier { get; }
         public IReadOnlyList<TypeParameter> Parameters { get; }

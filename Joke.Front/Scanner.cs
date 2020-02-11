@@ -117,13 +117,15 @@ namespace Joke.Front
             return false;
         }
 
-        public void Eat(int n)
+        public bool Eat(int n)
         {
             while (n > 0 && Current < Limit)
             {
                 Current += 1;
                 n -= 1;
             }
+
+            return n == 0;
         }
 
         public bool Check(char what)
@@ -131,7 +133,7 @@ namespace Joke.Front
             return Current < Limit && content[Current] == what;
         }
 
-        public bool Check(string what)
+        public bool TryMatch(string what)
         {
             return
                 Current + what.Length <= Limit &&

@@ -12,9 +12,14 @@ namespace Joke.Front
             this.scanner = scanner;
         }
 
-        public void Eat(int n)
+        public bool Eat(int n)
         {
-            scanner.Eat(n);
+            return scanner.Eat(n);
+        }
+
+        public bool Eat()
+        {
+            return scanner.Eat(1);
         }
 
         public bool Skip()
@@ -22,26 +27,32 @@ namespace Joke.Front
             return scanner.Skip();
         }
 
-        public bool SkipMatch(char ch)
+        public void SkipMatch(char ch)
         {
+            Debug.Assert(ch != Scanner.NoCharacter);
+
             scanner.Skip();
-            if (scanner.Current < scanner.Limit && Check(ch))
+            Match(ch);
+        }
+
+        public bool TrySkipMatch(char ch)
+        {
+            Debug.Assert(ch != Scanner.NoCharacter);
+
+            scanner.Skip();
+            if (At() == ch)
             {
-                var x = scanner.Current;
-
-                scanner.Current = scanner.Current + 1;
-
-                Debug.Assert(x + 1 == scanner.Current);
+                scanner.Current += 1;
 
                 return true;
             }
             return false;
         }
 
-        public bool SkipMatch(string str)
+        public bool TrySkipMatch(string str)
         {
             scanner.Skip();
-            if (scanner.Check(str))
+            if (scanner.TryMatch(str))
             {
                 scanner.Current += str.Length;
                 return true;
@@ -73,11 +84,11 @@ namespace Joke.Front
 
         public char Match(char ch)
         {
-            if (Check(ch))
+            Debug.Assert(ch != Scanner.NoCharacter);
+            if (At() == ch)
             {
-                var match = scanner.At();
                 scanner.Current += 1;
-                return match;
+                return ch;
             }
             throw new NotImplementedException();
         }
@@ -89,7 +100,7 @@ namespace Joke.Front
 
         public void Match(string vs)
         {
-            if (scanner.Check(vs))
+            if (scanner.TryMatch(vs))
             {
                 scanner.Current += vs.Length;
                 return;
@@ -122,30 +133,33 @@ namespace Joke.Front
             return scanner.Current < scanner.Limit;
         }
 
-        public bool CheckHexDigit()
+        public bool IsHexDigit()
         {
             var digit = At();
+
             return '0' <= digit && digit <= '9' || 'a' <= digit && digit <= 'f' || 'A' <= digit && digit <= 'F';
         }
 
         public char MatchHexDigit()
         {
-            if (CheckHexDigit())
+            if (IsHexDigit())
             {
                 return MatchAny();
             }
+
             throw new NotImplementedException();
         }
 
-        public bool CheckDigit()
+        public bool IsDigit()
         {
             var digit = At();
+
             return '0' <= digit && digit <= '9';
         }
 
         public char MatchDigit()
         {
-            if (CheckDigit())
+            if (IsDigit())
             {
                 return MatchAny();
             }
@@ -172,7 +186,7 @@ namespace Joke.Front
 
         public bool Check(string str)
         {
-            return scanner.Check(str);
+            return scanner.TryMatch(str);
         }
 
         public void EnsureMore()

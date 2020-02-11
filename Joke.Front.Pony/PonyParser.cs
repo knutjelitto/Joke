@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Joke.Front.Pony
 {
-    public class PonyParser : Parser<PonyScanner>
+    public class PonyParser : PonyParserBase
     {
         public PonyParser(PonyScanner scanner)
             : base(scanner)
@@ -19,7 +19,7 @@ namespace Joke.Front.Pony
 
         private enum IN
         {
-            Plain,
+            Both,
             Next,
             Case
         }
@@ -65,14 +65,14 @@ namespace Joke.Front.Pony
                         items.Add(Use());
                         break;
                     default:
-                        if (scanner.Check("\"\"\""))
+                        if (scanner.TryMatch("\"\"\""))
                         {
                             doc = DocString();
                         }
                         else
                         {
                             SetStart(start);
-                            throw new NotImplementedException();
+                            throw NoParse("unit");
                         }
                         break;
                 }
@@ -91,14 +91,11 @@ namespace Joke.Front.Pony
 
             if (name != null)
             {
-                Skip();
-                Match('=');
+                SkipMatch('=');
             }
 
-            Skip();
-            if (Check('@'))
+            if (TrySkipMatch('@'))
             {
-                Eat(1);
                 Ast.ExternIdentifier ffiName;
                 if (Check('"'))
                 {
@@ -109,9 +106,8 @@ namespace Joke.Front.Pony
                     ffiName = new Ast.ExternIdentifierPlain(Identifier().Span);
                 }
                 var typeArgs = TypeArgs();
-                Skip();
                 var parameters = Parameters();
-                var partial = SkipMatch('?');
+                var partial = SkipIff('?');
                 var condition = TryCondition();
 
                 return new Ast.UseFfi(Span(start), name, ffiName, typeArgs, parameters, partial, condition);
@@ -130,9 +126,8 @@ namespace Joke.Front.Pony
         private Ast.Expression? TryCondition()
         {
             Skip();
-            if (CheckKeyword("if"))
+            if (CheckAndMatchKeyword("if"))
             {
-                MatchKeyword("if");
                 return Infix();
             }
 
@@ -153,13 +148,7 @@ namespace Joke.Front.Pony
 
             var typeArguments = TryTypeParameters();
 
-            Ast.Type? type = null;
-
-            if (CheckKeyword("is"))
-            {
-                Eat(2);
-                type = Type();
-            }
+            var type = TryProvides();
 
             var docString = TryDocString();
 
@@ -214,7 +203,7 @@ namespace Joke.Front.Pony
             var bare = false;
             if (cap == null)
             {
-                bare = SkipMatch('@');
+                bare = TrySkipMatch('@');
             }
             Skip();
             var name = Identifier();
@@ -222,12 +211,12 @@ namespace Joke.Front.Pony
             var parameters = Parameters();
             var returnType = TryColonType();
 
-            var partial = SkipMatch('?');
+            var partial = TrySkipMatch('?');
             var docs = TryDocString();
 
             Ast.Expression? body = null;
 
-            if (SkipMatch("=>"))
+            if (TrySkipMatch("=>"))
             {
                 body = RawSeq();
 
@@ -276,9 +265,9 @@ namespace Joke.Front.Pony
             return TryExprSeq() ?? TryJump();
         }
 
-        private Ast.Expression ExprSeq(IN next = IN.Plain) => TryExprSeq(next) ?? throw NoParse("ExprSeq");
+        private Ast.Expression ExprSeq(IN next = IN.Both) => TryExprSeq(next) ?? throw NoParse("ExprSeq");
 
-        private Ast.Expression? TryExprSeq(IN next = IN.Plain)
+        private Ast.Expression? TryExprSeq(IN next = IN.Both)
         {
             var assign = TryAssignment(next);
 
@@ -311,9 +300,9 @@ namespace Joke.Front.Pony
             }
         }
 
-        private Ast.Expression Assignment(IN next = IN.Plain) => TryAssignment(next) ?? throw NoParse("assignment");
+        private Ast.Expression Assignment(IN next = IN.Both) => TryAssignment(next) ?? throw NoParse("assignment");
 
-        private Ast.Expression? TryAssignment(IN next = IN.Plain)
+        private Ast.Expression? TryAssignment(IN next = IN.Both)
         {
             var lhs = TryInfix(next);
 
@@ -337,19 +326,17 @@ namespace Joke.Front.Pony
 
         private Ast.Type? TryProvides()
         {
-            if (CheckKeyword("is"))
+            if (CheckAndMatchKeyword("is"))
             {
-                MatchKeyword("is");
-
                 return Type();
             }
 
             return null;
         }
 
-        private Ast.Expression Infix(IN next = IN.Plain) => TryInfix(next) ?? throw new NotImplementedException();
+        private Ast.Expression Infix(IN next = IN.Both) => TryInfix(next) ?? throw new NotImplementedException();
 
-        private Ast.Expression? TryInfix(IN next = IN.Plain)
+        private Ast.Expression? TryInfix(IN next = IN.Both)
         {
             var term = TryTerm(next);
 
@@ -370,23 +357,20 @@ namespace Joke.Front.Pony
                 }
                 else
                 {
-                    if (CheckKeyword("as"))
+                    if (CheckAndMatchKeyword("as"))
                     {
-                        MatchKeyword("as");
                         var type = Type();
 
                         term = new Ast.As(Span(term.Span.Start), term, type);
                     }
-                    else if (CheckKeyword("is"))
+                    else if (CheckAndMatchKeyword("is"))
                     {
-                        MatchKeyword("is");
                         var term2 = Term();
 
                         term = new Ast.Is(Span(term.Span.Start), false, term, term2);
                     }
-                    else if (CheckKeyword("isnt"))
+                    else if (CheckAndMatchKeyword("isnt"))
                     {
-                        MatchKeyword("isnt");
                         var term2 = Term();
 
                         term = new Ast.Is(Span(term.Span.Start), true, term, term2);
@@ -401,9 +385,9 @@ namespace Joke.Front.Pony
             return term;
         }
 
-        private Ast.Expression Term(IN next = IN.Plain) => TryTerm(next) ?? throw new NotImplementedException();
+        private Ast.Expression Term(IN next = IN.Both) => TryTerm(next) ?? throw new NotImplementedException();
 
-        private Ast.Expression? TryTerm(IN next = IN.Plain)
+        private Ast.Expression? TryTerm(IN next = IN.Both)
         {
             var (start, prefix) = KeywordPrefix();
 
@@ -448,10 +432,8 @@ namespace Joke.Front.Pony
             var body = Seq();
             var @else = TryElse(); ;
             Ast.Expression? then = null;
-            if (CheckKeyword("then"))
+            if (CheckAndMatchKeyword("then"))
             {
-                MatchKeyword("then");
-
                 then = RawSeq();
             }
             MatchKeyword("end");
@@ -478,9 +460,8 @@ namespace Joke.Front.Pony
 
         private Ast.Expression? TryElse()
         {
-            if (CheckKeyword("else"))
+            if (CheckAndMatchKeyword("else"))
             {
-                MatchKeyword("else");
                 return RawSeq();
             }
 
@@ -536,10 +517,9 @@ namespace Joke.Front.Pony
             var names = new List<Ast.IdSeq>();
             do
             {
-                var name = IdSeq();
-                names.Add(name);
+                names.Add(IdSeq());
             }
-            while (SkipMatch(','));
+            while (TrySkipMatch(','));
             Match(')');
 
             return new Ast.IdSeqMulti(Span(start), names);
@@ -554,7 +534,7 @@ namespace Joke.Front.Pony
             var @else = TryElse();
             MatchKeyword("end");
 
-            return new Ast.While(Span(condition.Span.Start), condition, body, @else);
+            return new Ast.While(Span(start), condition, body, @else);
         }
 
         private Ast.WithElement WithElement()
@@ -568,7 +548,7 @@ namespace Joke.Front.Pony
         }
 
 
-        private IReadOnlyList<Ast.WithElement> WithExpression()
+        private IReadOnlyList<Ast.WithElement> WithElements()
         {
             var elements = new List<Ast.WithElement>();
 
@@ -578,32 +558,32 @@ namespace Joke.Front.Pony
 
                 elements.Add(element);
             }
-            while (SkipMatch(','));
+            while (TrySkipMatch(','));
 
             return elements;
         }
 
         private Ast.With With(int start)
         {
-            var elements = WithExpression();
+            var elements = WithElements();
             Skip();
             Match("do");
             var body = RawSeq();
-            var @else = TryElse();
+            var optElse = TryElse();
             Skip();
             Match("end");
 
-            return new Ast.With(Span(start), elements, body, @else);
+            return new Ast.With(Span(start), elements, body, optElse);
         }
 
         private Ast.Match MatchExpression(int start)
         {
             var toMatch = RawSeq();
             var cases = Cases();
-            var @else = TryElse();
+            var optElse = TryElse();
             MatchKeyword("end");
 
-            return new Ast.Match(Span(start), toMatch, cases, @else);
+            return new Ast.Match(Span(start), toMatch, cases, optElse);
         }
 
         private IReadOnlyList<Ast.Case> Cases()
@@ -629,18 +609,18 @@ namespace Joke.Front.Pony
             Skip();
             var start = GetStart();
 
-            if (Check('|'))
+            if (CheckAndMatchPunctuation('|'))
             {
                 Eat(1);
 
                 var pattern = TryPattern(IN.Case);
                 Ast.Expression? guard = null;
                 Ast.Expression? body = null;
-                if (SkipMatch("if"))
+                if (TrySkipMatch("if"))
                 {
                     guard = RawSeq();
                 }
-                if (SkipMatch("=>"))
+                if (TrySkipMatch("=>"))
                 {
                     body = RawSeq();
                 }
@@ -651,9 +631,9 @@ namespace Joke.Front.Pony
             return null; ;
         }
 
-        private Ast.Expression ParamPattern(IN next = IN.Plain) => TryParamPattern(next) ?? throw new NotImplementedException();
+        private Ast.Expression ParamPattern(IN next = IN.Both) => TryParamPattern(next) ?? throw new NotImplementedException();
 
-        private Ast.Expression? TryParamPattern(IN next = IN.Plain)
+        private Ast.Expression? TryParamPattern(IN next = IN.Both)
         {
             return TryPrefix() ?? TryPostfix(next);
         }
@@ -689,9 +669,9 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Ast.Expression Postfix(IN next = IN.Plain) => TryPostfix(next) ?? throw new NotImplementedException();
+        private Ast.Expression Postfix(IN next = IN.Both) => TryPostfix(next) ?? throw new NotImplementedException();
 
-        private Ast.Expression? TryPostfix(IN next = IN.Plain)
+        private Ast.Expression? TryPostfix(IN next = IN.Both)
         {
             var expression = TryAtom(next);
 
@@ -943,19 +923,16 @@ namespace Joke.Front.Pony
                     }
                     break;
                 default:
-                    if (CheckKeyword("and"))
+                    if (CheckAndMatchKeyword("and"))
                     {
-                        Eat(3);
                         op = Ast.InfixOp.And;
                     }
-                    if (CheckKeyword("or"))
+                    if (CheckAndMatchKeyword("or"))
                     {
-                        Eat(2);
                         op = Ast.InfixOp.Or;
                     }
-                    if (CheckKeyword("xor"))
+                    if (CheckAndMatchKeyword("xor"))
                     {
-                        Eat(3);
                         op = Ast.InfixOp.Xor;
                     }
                     break;
@@ -964,7 +941,7 @@ namespace Joke.Front.Pony
 
             if (op != Ast.InfixOp.NONE)
             {
-                var @unsafe = SkipMatch('?');
+                var @unsafe = TrySkipMatch('?');
 
                 var rhs = Term();
 
@@ -1005,10 +982,10 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Ast.Expression Pattern(IN next = IN.Plain) => TryPattern(next) ?? throw new NotImplementedException();
+        private Ast.Expression Pattern(IN next = IN.Both) => TryPattern(next) ?? throw new NotImplementedException();
 
 
-        private Ast.Expression? TryPattern(IN next = IN.Plain)
+        private Ast.Expression? TryPattern(IN next = IN.Both)
         {
             return TryLocal() ?? TryParamPattern(next);
         }
@@ -1062,18 +1039,18 @@ namespace Joke.Front.Pony
             var named = Named();
             Match(')');
 
-            var partial = SkipMatch('?');
+            var partial = TrySkipMatch('?');
 
-            return new Ast.Call(Span(atom.Span.Start), atom, positional, named);
+            return new Ast.Call(Span(atom.Span.Start), atom, positional, named, partial);
         }
 
         private IReadOnlyList<Ast.Argument> Positional()
         {
             var arguments = new List<Ast.Argument>();
 
-            while (!CheckKeyword("where"))
+            while (!IsKeyword("where"))
             {
-                if (Check(')'))
+                if (IsPunctuation(')'))
                 {
                     break;
                 }
@@ -1082,7 +1059,7 @@ namespace Joke.Front.Pony
 
                 arguments.Add(new Ast.Argument(expr.Span, null, expr));
 
-                if (!SkipMatch(','))
+                if (!TrySkipMatch(','))
                 {
                     break;
                 }
@@ -1095,13 +1072,11 @@ namespace Joke.Front.Pony
         {
             var arguments = new List<Ast.Argument>();
 
-            if (CheckKeyword("where"))
+            if (CheckAndMatchKeyword("where"))
             {
-                Match("where");
-
                 arguments.Add(NamedArg());
 
-                while (SkipMatch(','))
+                while (TrySkipMatch(','))
                 {
                     arguments.Add(NamedArg());
                 }
@@ -1126,9 +1101,9 @@ namespace Joke.Front.Pony
             return TypeArgs();
         }
 
-        private Ast.Expression Atom(IN next = IN.Plain) => TryAtom(next) ?? throw NoParse("Atom");
+        private Ast.Expression Atom(IN next = IN.Both) => TryAtom(next) ?? throw NoParse("Atom");
 
-        private Ast.Expression? TryAtom(IN next = IN.Plain)
+        private Ast.Expression? TryAtom(IN next = IN.Both)
         {
             var (start, prefix) = KeywordPrefix();
 
@@ -1187,7 +1162,7 @@ namespace Joke.Front.Pony
 
         private Ast.Expression Number()
         {
-            if (CheckDigit())
+            if (IsDigit())
             {
                 var start = GetStart();
 
@@ -1197,7 +1172,7 @@ namespace Joke.Front.Pony
 
                     MatchHexDigit();
 
-                    while (CheckHexDigit())
+                    while (IsHexDigit())
                     {
                         Eat(1);
                     }
@@ -1209,7 +1184,7 @@ namespace Joke.Front.Pony
                 {
                     Eat(1);
                 }
-                while (CheckDigit() || At() == '_');
+                while (IsDigit() || At() == '_');
 
                 if (At() == '.')
                 {
@@ -1217,7 +1192,7 @@ namespace Joke.Front.Pony
                     {
                         Eat(1);
                     }
-                    while (CheckDigit());
+                    while (IsDigit());
 
                     if (At() == 'e' || At() == 'E')
                     {
@@ -1229,7 +1204,7 @@ namespace Joke.Front.Pony
                         }
 
                         MatchDigit();
-                        while (CheckDigit())
+                        while (IsDigit())
                         {
                             Eat(1);
                         }
@@ -1283,7 +1258,7 @@ namespace Joke.Front.Pony
             var named = Named();
             Match(')');
 
-            var partial = SkipMatch('?');
+            var partial = TrySkipMatch('?');
 
             return new Ast.FfiCall(Span(start), name, positional, named, partial);
         }
@@ -1309,7 +1284,7 @@ namespace Joke.Front.Pony
                 {
                     args.Add(TypeArg());
                 }
-                while (SkipMatch(','));
+                while (TrySkipMatch(','));
 
                 Match(']');
 
@@ -1326,19 +1301,13 @@ namespace Joke.Front.Pony
             return new Ast.TypeArgType(type.Span, type);
         }
 
-        private Ast.Expression BareLambda()
-        {
-            throw NotYet("bare lambda");
-        }
-
         private Ast.Expression Lambda()
         {
             Debug.Assert(!scanner.CanSkip());
 
             var start = GetStart();
 
-            var bare = At() == '@';
-            if (bare) Eat(1);
+            var bare = Iff(At() == '@', Eat);
 
             Match('{');
 
@@ -1348,37 +1317,29 @@ namespace Joke.Front.Pony
             var parameters = LambdaParameters();
             var captures = TryLambdaCaptures();
             var @return = TryColonType();
-            Skip();
-            var partial = Check('?');
-            if (partial)
-            {
-                Eat(1);
-            }
+            var partial = SkipIff('?');
             Skip();
             Match("=>");
             var body = RawSeq();
-            Skip();
-            Match('}');
+            MatchPunctuation('}');
             var refCap = TryCapability();
 
             return new Ast.Lambda(Span(start), bare, recCap, name, typeParameters, parameters, captures, @return, partial, body, refCap);
-            
-            throw NotYet("lambda");
         }
 
         private IReadOnlyList<Ast.LambdaParameter> LambdaParameters()
         {
-            SkipMatch('(');
+            TrySkipMatch('(');
 
             var parameters = new List<Ast.LambdaParameter>();
 
-            if (!SkipMatch(')'))
+            if (!TrySkipMatch(')'))
             {
                 do
                 {
                     parameters.Add(LambdaParameter());
                 }
-                while (SkipMatch(','));
+                while (TrySkipMatch(','));
 
                 Match(')');
             }
@@ -1401,17 +1362,17 @@ namespace Joke.Front.Pony
 
         private IReadOnlyList<Ast.LambdaCapture> TryLambdaCaptures()
         {
-            if (SkipMatch('('))
+            if (TrySkipMatch('('))
             {
                 var captures = new List<Ast.LambdaCapture>();
 
-                if (!SkipMatch(')'))
+                if (!TrySkipMatch(')'))
                 {
                     do
                     {
                         captures.Add(LambdaCapture());
                     }
-                    while (SkipMatch(','));
+                    while (TrySkipMatch(','));
                 }
 
                 Match(')');
@@ -1429,10 +1390,8 @@ namespace Joke.Front.Pony
 
             var start = GetStart();
 
-            if (CheckKeyword("this"))
+            if (CheckAndMatchKeyword("this"))
             {
-                MatchKeyword("this");
-
                 return new Ast.LambdaCaptureThis(Span(start));
             }
 
@@ -1447,7 +1406,7 @@ namespace Joke.Front.Pony
 
         private Ast.Type? TryColonType()
         {
-            if (SkipMatch(':'))
+            if (TrySkipMatch(':'))
             {
                 return Type();
             }
@@ -1455,9 +1414,9 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Ast.Expression Array(IN next = IN.Plain) => TryArray(next) ?? throw NoParse("array");
+        private Ast.Expression Array(IN next = IN.Both) => TryArray(next) ?? throw NoParse("array");
 
-        private Ast.Expression? TryArray(IN next = IN.Plain)
+        private Ast.Expression? TryArray(IN next = IN.Both)
         {
             if (Check('['))
             {
@@ -1480,10 +1439,8 @@ namespace Joke.Front.Pony
 
         private Ast.Type? TryArrayType()
         {
-            if (CheckKeyword("as"))
+            if (CheckAndMatchKeyword("as"))
             {
-                MatchKeyword("as");
-
                 var type = Type();
 
                 Skip();
@@ -1495,15 +1452,15 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Ast.Expression GroupedExpr(IN next = IN.Plain) => TryGroupedExpr(next) ?? throw NoParse("GroupedExpr");
+        private Ast.Expression GroupedExpr(IN next = IN.Both) => TryGroupedExpr(next) ?? throw NoParse("GroupedExpr");
 
-        private Ast.Expression? TryGroupedExpr(IN next = IN.Plain)
+        private Ast.Expression? TryGroupedExpr(IN next = IN.Both)
         {
-            Skip();
+            var nl = Skip();
 
             var start = GetStart();
 
-            if (Check('('))
+            if (Check('(') && (next == IN.Both || !nl))
             {
                 Eat(1);
 
@@ -1511,7 +1468,7 @@ namespace Joke.Front.Pony
 
                 values.Add(RawSeq());
 
-                while (SkipMatch(','))
+                while (TrySkipMatch(','))
                 {
                     values.Add(RawSeq());
                 }
@@ -1647,7 +1604,7 @@ namespace Joke.Front.Pony
                     }
                     parameters.Add(Parameter());
                 }
-                while (SkipMatch(','));
+                while (TrySkipMatch(','));
             }
             Match(')');
 
@@ -1670,7 +1627,7 @@ namespace Joke.Front.Pony
 
         private Ast.Expression? TryDefaultArg()
         {
-            if (SkipMatch('='))
+            if (TrySkipMatch('='))
             {
                 return Infix();
             }
@@ -1692,7 +1649,7 @@ namespace Joke.Front.Pony
 
             Ast.Expression? value = null;
 
-            if (SkipMatch('='))
+            if (TrySkipMatch('='))
             {
                 value = Infix();
             }
@@ -1740,57 +1697,12 @@ namespace Joke.Front.Pony
 
             var start = GetStart();
 
-            if (CheckKeyword("this"))
+            if (CheckAndMatchKeyword("this"))
             {
-                MatchKeyword("this");
-
                 return new Ast.ThisType(Span(start));
             }
             
             return null;
-        }
-
-        private (int, string) IdAlike(bool withHash = false)
-        {
-            Skip();
-            var start = GetStart();
-            if (withHash && Check('#'))
-            {
-                Eat(1);
-            }
-            if (scanner.IsLetter_())
-            {
-                Eat(1);
-                while (scanner.IsLetterOrDigit_())
-                {
-                    Eat(1);
-                }
-            }
-
-            return (start, Span(start).ToString());
-        }
-
-        private void MatchKeyword(string keyword)
-        {
-            var (start, prefix) = IdAlike();
-
-            if (prefix != keyword)
-            {
-                SetStart(start);
-
-                throw new NotImplementedException();
-            }
-        }
-
-        private bool CheckKeyword(string keyword)
-        {
-            var (start, prefix) = IdAlike();
-
-            var check = prefix == keyword;
-
-            SetStart(start);
-
-            return check;
         }
 
         private (int, string) KeywordPrefix(bool withHash = false)
@@ -1866,7 +1778,7 @@ namespace Joke.Front.Pony
 
                 var types = new List<Ast.Type>() { InfixType() };
 
-                while (SkipMatch(','))
+                while (TrySkipMatch(','))
                 {
                     types.Add(InfixType());
                 }
@@ -1892,7 +1804,7 @@ namespace Joke.Front.Pony
 
             var intersections = new List<Ast.Type>() { IntersectionType() };
 
-            while (SkipMatch('|'))
+            while (TrySkipMatch('|'))
             {
                 intersections.Add(IntersectionType());
             }
@@ -1911,7 +1823,7 @@ namespace Joke.Front.Pony
 
             var primaries = new List<Ast.Type>() { Type() };
 
-            while (SkipMatch('&'))
+            while (TrySkipMatch('&'))
             {
                 primaries.Add(Type());
             }
@@ -1932,7 +1844,7 @@ namespace Joke.Front.Pony
             var name = TryIdentifier();
             if (name != null)
             {
-                if (SkipMatch('.'))
+                if (TrySkipMatch('.'))
                 {
                     var name2 = Identifier();
 
@@ -1973,8 +1885,8 @@ namespace Joke.Front.Pony
 
             if (Check('{') || Check("@{"))
             {
-                var bare = At() == '@';
-                Eat(bare ? 2 : 1);
+                var bare = SkipIff('@');
+                Eat(1);
 
                 var start = GetStart();
 
@@ -1982,13 +1894,12 @@ namespace Joke.Front.Pony
                 var identifier = TryIdentifier();
                 var typeParameters = TryTypeParameters();
 
-                
-                Skip();
-                Match('(');
+
+                SkipMatchPunctuation('(');
 
                 IReadOnlyList<Ast.Type>? argumentTypes = System.Array.Empty<Ast.Type>();
 
-                if (!SkipMatch(')'))
+                if (!TrySkipMatch(')'))
                 {
                     argumentTypes = TypeList();
                     Skip();
@@ -1996,8 +1907,8 @@ namespace Joke.Front.Pony
                 }
 
                 var @return = TryColonType();
-                var partial = SkipMatch('?');
-                SkipMatch('}');
+                var partial = TrySkipMatch('?');
+                SkipMatchPunctuation('}');
 
                 var cap = TryCapability();
                 if (cap == null)
@@ -2007,6 +1918,7 @@ namespace Joke.Front.Pony
 
                 return new Ast.LambdaType(
                     Span(start),
+                    bare,
                     capability,
                     identifier,
                     typeParameters,
@@ -2028,13 +1940,13 @@ namespace Joke.Front.Pony
         {
             var parameters = new List<Ast.TypeParameter>();
 
-            if (SkipMatch('['))
+            if (TrySkipMatch('['))
             {
                 do
                 {
                     parameters.Add(TypeParameter());
                 }
-                while (SkipMatch(','));
+                while (TrySkipMatch(','));
 
                 Match(']');
             }
@@ -2054,7 +1966,7 @@ namespace Joke.Front.Pony
 
             Ast.Type? @default = null;
 
-            if (SkipMatch('='))
+            if (TrySkipMatch('='))
             {
                 @default = Type();
             }
@@ -2064,11 +1976,12 @@ namespace Joke.Front.Pony
 
         private IReadOnlyList<Ast.Type> TypeList()
         {
-            var arguments = new List<Ast.Type>() { Type() };
-            while (SkipMatch(','))
+            var arguments = new List<Ast.Type>();
+            do
             {
                 arguments.Add(Type());
             }
+            while (TrySkipMatch(','));
 
             return arguments;
         }
@@ -2077,7 +1990,7 @@ namespace Joke.Front.Pony
         {
             for (var i = 0; i < n; ++i)
             {
-                if (CheckHexDigit())
+                if (IsHexDigit())
                 {
                     Eat(1);
                 }
@@ -2095,11 +2008,8 @@ namespace Joke.Front.Pony
             switch (At())
             {
                 case '\"':
-                    Eat(1);
-                    break;
+                case '\'':
                 case '\\':
-                    Eat(1);
-                    break;
                 case 'a':
                 case 'b':
                 case 'e':
@@ -2198,7 +2108,7 @@ namespace Joke.Front.Pony
             Match("\"\"\"");
             while (More())
             {
-                if (scanner.Check("\"\"\""))
+                if (scanner.TryMatch("\"\"\""))
                 {
                     Eat(3);
                     while (More() && At() == '\"')
@@ -2246,16 +2156,6 @@ namespace Joke.Front.Pony
             }
 
             return null;
-        }
-
-        private NotYetException NotYet(string message)
-        {
-            return new NotYetException(message);
-        }
-
-        private NoParseException NoParse(string message)
-        {
-            return new NoParseException(message);
         }
     }
 }

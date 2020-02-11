@@ -6,7 +6,12 @@ namespace Joke.Front.Pony
     {
         public static bool IsKeyword(ISpan span)
         {
-            return Array.BinarySearch(keywords, span.Value.ToString()) >= 0;
+            return IsKeyword(span.Value.ToString());
+        }
+
+        public static bool IsKeyword(string maybeKeyword)
+        {
+            return Array.BinarySearch(keywords, maybeKeyword) >= 0;
         }
 
         private static string[] keywords =
