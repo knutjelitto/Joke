@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace Joke.Front.Pony.Lex
 {
@@ -15,25 +13,30 @@ namespace Joke.Front.Pony.Lex
         /// <summary>
         /// The current index into to <see cref="content"/> array.
         /// </summary>
-        public int index;
+        public int next;
 
         /// <summary>
-        /// Globally marks the start of a new token.
+        /// Globally marks the start of the whitespace clutter prefixing a token.
         /// </summary>
-        public int start;
+        public int clutter;
+
+        /// <summary>
+        /// Globally marks the start of a token payload.
+        /// </summary>
+        public int payload;
 
         public Tokenizer(ISource source)
         {
             Source = source;
 
             content = Source.Content;
-            index = 0;
             limit = content.Length;
+            next = 0;
+            clutter = 0;
+            payload = 0;
         }
 
         public ISource Source { get; }
-
-        private char this[int offset] => content[index+offset];
 
         public IEnumerable<Token> Tokens()
         {
@@ -48,17 +51,19 @@ namespace Joke.Front.Pony.Lex
 
         public Token Next()
         {
+            clutter = next;
+
             var nl = Skip();
 
-            start = index;
+            payload = next;
 
-            Debug.Assert(index <= limit);
-            if (index == limit)
+            Debug.Assert(next <= limit);
+            if (next == limit)
             {
                 return Token(TK.Eof);
             }
             
-            switch (content[index])
+            switch (content[next])
             {
                 case '"':
                     return String();
@@ -67,121 +72,158 @@ namespace Joke.Front.Pony.Lex
                 case '#':
                     return CapOrConstant();
                 case '(':
-                    index += 1;
+                    next += 1;
                     return Token(nl ? TK.LParenNew : TK.LParen);
                 case ')':
-                    index += 1;
+                    next += 1;
                     return Token(TK.RParen);
                 case '[':
-                    index += 1;
+                    next += 1;
                     return Token(nl ? TK.LSquareNew : TK.LSquare);
                 case ']':
-                    index += 1;
+                    next += 1;
                     return Token(TK.RSquare);
                 case '{':
-                    index += 1;
+                    next += 1;
                     return Token(TK.LBrace);
                 case '}':
-                    index += 1;
+                    next += 1;
                     return Token(TK.RBrace);
                 case ',':
-                    index += 1;
+                    next += 1;
                     return Token(TK.Comma);
+                case '~':
+                    next += 1;
+                    return Token(TK.Tilde);
                 case ':':
-                    index += 1;
+                    next += 1;
                     return Token(TK.Colon);
                 case ';':
-                    index += 1;
+                    next += 1;
                     return Token(TK.Semi);
                 case '?':
-                    index += 1;
+                    next += 1;
                     return Token(TK.Question);
                 case '|':
-                    index += 1;
+                    next += 1;
                     return Token(TK.Pipe);
                 case '^':
-                    index += 1;
+                    next += 1;
                     return Token(TK.Ephemeral);
                 case '&':
-                    index += 1;
+                    next += 1;
                     return Token(TK.ISectType);
+                case '\\':
+                    next += 1;
+                    return Token(TK.Backslash);
 
                 case '.':
-                    index += 1;
-                    if (index < limit)
+                    next += 1;
+                    if (next < limit)
                     {
-                        if (content[index] == '>')
+                        if (content[next] == '>')
                         {
-                            index += 1;
+                            next += 1;
                             return Token(TK.Chain);
                         }
-                        if (content[index] == '.' && index + 1 < limit && content[index+1] == '.')
+                        if (content[next] == '.' && next + 1 < limit && content[next + 1] == '.')
                         {
-                            index += 2;
+                            next += 2;
                             return Token(TK.Ellipsis);
                         }
                     }
                     return Token(TK.Dot);
 
                 case '@':
-                    index += 1;
-                    if (index < limit && content[index] == '{')
+                    next += 1;
+                    if (next < limit && content[next] == '{')
                     {
-                        index += 1;
+                        next += 1;
                         return Token(TK.AtLBrace);
                     }
                     return Token(TK.At);
 
                 case '+':
-                    index += 1;
-                    if (index < limit && content[index] == '~')
+                    next += 1;
+                    if (next < limit && content[next] == '~')
                     {
-                        index += 1;
+                        next += 1;
                         return Token(TK.PlusTilde);
                     }
                     return Token(TK.Plus);
 
                 case '-':
-                    index += 1;
-                    if (index < limit)
+                    next += 1;
+                    if (next < limit)
                     {
-                        if (content[index] == '~')
+                        if (content[next] == '~')
                         {
-                            index += 1;
+                            next += 1;
                             return Token(nl ? TK.MinusTildeNew : TK.MinusTilde);
                         }
-                        if (content[index] == '>')
+                        if (content[next] == '>')
                         {
-                            index += 1;
+                            next += 1;
                             return Token(TK.Arrow);
                         }
                     }
                     return Token(nl ? TK.Minus : TK.MinusNew);
 
                 case '/':
-                    index += 1;
-                    if (index < limit && content[index] == '~')
+                    next += 1;
+                    if (next < limit && content[next] == '~')
                     {
-                        index += 1;
+                        next += 1;
                         return Token(TK.DivideTilde);
                     }
                     return Token(TK.Divide);
 
-                case '=':
-                    index += 1;
-                    if (index < limit)
+                case '*':
+                    next += 1;
+                    if (next < limit && content[next] == '~')
                     {
-                        if (content[index] == '>')
+                        next += 1;
+                        return Token(TK.MultiplyTilde);
+                    }
+                    return Token(TK.Multiply);
+
+                case '%':
+                    next += 1;
+                    if (next < limit)
+                    {
+                        if (content[next] == '~')
                         {
-                            index += 1;
+                            next += 1;
+                            return Token(TK.RemTilde);
+                        }
+                        if (content[next] == '%')
+                        {
+                            next += 1;
+                            if (next < limit && content[next] == '~')
+                            {
+                                next += 1;
+                                return Token(TK.ModTilde);
+                            }
+                            return Token(TK.Mod);
+                        }
+                    }
+                    return Token(TK.Rem);
+
+                case '=':
+                    next += 1;
+                    if (next < limit)
+                    {
+                        if (content[next] == '>')
+                        {
+                            next += 1;
                             return Token(TK.DblArrow);
                         }
-                        else if (content[index] == '=')
+                        else if (content[next] == '=')
                         {
-                            index += 1;
-                            if (index < limit && content[index] == '~')
+                            next += 1;
+                            if (next < limit && content[next] == '~')
                             {
-                                index += 1;
+                                next += 1;
                                 return Token(TK.EqTilde);
                             }
                             return Token(TK.Eq);
@@ -190,15 +232,15 @@ namespace Joke.Front.Pony.Lex
                     return Token(TK.Assign);
 
                 case '!':
-                    index += 1;
-                    if (index < limit)
+                    next += 1;
+                    if (next < limit)
                     {
-                        if (content[index] == '=')
+                        if (content[next] == '=')
                         {
-                            index += 1;
-                            if (index < limit && content[index] == '~')
+                            next += 1;
+                            if (next < limit && content[next] == '~')
                             {
-                                index += 1;
+                                next += 1;
                                 return Token(TK.NeTilde);
                             }
                             return Token(TK.Ne);
@@ -207,35 +249,35 @@ namespace Joke.Front.Pony.Lex
                     return Token(TK.Aliased);
 
                 case '<':
-                    index += 1;
-                    if (index < limit)
+                    next += 1;
+                    if (next < limit)
                     {
-                        if (content[index] == ':')
+                        if (content[next] == ':')
                         {
-                            index += 1;
+                            next += 1;
                             return Token(TK.Subtype);
                         }
-                        if (content[index] == '~')
+                        if (content[next] == '~')
                         {
-                            index += 1;
+                            next += 1;
                             return Token(TK.LtTilde);
                         }
-                        if (content[index] == '=')
+                        if (content[next] == '=')
                         {
-                            index += 1;
-                            if (index < limit && content[index] == '~')
+                            next += 1;
+                            if (next < limit && content[next] == '~')
                             {
-                                index += 1;
+                                next += 1;
                                 return Token(TK.LeTilde);
                             }
                             return Token(TK.Le);
                         }
-                        if (content[index] == '<')
+                        if (content[next] == '<')
                         {
-                            index += 1;
-                            if (index < limit && content[index] == '~')
+                            next += 1;
+                            if (next < limit && content[next] == '~')
                             {
-                                index += 1;
+                                next += 1;
                                 return Token(TK.LShiftTilde);
                             }
                             return Token(TK.LShift);
@@ -244,30 +286,30 @@ namespace Joke.Front.Pony.Lex
                     return Token(TK.Lt);
 
                 case '>':
-                    index += 1;
-                    if (index < limit)
+                    next += 1;
+                    if (next < limit)
                     {
-                        if (content[index] == '~')
+                        if (content[next] == '~')
                         {
-                            index += 1;
+                            next += 1;
                             return Token(TK.Gt);
                         }
-                        if (content[index] == '=')
+                        if (content[next] == '=')
                         {
-                            index += 1;
-                            if (index < limit && content[index] == '~')
+                            next += 1;
+                            if (next < limit && content[next] == '~')
                             {
-                                index += 1;
+                                next += 1;
                                 return Token(TK.GeTilde);
                             }
                             return Token(TK.Ge);
                         }
-                        if (content[index] == '>')
+                        if (content[next] == '>')
                         {
-                            index += 1;
-                            if (index < limit && content[index] == '~')
+                            next += 1;
+                            if (next < limit && content[next] == '~')
                             {
-                                index += 1;
+                                next += 1;
                                 return Token(TK.RShiftTilde);
                             }
                             return Token(TK.RShift);
@@ -294,16 +336,16 @@ namespace Joke.Front.Pony.Lex
         {
             do
             {
-                index += 1;
+                next += 1;
             }
-            while (IsLetterOrDigit_());
+            while (next < limit && IsLetterOrDigit_());
 
-            while (content[index] == '\'')
+            while (next < limit && content[next] == '\'')
             {
-                index += 1;
+                next += 1;
             }
 
-            var tk = Keywords.Classify(content.Substring(start, index - start));
+            var tk = Keywords.Classify(content.Substring(payload, next - payload));
 
             return Token(tk);
         }
@@ -312,15 +354,15 @@ namespace Joke.Front.Pony.Lex
         {
             do
             {
-                index += 1;
+                next += 1;
             }
             while (IsLetter());
 
-            var tk = Keywords.Classify(content.Substring(start, index - start));
+            var tk = Keywords.Classify(content.Substring(payload, next - payload));
 
             if (tk == TK.Identifier)
             {
-                index = start + 1;
+                next = payload + 1;
                 return Token(TK.Constant);
             }
 
@@ -329,22 +371,22 @@ namespace Joke.Front.Pony.Lex
 
         private Token Number()
         {
-            if (content[index] == '0')
+            if (content[next] == '0')
             {
-                index += 1;
-                if (index < limit)
+                next += 1;
+                if (next < limit)
                 {
-                    if (content[index] == 'x' || content[index] == 'X')
+                    if (content[next] == 'x' || content[next] == 'X')
                     {
-                        index += 1;
+                        next += 1;
                         // Hex
-                        if (index == limit || !IsHexDigit())
+                        if (next == limit || !IsHexDigit())
                         {
                             throw NoScan("incomplete hex number");
                         }
                         do
                         {
-                            index += 1;
+                            next += 1;
                         }
                         while (IsHexDigit());
 
@@ -354,77 +396,111 @@ namespace Joke.Front.Pony.Lex
             }
             else
             {
-                index += 1;
+                next += 1;
             }
 
-            while (index < limit && IsDigit())
+            while (next < limit && IsDigit())
             {
-                index += 1;
+                next += 1;
             }
 
-            if (IsLetter() || content[index] == '.')
+            var floating = false;
+
+            if (next < limit)
             {
-                throw NotYet("complicated number");
+                if (content[next] == '.')
+                {
+                    floating = true;
+                    next += 1;
+                    if (next == limit || !IsDigit())
+                    {
+                        throw NoScan("incomplete floating point number");
+                    }
+                    do
+                    {
+                        next += 1;
+                    }
+                    while (next < limit && IsDigit());
+                }
+
+                if (next < limit && (content[next] == 'e' || content[next] == 'E'))
+                {
+                    floating = true;
+                    next += 1;
+                    if (next < limit && (content[next] == '-' || content[next] == '+'))
+                    {
+                        next += 1;
+                    }
+                    if (next == limit || !IsDigit())
+                    {
+                        throw NoScan("incomplete floating point number");
+                    }
+                    do
+                    {
+                        next += 1;
+                    }
+                    while (next < limit && IsDigit());
+                }
             }
 
-            return Token(TK.Int);
+            return Token(floating ? TK.Float : TK.Int);
         }
 
         private Token String()
         {
             Debug.Assert(StartsWith("\""));
 
-            if (index + 3 <= limit && content[index+1] == '"' && content[index+2] == '"')
+            if (next + 3 <= limit && content[next+1] == '"' && content[next+2] == '"')
             {
                 return DocString();
             }
 
-            index += 1;
-            while (index < limit)
+            next += 1;
+            while (next < limit)
             {
-                if (content[index] == '"')
+                if (content[next] == '"')
                 {
                     break;
                 }
-                if (content[index] == '\\')
+                if (content[next] == '\\')
                 {
                     MatchEscape("string literal");
                 }
                 else
                 {
-                    index += 1;
+                    next += 1;
                 }
             }
-            if (index == limit)
+            if (next == limit)
             {
                 throw NoScan("unterminated string literal");
             }
-            Debug.Assert(content[index] == '"');
-            index += 1;
+            Debug.Assert(content[next] == '"');
+            next += 1;
 
             return Token(TK.String);
         }
 
         private Token Char()
         {
-            Debug.Assert(content[index] == '\'');
-            index += 1;
-            if (index == limit)
+            Debug.Assert(content[next] == '\'');
+            next += 1;
+            if (next == limit)
             {
                 throw NoScan("unterminated character literal");
             }
-            if (content[index] == '\\')
+            if (content[next] == '\\')
             {
                 MatchEscape("character literal");
             }
             else
             {
-                index += 1;
+                next += 1;
             }
 
-            if (index < limit && content[index] == '\'')
+            if (next < limit && content[next] == '\'')
             {
-                index += 1;
+                next += 1;
                 return Token(TK.Char);
             }
             throw NoScan("unterminated character literal");
@@ -432,20 +508,23 @@ namespace Joke.Front.Pony.Lex
 
         private void MatchEscape(string inWhat)
         {
-            index += 1;
+            Debug.Assert(content[next] == '\\');
 
-            if (index == limit)
+            next += 1;
+
+            if (next == limit)
             {
                 throw NoScan($"incomplete escape sequence in {inWhat}");
             }
 
-            Debug.Assert(index < limit);
+            Debug.Assert(next < limit);
 
-            switch (content[index])
+            switch (content[next])
             {
                 case '\"':
                 case '\'':
                 case '\\':
+                case '0':
                 case 'a':
                 case 'b':
                 case 'e':
@@ -454,18 +533,18 @@ namespace Joke.Front.Pony.Lex
                 case 'r':
                 case 't':
                 case 'v':
-                    index += 1;
+                    next += 1;
                     break;
                 case 'x':
-                    index += 1;
+                    next += 1;
                     MatchHexN(2, inWhat);
                     break;
                 case 'u':
-                    index += 1;
+                    next += 1;
                     MatchHexN(4, inWhat);
                     break;
                 case 'U':
-                    index += 1;
+                    next += 1;
                     MatchHexN(6, inWhat);
                     break;
                 default:
@@ -479,7 +558,7 @@ namespace Joke.Front.Pony.Lex
             {
                 if (IsHexDigit())
                 {
-                    index += 1;
+                    next += 1;
                 }
                 else
                 {
@@ -492,23 +571,23 @@ namespace Joke.Front.Pony.Lex
         {
             Debug.Assert(StartsWith("\"\"\""));
 
-            index += 3;
+            next += 3;
 
             var done = false;
-            while (!done && index + 3 <= limit)
+            while (!done && next + 3 <= limit)
             {
-                if (content[index] == '"' && content[index+1] == '"' && content[index+2] == '"')
+                if (content[next] == '"' && content[next+1] == '"' && content[next+2] == '"')
                 {
-                    index += 3;
+                    next += 3;
 
-                    while (index < limit && content[index] == '"')
+                    while (next < limit && content[next] == '"')
                     {
-                        index += 1;
+                        next += 1;
                     }
                     done = true;
                     break;
                 }
-                index += 1;
+                next += 1;
             }
             if (!done)
             {
@@ -524,105 +603,92 @@ namespace Joke.Front.Pony.Lex
 
         private bool IsLetter()
         {
-            var ch = content[index];
+            var ch = content[next];
 
             return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z';
         }
 
         private bool IsLetter_()
         {
-            var ch = content[index];
+            var ch = content[next];
 
             return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
         }
 
         private bool IsLetterOrDigit()
         {
-            var ch = content[index];
+            var ch = content[next];
 
             return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9';
         }
 
         private bool IsLetterOrDigit_()
         {
-            var ch = content[index];
+            var ch = content[next];
 
             return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9' || ch == '_';
         }
 
         private bool IsDigit()
         {
-            var ch = content[index];
+            var ch = content[next];
 
             return '0' <= ch && ch <= '9';
         }
 
         private bool IsHexDigit()
         {
-            var ch = content[index];
+            var ch = content[next];
 
             return '0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || 'A' <= ch && ch <= 'F';
         }
 
         private Token Token(TK kind)
         {
-            return new Token(start, index - start, kind);
+            return new Token(kind, clutter, payload, next);
         }
 
         private bool StartsWith(string start)
         {
-            return index + start.Length <= limit && content.Substring(index, start.Length) == start;
+            return next + start.Length <= limit && content.Substring(next, start.Length) == start;
         }
 
         private bool Skip()
         {
             var done = false;
             var nl = false;
-            while (index < limit && !done)
+            while (next < limit && !done)
             {
-                switch (content[index])
+                switch (content[next])
                 {
                     case '\n':
                         nl = true;
-                        index += 1;
+                        next += 1;
                         break;
                     case '\t':
                     case '\r':
                     case ' ':
-                        index += 1;
+                        next += 1;
                         break;
                     case '/':
-                        if (index + 1 < limit)
+                        if (next + 1 < limit)
                         {
-                            if (content[index + 1] == '/')
+                            if (content[next + 1] == '/')
                             {
-                                index += 2;
-                                while (index < limit && content[index] != '\n')
+                                next += 2;
+                                while (next < limit && content[next] != '\n')
                                 {
-                                    index += 1;
+                                    next += 1;
                                 }
-                                if (index < limit)
+                                if (next < limit)
                                 {
                                     nl = true;
                                 }
                                 break;
                             }
-                            if (content[index + 1] == '*')
+                            if (content[next + 1] == '*')
                             {
-                                index += 2;
-                                while (index + 1 < limit && (content[index] != '*' || content[index + 1] != '/'))
-                                {
-                                    nl = nl || content[index] == '\n';
-                                    index += 1;
-                                }
-                                if (index + 1 < limit)
-                                {
-                                    index += 2;
-                                }
-                                else
-                                {
-                                    throw NoScan("unexpected EOF in multi line comment");
-                                }
+                                nl = nl | SkipMulitlineComment();
                                 break;
                             }
                         }
@@ -632,6 +698,37 @@ namespace Joke.Front.Pony.Lex
                         done = true;
                         break;
                 }
+            }
+
+            return nl;
+        }
+
+        private bool SkipMulitlineComment()
+        {
+            Debug.Assert(next + 1 < limit && content[next] == '/' && content[next + 1] == '*');
+
+            var nl = false;
+
+            next += 2;
+            while (next + 1 < limit && (content[next] != '*' || content[next + 1] != '/'))
+            {
+                if (content[next] == '/' && content[next + 1] == '*')
+                {
+                    nl = nl | SkipMulitlineComment();
+                }
+                else
+                {
+                    nl = nl | content[next] == '\n';
+                    next += 1;
+                }
+            }
+            if (next + 1 < limit)
+            {
+                next += 2;
+            }
+            else
+            {
+                throw NoScan("unexpected EOF in multi line comment");
             }
 
             return nl;

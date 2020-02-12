@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
+using System.Text;
 using Joke.Front;
 using Joke.Front.Pony;
 using Joke.Front.Pony.Lex;
@@ -27,7 +28,7 @@ namespace Joke
             int no = 0;
             int lines = 0;
 
-            // foreach (var ponyFile in EnumeratePonies())
+            //foreach (var ponyFile in EnumeratePonies())
             foreach (var ponyFile in EnumeratePackagePonies())
             {
                 no += 1;
@@ -56,14 +57,47 @@ namespace Joke
             {
                 var tokens = tokenizer.Tokens().ToList();
 
-                return true;
+                var builder = new StringBuilder();
+                foreach (var token in tokens)
+                {
+                    builder.Append(token.GetClutter(source));
+                    builder.Append(token.GetPayload(source));
+                }
+                var content = source.Content;
+                var rebuild = builder.ToString();
+
+                Debug.Assert(content == rebuild);
+
+                var parser = new PonyParser(tokens);
+
+                try
+                {
+                    parser.Module();
+
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    var (line, col) = source.GetLineCol(parser.Offset);
+
+                    ErrorMessage(e, line, col);
+
+                    return false;
+                }
             }
             catch (Exception e)
             {
-                var (line, col) = source.GetLineCol(tokenizer.index);
+                var (line, col) = source.GetLineCol(tokenizer.next);
 
+                ErrorMessage(e, line, col);
+
+                return false;
+            }
+
+            void ErrorMessage(Exception e, int line, int col)
+            {
                 var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $" - {e.Message}";
-                Console.WriteLine($"({line},{col}): can't continue @{tokenizer.index}{msg}");
+                Console.WriteLine($"({line},{col}): can't continue @{tokenizer.next}{msg}");
                 var arrow = new string('-', col - 1) + "^";
                 if (line > 1)
                 {
@@ -73,13 +107,12 @@ namespace Joke
                 Console.WriteLine($" |{arrow}");
                 Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");
                 var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
+                //var at = e.StackTrace;
                 Console.WriteLine($"{at}");
-
-                return false;
             }
 #else
             var scanner = new PonyScanner(source);
-            var parser = new PonyParser(scanner);
+            var parser = new PonyParser2(scanner);
 
             try
             {
@@ -146,40 +179,81 @@ namespace Joke
             repository = temp.Dir("ponyc");
             GitRunner.Ensure("https://github.com/ponylang/ponyc.git", repository);
 
-            var ponySources = temp.Dir("pony-source");
-            ponySources.Ensure();
+            repository = temp.Dir("pony-source");
+            repository.Ensure();
 
-            repository = ponySources.Dir("ponyup");
-            GitRunner.Ensure("https://github.com/ponylang/ponyup.git", repository);
+            string[] sources = new string[] 
+            {
+                "https://github.com/ponylang/ponyup.git",
+                "https://github.com/ponylang/corral.git",
+                "https://github.com/ponylang/pony-stable.git",
+                "https://github.com/ponylang/appdirs.git",
+                "https://github.com/ponylang/net_ssl.git",
+                "https://github.com/ponylang/http.git",
+                "https://github.com/ponylang/reactive-streams.git",
+                "https://github.com/WallarooLabs/pony-kafka.git",
+                "https://github.com/dougmacdoug/ponylang-linal.git",
+                "https://github.com/WallarooLabs/wallaroo.git",
+                "https://github.com/jemc/pony-zmq.git",
+                "https://github.com/Theodus/jennet.git",
+                "https://github.com/jtfmumm/novitiate.git",
+                "https://github.com/mfelsche/ponycheck.git",
+                "https://github.com/jemc/jylis.git",
+                "https://github.com/oraoto/pony-websocket.git",
+                "https://github.com/jemc/ponycc.git",
+                "https://github.com/jemc/pony-crdt.git",
+                "https://github.com/SeanTAllen/pony-msgpack.git",
+                "https://github.com/sylvanc/pony-lecture.git",
+                "https://github.com/jemc/pony-sodium.git",
+                "https://github.com/jemc/pony-capnp.git",
+                "https://github.com/kulibali/kiuatan.git",
+                "https://github.com/lisael/pony-postgres.git",
+                "https://github.com/mfelsche/ponyfmt.git",
+                "https://github.com/joncfoo/pony-sqlite.git",
+                "https://github.com/autodidaddict/ponymud.git",
+                "https://github.com/ponylang/changelog-tool.git",
+                "https://github.com/jemc/pony-pegasus.git",
+                "https://github.com/jemc/pony-llvm.git",
+                "https://github.com/krig/tinyhorse.git",
+                "https://github.com/sylvanc/peg.git",
+                "https://github.com/EpicEric/pony-mqtt.git",
+                "https://github.com/jemc/pony-rope.git",
+                "https://github.com/BrianOtto/pony-gui.git",
+                "https://github.com/jemc/pony-jason.git",
+                "https://github.com/BrianOtto/pony-win32.git",
+                "https://github.com/jkleiser/toy-forth-in-pony.git",
+                "https://github.com/emilbayes/pony-endianness.git",
+                "https://github.com/sgebbie/pony-graphs.git",
+                "https://github.com/lisael/pied.git",
+                "https://github.com/ponylang/regex.git",
+                "https://github.com/mfelsche/pony-maybe.git",
+                "https://github.com/sgebbie/pony-statsd.git",
+                "https://github.com/jemc/pony-unsafe.git",
+                "https://github.com/lisael/pony-bitarray.git",
+                "https://github.com/lisael/pony-bm.git",
+                "https://github.com/slayful/sagittarius.git",
+                "https://github.com/ponylang/glob.git",
+                "https://github.com/jtfmumm/pony-logic.git",
+                "https://github.com/sgebbie/pony-tty.git",
+                "https://github.com/jtfmumm/pony-queue.git",
+                "https://github.com/mfelsche/pony-kv.git",
+                "https://github.com/elmattic/pony-toml.git",
+                "https://github.com/krig/pony-sform.git",
+                "https://github.com/jemc/pony-dict.git",
+                "https://github.com/cquinn/ponycli.git",
+                "https://github.com/niclash/pink2web.git",
+                "https://github.com/andrenth/pony-uuid.git",
+                "https://github.com/kulibali/kiuatan-calculator.git",
+                "https://github.com/Theodus/pony-stats.git",
+                "https://github.com/jtfmumm/microkanren-pony.git",
+                "https://github.com/ergl/sss.git",
+            };
 
-            repository = ponySources.Dir("corral");
-            GitRunner.Ensure("https://github.com/ponylang/corral.git", repository);
-
-            repository = ponySources.Dir("pony-stable");
-            GitRunner.Ensure("https://github.com/ponylang/pony-stable.git", repository);
-
-            repository = ponySources.Dir("appdirs");
-            GitRunner.Ensure("https://github.com/ponylang/appdirs.git", repository);
-
-            repository = ponySources.Dir("net_ssl");
-            GitRunner.Ensure("https://github.com/ponylang/net_ssl.git", repository);
-
-            repository = ponySources.Dir("http");
-            GitRunner.Ensure("https://github.com/ponylang/http.git", repository);
-
-            repository = ponySources.Dir("reactive-streams");
-            GitRunner.Ensure("https://github.com/ponylang/reactive-streams.git", repository);
-
-            repository = ponySources.Dir("pony-kafka");
-            GitRunner.Ensure("https://github.com/WallarooLabs/pony-kafka.git", repository);
-
-            repository = ponySources.Dir("ponylang-linal");
-            GitRunner.Ensure("https://github.com/dougmacdoug/ponylang-linal.git", repository);
-
-            repository = ponySources.Dir("wallaroo");
-            GitRunner.Ensure("https://github.com/WallarooLabs/wallaroo.git", repository);
-
-            // 
+            foreach (var url in sources)
+            {
+                var name = Path.GetFileNameWithoutExtension(url);
+                GitRunner.Ensure(url, repository.Dir(name));
+            }
         }
     }
 }

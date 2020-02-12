@@ -22,6 +22,7 @@
         RSquare,            // ']'
 
         Comma,              // ','
+        Tilde,              // '~'
         Colon,              // ':'
         Semi,               // ';'
         Question,           // '?'
@@ -29,6 +30,7 @@
         Ephemeral,          // '^'
         ISectType,          // '&'
         Constant,           // '#'
+        Backslash,          // '\'
 
         At,                 // '@'
         AtLBrace,           // '@{'
@@ -72,6 +74,14 @@
 
         Divide,             // '/'
         DivideTilde,        // '/~'
+
+        Multiply,           // '*'
+        MultiplyTilde,      // '*~'
+
+        Rem,                // '%'
+        RemTilde,           // '%~'
+        Mod,                // '%%'
+        ModTilde,           // '%%~'
 
         Actor,
         As,

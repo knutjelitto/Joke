@@ -1,20 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Diagnostics;
 
 namespace Joke.Front.Pony.Lex
 {
     public struct Token
     {
-        public Token(int start, int length, TK kind) 
+        public Token(TK kind, int clutter, int payload, int next)
         {
-            Start = start;
-            Length = length;
+            Debug.Assert(clutter <= payload);
+            Debug.Assert(payload <= next);
+
             Kind = kind;
+            Clutter = clutter;
+            Payload = payload;
+            Next = next;
         }
 
-        public readonly int Start;
-        public readonly int Length;
         public readonly TK Kind;
+        public readonly int Clutter;
+        public readonly int Payload;
+        public readonly int Next;
+
+        public string GetClutter(ISource source)
+        {
+            return source.GetText(Clutter, Payload - Clutter);
+        }
+
+        public string GetPayload(ISource source)
+        {
+            return source.GetText(Payload, Next - Payload);
+        }
     }
 }
