@@ -8,22 +8,70 @@
 
         String,
         DocString,
+        Char,
+        Int,
+        Float,
 
-        LBrace,     // '{'
-        RBrace,     // '}'
-        LParen,     // '('
-        LParenNew,  // <nl>'('
-        RParen,     // ')'
-        LSquare,    // '['
-        LSquareNew, // <nl>'['
-        RSquare,    // ']'
+        LBrace,             // '{'
+        RBrace,             // '}'
+        LParen,             // '('
+        LParenNew,          // <nl>'('
+        RParen,             // ')'
+        LSquare,            // '['
+        LSquareNew,         // <nl>'['
+        RSquare,            // ']'
 
-        Colon,      // ':'
+        Comma,              // ','
+        Colon,              // ':'
+        Semi,               // ';'
+        Question,           // '?'
+        Pipe,               // '|'
+        Ephemeral,          // '^'
+        ISectType,          // '&'
+        Constant,           // '#'
 
-        DblArrow,   // '=>'
-        EqTilde,    // '==~'
-        Eq,         // '=='
-        Assign,     // '='
+        At,                 // '@'
+        AtLBrace,           // '@{'
+
+        Dot,                // '.'
+        Chain,              // '.>'
+        Ellipsis,           // '...'
+
+        Assign,             // '='
+        DblArrow,           // '=>'
+        Eq,                 // '=='
+        EqTilde,            // '==~'
+
+        Aliased,            // '!'
+        Ne,                 // '!='
+        NeTilde,            // '!=~'
+
+        Lt,                 // '<'
+        Subtype,            // '<:'
+        LtTilde,            // '<~'
+        Le,                 // '<='
+        LeTilde,            // '<=~'
+        LShift,             // '<<'
+        LShiftTilde,        // '<<~'
+
+        Gt,                 // '>'
+        GtTilde,            // '>~'
+        Ge,                 // '>='
+        GeTilde,            // '>=~'
+        RShift,             // '>>'
+        RShiftTilde,        // '>>~'
+
+        Plus,               // '+'
+        PlusTilde,          // '+~'
+
+        Minus,              // '-'
+        MinusNew,           // <nl>'-'
+        Arrow,              // '->'
+        MinusTilde,         // '-~'
+        MinusTildeNew,      // <nl>'-~'
+
+        Divide,             // '/'
+        DivideTilde,        // '/~'
 
         Actor,
         As,
@@ -77,5 +125,11 @@
         Where,
         While,
         With,
+
+        CapRead,            // '#read'
+        CapSend,            // '#send'
+        CapShare,           // '#share'
+        CapAlias,           // '#alias'
+        CapAny,             // '#any'
     }
 }

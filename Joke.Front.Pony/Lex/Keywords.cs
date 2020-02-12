@@ -69,6 +69,11 @@ namespace Joke.Front.Pony.Lex
             { "where", TK.Where },
             { "while", TK.While },
             { "with", TK.With },
+            { "#read", TK.CapRead },
+            { "#send", TK.CapSend },
+            { "#share", TK.CapShare },
+            { "#alias", TK.CapAlias },
+            { "#any", TK.CapAny },
         };
     }
 }
