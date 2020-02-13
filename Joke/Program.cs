@@ -99,10 +99,9 @@ namespace Joke
                 var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $" - {e.Message}";
                 Console.WriteLine($"({line},{col}): can't continue @{tokenizer.next}{msg}");
                 var arrow = new string('-', col - 1) + "^";
-                if (line > 1)
-                {
-                    Console.WriteLine($" |{source.GetLine(line - 1).ToString()}");
-                }
+                if (line > 3) Console.WriteLine($" |{source.GetLine(line - 3).ToString()}");
+                if (line > 2) Console.WriteLine($" |{source.GetLine(line - 2).ToString()}");
+                if (line > 1) Console.WriteLine($" |{source.GetLine(line - 1).ToString()}");
                 Console.WriteLine($" |{source.GetLine(line).ToString()}");
                 Console.WriteLine($" |{arrow}");
                 Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");

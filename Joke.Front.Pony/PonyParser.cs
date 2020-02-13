@@ -23,14 +23,6 @@ namespace Joke.Front.Pony
         {
             TK.Type, TK.Interface, TK.Trait, TK.Primitive, TK.Struct, TK.Class, TK.Actor
         };
-        private static readonly TK[] FirstCap = new TK[]
-        {
-            TK.Iso, TK.Trn, TK.Ref, TK.Val, TK.Box, TK.Tag
-        };
-        private static readonly TK[] FirstCapExtended = new TK[]
-        {
-            TK.Iso, TK.Trn, TK.Ref, TK.Val, TK.Box, TK.Tag, TK.CapRead, TK.CapSend, TK.CapShare, TK.CapAlias, TK.CapAny
-        };
 
         public Tree.Module Module()
         {
@@ -64,20 +56,142 @@ namespace Joke.Front.Pony
         {
             Debug.Assert(Iss(FirstClass));
 
-
             var start = next;
-            var kind = Kind;
-            Eat();
+            var kind = toks[next].Kind;
+            Match();
 
-            var at = EatIff(TK.At);
+            var at = MayMatch(TK.At);
             var cap = OptCap(false);
             var name = Identifier();
+            var typeParams = OptTypeParameters();
+            var provides = OptProvides();
+            var doc = OptString();
+            var members = Members();
 
 
             throw NotYet("class-def");
         }
 
-        public Tree.Cap OptCap(bool extended)
+        private Tree.Members Members()
+        {
+            var start = next;
+
+            var fields = Fields();
+            var methods = Methods();
+
+            return new Tree.Members(Span(start), fields, methods);
+        }
+
+        private Tree.Fields Fields()
+        {
+            var start = next;
+
+            var fields = new List<Tree.Field>();
+            while (Iss(TK.Var, TK.Let, TK.Embed))
+            {
+                fields.Add(Field());
+            }
+
+            return new Tree.Fields(Span(start), fields);
+        }
+
+        private Tree.Field Field()
+        {
+            Debug.Assert(Iss(TK.Var, TK.Let, TK.Embed));
+
+            throw NotYet("methods");
+        }
+
+        private Tree.Methods Methods()
+        {
+            var start = next;
+
+            var methods = new List<Tree.Method>();
+            while (next < limit)
+            {
+                var kind = Tree.MethodKind.Missing;
+
+                switch(Kind)
+                {
+                    case TK.Fun:
+                        kind = Tree.MethodKind.Fun;
+                        break;
+                    case TK.Be:
+                        kind = Tree.MethodKind.Fun;
+                        break;
+                    case TK.New:
+                        kind = Tree.MethodKind.Fun;
+                        break;
+                }
+
+                if (kind != Tree.MethodKind.Missing)
+                {
+                    methods.Add(Method(kind));
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return new Tree.Methods(Span(start), methods);
+        }
+
+        private Tree.Method Method(Tree.MethodKind kind)
+        {
+            Debug.Assert(Iss(TK.Fun, TK.Be, TK.New));
+            
+            var start = next;
+
+            Match();
+            var annotations = Annotations();
+            
+            throw NotYet("method");
+        }
+
+        private Tree.Type? OptProvides()
+        {
+            if (Iss(TK.Is))
+            {
+                return Type();
+            }
+
+            return null;
+        }
+
+        private Tree.Type Type()
+        {
+            throw NotYet("type");
+        }
+
+        private Tree.TypeParameter TypeParameter()
+        {
+            throw NotYet("type-parameter");
+        }
+
+        private Tree.TypeParameters OptTypeParameters()
+        {
+            if (Iss(TK.LSquare, TK.LSquareNew))
+            {
+                var start = next;
+
+                var parameters = new List<Tree.TypeParameter>();
+                do
+                {
+                    next += 1;
+                    parameters.Add(TypeParameter());
+                }
+                while (Iss(TK.Comma));
+
+                Match("']'", TK.RSquare);
+
+                return new Tree.TypeParameters(Span(start), parameters);
+            }
+
+            return new Tree.TypeParameters(Span(), new Tree.TypeParameter[] { });
+        }
+
+        private Tree.Cap OptCap(bool extended)
         {
             if (next < limit)
             {
@@ -137,7 +251,7 @@ namespace Joke.Front.Pony
                 var names = new List<Tree.Identifier>();
                 do
                 {
-                    Eat();
+                    Match();
                     names.Add(Identifier());
                 }
                 while (Iss(TK.Comma));
@@ -174,7 +288,7 @@ namespace Joke.Front.Pony
 
         private TK Kind => toks[next].Kind;
 
-        private bool EatIff(TK kind)
+        private bool MayMatch(TK kind)
         {
             if (next < limit && toks[next].Kind == kind)
             {
@@ -196,11 +310,33 @@ namespace Joke.Front.Pony
             throw NoParse($"{fail} expected");
         }
 
+        private void Match(string fail, params TK[] kinds)
+        {
+            if (next < limit)
+            {
+                for (var i = 0; i < kinds.Length; ++i)
+                {
+                    if (kinds[i] == toks[next].Kind)
+                    {
+                        next += 1;
+                        return;
+                    }
+                }
+            }
+
+            throw NoParse($"{fail} expected");
+        }
+
         private TSpan Span(int start)
         {
             Debug.Assert(next <= limit);
 
             return new TSpan(toks, start, next);
+        }
+
+        private TSpan Span()
+        {
+            return new TSpan(toks, next, next);
         }
 
         private TSpan EatSpan()
@@ -233,6 +369,25 @@ namespace Joke.Front.Pony
             }
 
             return false;
+        }
+
+        private void Next()
+        {
+            if (next < limit)
+            {
+                next += 1;
+            }
+        }
+
+        private void Match()
+        {
+            if (next < limit)
+            {
+                next += 1;
+                return;
+            }
+
+            throw NoParse("expected something (not EOF)");
         }
 
         private int Eat()
