@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Joke.Front.Pony.Ast
+namespace Joke.Front.Pony.Tree
 {
-    public enum InfixOp
+    public enum BinaryOpKind
     {
         Missing,
 

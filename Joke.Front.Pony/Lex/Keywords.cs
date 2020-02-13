@@ -17,8 +17,14 @@ namespace Joke.Front.Pony.Lex
 
         private static Dictionary<string, TK> keywords = new Dictionary<string, TK>
         {
+            { "not", TK.Not },
+            { "and", TK.And },
+            { "or", TK.Or },
+            { "xor", TK.Xor },
+
             { "actor", TK.Actor },
             { "as", TK.As },
+            { "addressof", TK.Addressof },
             { "be", TK.Be },
             { "box", TK.Box},
             { "break", TK.Break },
@@ -47,7 +53,6 @@ namespace Joke.Front.Pony.Lex
             { "let", TK.Let },
             { "match", TK.Match },
             { "new", TK.New },
-            { "not", TK.Not },
             { "object", TK.Object },
             { "primitive", TK.Primitive },
             { "recover", TK.Recover },

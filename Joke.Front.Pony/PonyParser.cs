@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Joke.Front.Pony
 {
-    public class PonyParser
+    public partial class PonyParser
     {
         public PonyParser(IReadOnlyList<Token> tokens)
         {
@@ -19,14 +19,20 @@ namespace Joke.Front.Pony
         private readonly int limit;
         private readonly IReadOnlyList<Token> toks;
 
+
         private static readonly TK[] FirstClass = new TK[]
         {
             TK.Type, TK.Interface, TK.Trait, TK.Primitive, TK.Struct, TK.Class, TK.Actor
         };
 
+        private static readonly TK[] FirstParameter = new TK[]
+        {
+            TK.Identifier, TK.Ellipsis
+        };
+
         public Tree.Module Module()
         {
-            var start = next;
+            Begin();
 
             var doc = OptString();
 
@@ -56,14 +62,15 @@ namespace Joke.Front.Pony
         {
             Debug.Assert(Iss(FirstClass));
 
-            var start = next;
+            Begin();
+
             var kind = toks[next].Kind;
             Match();
 
-            var at = MayMatch(TK.At);
-            var cap = OptCap(false);
+            var bare = TryBare();
+            var cap = TryCap(false);
             var name = Identifier();
-            var typeParams = OptTypeParameters();
+            var typeParams = TryTypeParameters();
             var provides = OptProvides();
             var doc = OptString();
             var members = Members();
@@ -74,17 +81,17 @@ namespace Joke.Front.Pony
 
         private Tree.Members Members()
         {
-            var start = next;
+            Begin();
 
             var fields = Fields();
             var methods = Methods();
 
-            return new Tree.Members(Span(start), fields, methods);
+            return new Tree.Members(End(), fields, methods);
         }
 
         private Tree.Fields Fields()
         {
-            var start = next;
+            Begin();
 
             var fields = new List<Tree.Field>();
             while (Iss(TK.Var, TK.Let, TK.Embed))
@@ -92,7 +99,7 @@ namespace Joke.Front.Pony
                 fields.Add(Field());
             }
 
-            return new Tree.Fields(Span(start), fields);
+            return new Tree.Fields(End(), fields);
         }
 
         private Tree.Field Field()
@@ -104,7 +111,7 @@ namespace Joke.Front.Pony
 
         private Tree.Methods Methods()
         {
-            var start = next;
+            Begin();
 
             var methods = new List<Tree.Method>();
             while (next < limit)
@@ -117,10 +124,10 @@ namespace Joke.Front.Pony
                         kind = Tree.MethodKind.Fun;
                         break;
                     case TK.Be:
-                        kind = Tree.MethodKind.Fun;
+                        kind = Tree.MethodKind.Be;
                         break;
                     case TK.New:
-                        kind = Tree.MethodKind.Fun;
+                        kind = Tree.MethodKind.New;
                         break;
                 }
 
@@ -134,34 +141,144 @@ namespace Joke.Front.Pony
                 }
             }
 
-            return new Tree.Methods(Span(start), methods);
+            return new Tree.Methods(End(), methods);
         }
 
         private Tree.Method Method(Tree.MethodKind kind)
         {
             Debug.Assert(Iss(TK.Fun, TK.Be, TK.New));
-            
-            var start = next;
+
+            Begin();
 
             Match();
             var annotations = Annotations();
+            var bare = TryBare();
+            var cap = TryCap(false);
+            var name = Identifier();
+            var typeParameters = TryTypeParameters();
+            var parameters = Parameters();
+            var returnType = TryColonType();
+            var partial = MayMatch(TK.Question);
+            var doc = TryString();
+            var body = TryBody();
             
             throw NotYet("method");
+        }
+
+        private Tree.Body? TryBody()
+        {
+            if (Iss(TK.DblArrow))
+            {
+                Begin();
+
+                Match();
+
+                var expression = RawSeq();
+
+                return new Tree.Body(End(), expression);
+            }
+
+            return null;
+        }
+
+        private Tree.Parameters Parameters()
+        {
+            Begin();
+
+            var parameters = new List<Tree.Parameter>();
+
+            Match("'('", TK.LParen, TK.LParenNew);
+            if (Iss(FirstParameter))
+            {
+                do
+                {
+                    parameters.Add(Parameter());
+                }
+                while (MayMatch(TK.Comma));
+            }
+            Match("')'", TK.RParen);
+
+            return new Tree.Parameters(End(), parameters);
+        }
+
+        private Tree.Parameter Parameter()
+        {
+            Begin();
+
+            if (Iss(TK.Ellipsis))
+            {
+                Match();
+                return new Tree.EllipsisParameter(End());
+            }
+
+            var name = Identifier();
+            var type = ColonType();
+            var value = TryDefaultArg();
+
+            return new Tree.RegularParameter(End(), name, type, value);
+        }
+
+        private Tree.DefaultArg? TryDefaultArg()
+        {
+            if (Iss(TK.Assign))
+            {
+                Begin();
+
+                Match();
+                var expression = Infix();
+
+                return new Tree.DefaultArg(End(), expression);
+            }
+
+            return null;
+        }
+
+        private Tree.ColonType ColonType()
+        {
+            Begin();
+
+            Match("':'", TK.Colon);
+            var type = Type();
+
+            return new Tree.ColonType(End(), type);
+        }
+
+        private Tree.ColonType? TryColonType()
+        {
+            if (Iss(TK.Colon))
+            {
+                Begin();
+
+                Match("':'", TK.Colon);
+                var type = Type();
+
+                return new Tree.ColonType(End(), type);
+            }
+
+            return null;
+        }
+
+        private Tree.Bare TryBare()
+        {
+            Begin();
+
+            if (Iss(TK.At))
+            {
+                Match();
+            }
+
+            return new Tree.Bare(End());
         }
 
         private Tree.Type? OptProvides()
         {
             if (Iss(TK.Is))
             {
+                Match();
                 return Type();
             }
 
             return null;
-        }
-
-        private Tree.Type Type()
-        {
-            throw NotYet("type");
         }
 
         private Tree.TypeParameter TypeParameter()
@@ -169,33 +286,35 @@ namespace Joke.Front.Pony
             throw NotYet("type-parameter");
         }
 
-        private Tree.TypeParameters OptTypeParameters()
+        private Tree.TypeParameters TryTypeParameters()
         {
+            Begin();
+
+            var parameters = new List<Tree.TypeParameter>();
+
             if (Iss(TK.LSquare, TK.LSquareNew))
             {
-                var start = next;
-
-                var parameters = new List<Tree.TypeParameter>();
                 do
                 {
-                    next += 1;
+                    Match();
                     parameters.Add(TypeParameter());
                 }
                 while (Iss(TK.Comma));
 
                 Match("']'", TK.RSquare);
-
-                return new Tree.TypeParameters(Span(start), parameters);
             }
 
-            return new Tree.TypeParameters(Span(), new Tree.TypeParameter[] { });
+            return new Tree.TypeParameters(End(), parameters);
         }
 
-        private Tree.Cap OptCap(bool extended)
+        private Tree.Cap TryCap(bool extended)
         {
+            Begin();
+
+            var cap = Tree.CapKind.Missing;
+
             if (next < limit)
             {
-                var cap = Tree.CapKind.Missing;
                 switch (Kind)
                 {
                     case TK.Iso:
@@ -236,19 +355,20 @@ namespace Joke.Front.Pony
                 if (cap != Tree.CapKind.Missing)
                 {
                     next += 1;
-                    return new Tree.Cap(Span(next - 1), cap);
                 }
             }
 
-            return new Tree.Cap(Span(next), Tree.CapKind.Missing);
+            return new Tree.Cap(End(), cap);
         }
 
         public Tree.Annotations Annotations()
         {
+            Begin();
+
+            var names = new List<Tree.Identifier>();
+
             if (Iss(TK.Backslash))
             {
-                var start = next;
-                var names = new List<Tree.Identifier>();
                 do
                 {
                     Match();
@@ -256,11 +376,9 @@ namespace Joke.Front.Pony
                 }
                 while (Iss(TK.Comma));
                 Match("backslash", TK.Backslash);
-
-                return new Tree.Annotations(Span(start), names);
             }
 
-            return new Tree.Annotations(Span(next), new Tree.Identifier[] { });
+            return new Tree.Annotations(End(), names);
         }
 
         //================= Literals
@@ -269,7 +387,11 @@ namespace Joke.Front.Pony
         {
             if (Iss(TK.Identifier))
             {
-                return new Tree.Identifier(EatSpan());
+                Begin();
+
+                Match();
+
+                return new Tree.Identifier(End());
             }
 
             throw NoParse("identifier expected");
@@ -279,7 +401,11 @@ namespace Joke.Front.Pony
         {
             if (Iss(TK.String, TK.DocString))
             {
-                return new Tree.String(EatSpan());
+                Begin();
+
+                Match();
+
+                return new Tree.String(End());
             }
             return null;
         }
@@ -327,29 +453,6 @@ namespace Joke.Front.Pony
             throw NoParse($"{fail} expected");
         }
 
-        private TSpan Span(int start)
-        {
-            Debug.Assert(next <= limit);
-
-            return new TSpan(toks, start, next);
-        }
-
-        private TSpan Span()
-        {
-            return new TSpan(toks, next, next);
-        }
-
-        private TSpan EatSpan()
-        {
-            Debug.Assert(next < limit);
-
-            int start = next;
-
-            next += 1;
-
-            return new TSpan(toks, start, next);
-        }
-
         private bool Iss(TK kind)
         {
             return next < limit && toks[next].Kind == kind;
@@ -390,15 +493,12 @@ namespace Joke.Front.Pony
             throw NoParse("expected something (not EOF)");
         }
 
-        private int Eat()
+        private void Ensure()
         {
-            Debug.Assert(next < limit);
-
-            var start = next;
-
-            next += 1;
-
-            return start;
+            if (next >= limit)
+            {
+                throw NoParse("expected something (not EOF)");
+            }
         }
 
         /*

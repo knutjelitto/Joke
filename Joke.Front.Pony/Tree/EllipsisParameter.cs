@@ -5,14 +5,11 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public class Cap : Type
+    public class EllipsisParameter : Parameter
     {
-        public Cap(TSpan span, CapKind kind)
+        public EllipsisParameter(TSpan span)
             : base(span)
         {
-            Kind = kind;
         }
-
-        public CapKind Kind { get; }
     }
 }

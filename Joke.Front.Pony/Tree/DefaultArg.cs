@@ -5,14 +5,14 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public class Cap : Type
+    public class DefaultArg : Expression
     {
-        public Cap(TSpan span, CapKind kind)
+        public DefaultArg(TSpan span, Expression expression)
             : base(span)
         {
-            Kind = kind;
+            Expression = expression;
         }
 
-        public CapKind Kind { get; }
+        public Expression Expression { get; }
     }
 }

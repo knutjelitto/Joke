@@ -83,7 +83,13 @@
         Mod,                // '%%'
         ModTilde,           // '%%~'
 
+        Not,                // 'not'
+        And,                // 'and'
+        Or,                 // 'or'
+        Xor,                // 'xor'
+
         Actor,
+        Addressof,
         As,
         Be,
         Box,
@@ -113,7 +119,6 @@
         Let,
         Match,
         New,
-        Not,
         Object,
         Primitive,
         Recover,

@@ -718,7 +718,7 @@ namespace Joke.Front.Pony
             Debug.Assert(!scanner.CanSkip());
 
             var start = GetStart();
-            var op = Ast.InfixOp.NONE;
+            var op = Ast.InfixOp.Missing;
 
             switch (At())
             {
@@ -918,7 +918,7 @@ namespace Joke.Front.Pony
 
             }
 
-            if (op != Ast.InfixOp.NONE)
+            if (op != Ast.InfixOp.Missing)
             {
                 var @unsafe = TrySkipMatch('?');
 

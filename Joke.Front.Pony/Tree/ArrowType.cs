@@ -5,14 +5,14 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public class Cap : Type
+    public class ArrowType : Type
     {
-        public Cap(TSpan span, CapKind kind)
+        public ArrowType(TSpan span, Type type)
             : base(span)
         {
-            Kind = kind;
+            Type = type;
         }
 
-        public CapKind Kind { get; }
+        public Type Type { get; }
     }
 }
