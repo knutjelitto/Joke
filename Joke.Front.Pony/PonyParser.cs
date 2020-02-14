@@ -225,7 +225,7 @@ namespace Joke.Front.Pony
                 Begin();
 
                 Match();
-                var expression = Infix();
+                var expression = TryInfix() ?? throw NoParse("default - value");
 
                 return new Tree.DefaultArg(End(), expression);
             }
@@ -472,6 +472,29 @@ namespace Joke.Front.Pony
             }
 
             return false;
+        }
+
+        private bool Issnt(params TK[] kinds)
+        {
+            if (next < limit)
+            {
+                for (var i = 0; i < kinds.Length; ++i)
+                {
+                    if (kinds[i] == toks[next].Kind)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool More()
+        {
+            return next < limit;
         }
 
         private void Next()

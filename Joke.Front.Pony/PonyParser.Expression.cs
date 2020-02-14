@@ -15,11 +15,18 @@ namespace Joke.Front.Pony
             Case
         }
 
-        private Tree.Expression Infix(NL nl = NL.Both)
+        private Tree.Expression? TryInfix(NL nl = NL.Both)
         {
             Begin();
 
-            var term = Term(nl);
+            var term = TryTerm(nl);
+
+            if (term == null)
+            {
+                Discard();
+
+                return null;
+            }
 
             var parts = new List<Tree.InfixPart>();
 
@@ -138,19 +145,20 @@ namespace Joke.Front.Pony
                         parts.Add(AsPart());
                         break;
 
-
-
                     default:
-#if false
-                        throw NotYet("infix");
-#else
                         done = true;
                         break;
-#endif
                 }
             }
 
-            return new Tree.Infix(End(), term, parts);
+            if (parts.Count > 0)
+            {
+                return new Tree.Infix(End(), term, parts);
+            }
+
+            Discard();
+
+            return term;
         }
 
         private Tree.BinaryOpPart BinaryPart(Tree.BinaryOpKind kind)
@@ -159,7 +167,7 @@ namespace Joke.Front.Pony
 
             Match();
             var partial = MayMatch(TK.Question);
-            var term = Term(NL.Both);
+            var term = TryTerm(NL.Both) ?? throw NoParse("term");
 
             return new Tree.BinaryOpPart(End(), kind, partial, term);
         }
@@ -174,21 +182,44 @@ namespace Joke.Front.Pony
             throw NotYet("as");
         }
 
-        private Tree.Expression Term(NL nl)
+        private Tree.Expression? TryTerm(NL nl)
         {
-            Begin();
-
             switch (Kind)
             {
-                case TK.String:
-                    return String();
+                case TK.If:
+                    throw NotYet("term");
                 case TK.Ifdef:
                     return Ifdef();
+                case TK.Iftype:
+                    throw NotYet("term");
+                case TK.Match:
+                    throw NotYet("term");
+                case TK.While:
+                    throw NotYet("term");
+                case TK.Repeat:
+                    throw NotYet("term");
+                case TK.For:
+                    throw NotYet("term");
+                case TK.With:
+                    throw NotYet("term");
+                case TK.Try:
+                    throw NotYet("term");
+                case TK.Recover:
+                    throw NotYet("term");
+                case TK.Consume:
+                    throw NotYet("term");
                 case TK.Identifier:
+                case TK.String:
+                case TK.Int:
+                case TK.Float:
+                case TK.True:
+                case TK.False:
                     return Pattern(nl);
+                case TK.Constant:
+                    throw NotYet("term");
             }
 
-            throw NotYet("term");
+            return null;
         }
 
         private Tree.Expression Ifdef()
@@ -200,7 +231,7 @@ namespace Joke.Front.Pony
             Match();
 
             var annotations = Annotations();
-            var condition = Infix();
+            var condition = TryInfix() ?? throw NoParse("ifdef - condition");
             Match("then", TK.Then);
             var thenPart = RawSeq();
             var elsePart = TryElseIfdef() ?? TryElseClause();
@@ -218,7 +249,7 @@ namespace Joke.Front.Pony
                 Match();
 
                 var annotations = Annotations();
-                var condition = Infix();
+                var condition = TryInfix() ?? throw NoParse("elseif - condition");
                 Match("then", TK.Then);
                 var thenPart = RawSeq();
                 var elsePart = TryElseIfdef() ?? TryElseClause();
@@ -256,9 +287,9 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Tree.Expression RawSeq()
-        {
-            var expression = TryExprSeq();
+        private Tree.Expression RawSeq(NL nl = NL.Both)
+        {   
+            var expression = TryExprSeq(nl);
             if (expression == null)
             {
                 expression = Jump();
@@ -269,9 +300,23 @@ namespace Joke.Front.Pony
 
         private Tree.Expression? TryExprSeq(NL nl = NL.Both)
         {
-            var assignment = Assignment(nl);
+            Begin();
 
-            throw NotYet("[expr-seq]");
+            var assignment = TryAssignment(nl);
+
+            if (assignment != null)
+            {
+                var next = TrySemiExpr() ?? TryNoSemi();
+
+                if (next != null)
+                {
+                    return new Tree.Sequence(End(), assignment, next);
+                }
+            }
+
+            Discard();
+
+            return assignment;
         }
 
         private Tree.Expression Jump()
@@ -279,16 +324,35 @@ namespace Joke.Front.Pony
             throw NotYet("jump");
         }
 
-        private Tree.Expression Assignment(NL nl = NL.Both)
+        private Tree.Expression? TryNoSemi()
         {
-            var infix = Infix(nl);
+            return RawSeq(NL.Next);
+        }
 
-            if (Iss(TK.Assign))
+        private Tree.Expression? TrySemiExpr()
+        {
+            if (More() && Iss(TK.Semi))
+            {
+                Begin();
+                Match();
+                var expression = RawSeq();
+
+                return new Tree.SemiExpression(End(), expression);
+            }
+
+            return null;
+        }
+
+        private Tree.Expression? TryAssignment(NL nl = NL.Both)
+        {
+            var infix = TryInfix(nl);
+
+            if (infix != null && Iss(TK.Assign))
             {
                 Begin();
 
                 Match();
-                var right = Assignment(NL.Both);
+                var right = TryAssignment(NL.Both) ?? throw NoParse("assignment - assignment");
 
                 return new Tree.Assignment(End(), infix, right);
             }
@@ -451,7 +515,57 @@ namespace Joke.Front.Pony
 
         private Tree.Expression Call(Tree.Expression atom)
         {
-            throw NotYet("call");
+            Begin();
+
+            Match("'('", TK.LParen);
+            var arguments = Arguments();
+            Match("')'", TK.RParen);
+
+            return new Tree.Call(End(), arguments);
+        }
+
+        private Tree.Arguments Arguments()
+        {
+            Begin();
+
+            var arguments = new List<Tree.Argument>();
+
+            while (Issnt(TK.Where, TK.RParen))
+            {
+                arguments.Add(Positional());
+                if (Iss(TK.Comma))
+                {
+                    Match();
+                    continue;
+                }
+                break;
+            }
+
+            if (Iss(TK.Where))
+            {
+                do
+                {
+                    Match();
+                    arguments.Add(Named());
+                }
+                while (Iss(TK.Comma));
+            }
+
+            return new Tree.Arguments(End(), arguments);
+        }
+
+        private Tree.PositionalArgument Positional()
+        {
+            Begin();
+
+            var value = RawSeq();
+
+            return new Tree.PositionalArgument(End(), value);
+        }
+
+        private Tree.NamedArgument Named()
+        {
+            throw NotYet("named-argument");
         }
 
         private Tree.Ref Ref()
@@ -484,6 +598,8 @@ namespace Joke.Front.Pony
                     return Ref();
                 case TK.This:
                     return ThisLiteral();
+                case TK.String:
+                    return String();
                 default:
                     break;
             }

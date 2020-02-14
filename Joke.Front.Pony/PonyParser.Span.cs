@@ -22,6 +22,11 @@ namespace Joke.Front.Pony
             return new TSpan(toks, marks.Pop(), next);
         }
 
+        private int Discard()
+        {
+            return marks.Pop();
+        }
+
         private TSpan Span(int start)
         {
             Debug.Assert(next <= limit);

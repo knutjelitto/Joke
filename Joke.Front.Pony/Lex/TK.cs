@@ -88,6 +88,9 @@
         Or,                 // 'or'
         Xor,                // 'xor'
 
+        True,               // 'true'
+        False,              // 'false'
+
         Actor,
         Addressof,
         As,
@@ -110,6 +113,7 @@
         Fun,
         If,
         Ifdef,
+        Iftype,
         In,
         Interface,
         Is,

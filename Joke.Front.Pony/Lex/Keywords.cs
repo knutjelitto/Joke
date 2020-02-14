@@ -22,6 +22,9 @@ namespace Joke.Front.Pony.Lex
             { "or", TK.Or },
             { "xor", TK.Xor },
 
+            { "true", TK.True },
+            { "false", TK.False },
+
             { "actor", TK.Actor },
             { "as", TK.As },
             { "addressof", TK.Addressof },
@@ -44,6 +47,7 @@ namespace Joke.Front.Pony.Lex
             { "fun", TK.Fun },
             { "if", TK.If },
             { "ifdef", TK.Ifdef },
+            { "iftype", TK.Iftype },
             { "in", TK.In },
             { "interface", TK.Interface },
             { "is", TK.Is },
