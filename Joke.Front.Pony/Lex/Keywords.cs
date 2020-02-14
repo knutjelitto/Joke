@@ -25,9 +25,12 @@ namespace Joke.Front.Pony.Lex
             { "true", TK.True },
             { "false", TK.False },
 
+            { "addressof", TK.Addressof },
+            { "digestof", TK.DigestOf },
+            { "__loc", TK.Location },
+
             { "actor", TK.Actor },
             { "as", TK.As },
-            { "addressof", TK.Addressof },
             { "be", TK.Be },
             { "box", TK.Box},
             { "break", TK.Break },
@@ -36,7 +39,6 @@ namespace Joke.Front.Pony.Lex
             { "compile_intrinsic", TK.CompileIntrinsic },
             { "continue", TK.Continue },
             { "consume", TK.Consume },
-            { "digestof", TK.DigestOf },
             { "do", TK.Do },
             { "else", TK.Else },
             { "elseif", TK.Elseif },

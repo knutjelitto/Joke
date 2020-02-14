@@ -5,14 +5,14 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public abstract class Use : Node
+    public class TypeArgumentType : TypeArgument
     {
-        public Use(TSpan span, Identifier? name)
+        public TypeArgumentType(TSpan span, Type type)
             : base(span)
         {
-            Name = name;
+            Type = type;
         }
 
-        public Identifier? Name { get; }
+        public Type Type { get; }
     }
 }

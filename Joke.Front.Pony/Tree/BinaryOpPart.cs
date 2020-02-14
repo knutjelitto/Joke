@@ -7,7 +7,7 @@ namespace Joke.Front.Pony.Tree
 {
     public class BinaryOpPart : InfixPart
     {
-        public BinaryOpPart(TSpan span, BinaryOpKind kind, Boolean partial, Expression right)
+        public BinaryOpPart(TSpan span, BinaryOpKind kind, Partial? partial, Expression right)
             : base(span)
         {
             Kind = kind;
@@ -16,7 +16,7 @@ namespace Joke.Front.Pony.Tree
         }
 
         public BinaryOpKind Kind { get; }
-        public Boolean Partial { get; }
+        public Partial? Partial { get; }
         public Expression Right { get; }
     }
 }

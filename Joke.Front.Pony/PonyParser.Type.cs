@@ -10,17 +10,25 @@ namespace Joke.Front.Pony
     {
         private static TK[] FirstViewpoint = new TK[] { TK.Arrow };
 
-        private Tree.Type Type()
+        private Tree.Type Type() => TryType() ?? throw NoParse("type");
+        private Tree.Type? TryType()
         {
             Begin();
 
-            var atom = AtomType();
+            var atom = TryAtomType();
 
-            if (Iss(FirstViewpoint))
+            if (atom != null)
             {
-                var arrow = ArrowType();
+                if (Iss(FirstViewpoint))
+                {
+                    var arrow = ArrowType();
 
-                return new Tree.ViewpointType(End(), atom, arrow);
+                    return new Tree.ViewpointType(End(), atom, arrow);
+                }
+            }
+            else
+            {
+                Discard();
             }
 
             return atom;
@@ -36,23 +44,35 @@ namespace Joke.Front.Pony
             return new Tree.ArrowType(End(), type);
         }
 
-        private Tree.Type AtomType()
+        private Tree.Type? TryAtomType()
         {
-            Begin();
-
-            switch (Kind)
+            if (More())
             {
-                case TK.This:
-                    Match();
-                    return new Tree.ThisType(End());
-                case TK.LParen:
-                case TK.LParenNew:
-                    return GroupedType();
-                case TK.Identifier:
-                    return Nominal();
+                switch (Kind)
+                {
+                    case TK.This:
+                        Match();
+                        return new Tree.ThisType(End());
+                    case TK.LParen:
+                    case TK.LParenNew:
+                        return GroupedType();
+                    case TK.Identifier:
+                        return Nominal();
+                    case TK.LBrace:
+                        throw NotYet("atom-type -- lambdatype");
+                    case TK.AtLBrace:
+                        throw NotYet("atom-type -- barelambdatype");
+                    default:
+                        var cap = TryCap(false);
+                        if (cap != null)
+                        {
+                            return cap;
+                        }
+                        break;
+                }
             }
 
-            throw NotYet("atom-type");
+            return null;
         }
 
         private Tree.GroupedType GroupedType()
@@ -77,7 +97,40 @@ namespace Joke.Front.Pony
 
         private Tree.Type InfixType()
         {
-            throw NotYet("infix-type");
+            Begin();
+
+            var type = Type();
+            var parts = new List<Tree.InfixTypePart>();
+            var done = false;
+            while (!done && More())
+            {
+                switch (Kind)
+                {
+                    case TK.Pipe:
+                        Begin();
+                        Match();
+                        var ptype = Type();
+                        parts.Add(new Tree.UnionPart(End(), ptype));
+                        break;
+                    case TK.ISectType:
+                        Begin();
+                        Match();
+                        var itype = Type();
+                        parts.Add(new Tree.IntersectionPart(End(), itype));
+                        break;
+                    default:
+                        done = true;
+                        break;
+                }
+            }
+
+            if (parts.Count > 1)
+            {
+                return new Tree.InfixType(End(), type, parts);
+            }
+
+            Discard();
+            return type;
         }
 
         private Tree.Type Nominal()
@@ -136,7 +189,14 @@ namespace Joke.Front.Pony
 
         private Tree.TypeArgument TypeArgument()
         {
-            throw NotYet("nominal");
+            var type = TryType();
+
+            if (type != null)
+            {
+                return new Tree.TypeArgumentType(type.Span, type);
+            }
+
+            throw NotYet("type-argument");
         }
     }
 }

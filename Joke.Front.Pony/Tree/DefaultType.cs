@@ -5,11 +5,13 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public class TypeArgument : Type
+    public class DefaultType : Type
     {
-        public TypeArgument(TSpan span)
-            : base(span)
+        public DefaultType(TSpan span, Type type) : base(span)
         {
+            Type = type;
         }
+
+        public Type Type { get; }
     }
 }

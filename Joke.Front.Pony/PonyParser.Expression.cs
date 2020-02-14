@@ -1,8 +1,6 @@
 ﻿using Joke.Front.Pony.Lex;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace Joke.Front.Pony
 {
@@ -166,7 +164,7 @@ namespace Joke.Front.Pony
             Begin();
 
             Match();
-            var partial = MayMatch(TK.Question);
+            var partial = TryPartial();
             var term = TryTerm(NL.Both) ?? throw NoParse("term");
 
             return new Tree.BinaryOpPart(End(), kind, partial, term);
@@ -174,7 +172,13 @@ namespace Joke.Front.Pony
 
         private Tree.IsPart IsPart(bool isnt)
         {
-            throw NotYet("is/isnt");
+            Debug.Assert(Iss(TK.Is, TK.Isnt));
+
+            Begin(); Match();
+
+            var term = TryTerm() ?? throw NoParse("term");
+
+            return new Tree.IsPart(End(), isnt, term);
         }
 
         private Tree.AsPart AsPart()
@@ -182,117 +186,140 @@ namespace Joke.Front.Pony
             throw NotYet("as");
         }
 
-        private Tree.Expression? TryTerm(NL nl)
+        private Tree.Expression? TryTerm(NL nl = NL.Both)
         {
-            switch (Kind)
+            if (More())
             {
-                case TK.If:
-                    throw NotYet("term");
-                case TK.Ifdef:
-                    return Ifdef();
-                case TK.Iftype:
-                    throw NotYet("term");
-                case TK.Match:
-                    throw NotYet("term");
-                case TK.While:
-                    throw NotYet("term");
-                case TK.Repeat:
-                    throw NotYet("term");
-                case TK.For:
-                    throw NotYet("term");
-                case TK.With:
-                    throw NotYet("term");
-                case TK.Try:
-                    throw NotYet("term");
-                case TK.Recover:
-                    throw NotYet("term");
-                case TK.Consume:
-                    throw NotYet("term");
-                case TK.Identifier:
-                case TK.String:
-                case TK.Int:
-                case TK.Float:
-                case TK.True:
-                case TK.False:
-                    return Pattern(nl);
-                case TK.Constant:
-                    throw NotYet("term");
+                switch (Kind)
+                {
+                    case TK.If:
+                        return Iff();
+                    case TK.Ifdef:
+                        return Iffdef();
+                    case TK.Iftype:
+                        throw NotYet("term -- iftype");
+                    case TK.Match:
+                        throw NotYet("term -- match");
+                    case TK.While:
+                        throw NotYet("term -- while");
+                    case TK.Repeat:
+                        throw NotYet("term -- repeat");
+                    case TK.For:
+                        throw NotYet("term -- for");
+                    case TK.With:
+                        throw NotYet("term -- with");
+                    case TK.Try:
+                        throw NotYet("term -- try");
+                    case TK.Recover:
+                        throw NotYet("term -- recover");
+                    case TK.Consume:
+                        throw NotYet("term -- consume");
+                    case TK.Constant:
+                        throw NotYet("term -- constant");
+                    default:
+                        return TryPattern(nl);
+                }
             }
 
             return null;
         }
 
-        private Tree.Expression Ifdef()
+        private Tree.Expression Iff()
+        {
+            Debug.Assert(Iss(TK.If));
+
+            Begin(); Match();
+
+            var annotations = Annotations();
+            var condition = TryRawSeq() ?? throw NoParse("if -- raw-seq-condition");
+            var thenPart = ThenClause();
+            var elsePart = TryElseIf() ?? TryElseClause();
+            Match("end", TK.End);
+
+            return new Tree.Iff(End(), Tree.IffKind.Iff, annotations, condition, thenPart, elsePart);
+        }
+
+        private Tree.Expression? TryElseIf()
+        {
+            if (Iss(TK.Elseif))
+            {
+                Begin(); Match();
+
+                var annotations = Annotations();
+                var condition = TryRawSeq() ?? throw NoParse("elseif -- raw-seq-condition");
+                var thenPart = ThenClause();
+                var elsePart = TryElseIfdef() ?? TryElseClause();
+
+                return new Tree.Iff(End(), Tree.IffKind.ElseIff, annotations, condition, thenPart, elsePart);
+            }
+
+            return null;
+        }
+
+        private Tree.Expression Iffdef()
         {
             Debug.Assert(Iss(TK.Ifdef));
 
-            Begin();
-
-            Match();
+            Begin(); Match();
 
             var annotations = Annotations();
-            var condition = TryInfix() ?? throw NoParse("ifdef - condition");
-            Match("then", TK.Then);
-            var thenPart = RawSeq();
+            var condition = TryInfix() ?? throw NoParse("ifdef -- infix-condition");
+            var thenPart = ThenClause();
             var elsePart = TryElseIfdef() ?? TryElseClause();
             Match("end", TK.End);
 
-            throw NotYet("ifdef");
+            return new Tree.Iff(End(), Tree.IffKind.IffDef, annotations, condition, thenPart, elsePart);
         }
 
         private Tree.Expression? TryElseIfdef()
         {
             if (Iss(TK.Elseif))
             {
-                Begin();
-
-                Match();
+                Begin(); Match();
 
                 var annotations = Annotations();
-                var condition = TryInfix() ?? throw NoParse("elseif - condition");
-                Match("then", TK.Then);
-                var thenPart = RawSeq();
+                var condition = TryInfix() ?? throw NoParse("elseif - infix-condition");
+                var thenPart = ThenClause();
                 var elsePart = TryElseIfdef() ?? TryElseClause();
 
-                throw NotYet("ifdef");
+                return new Tree.Iff(End(), Tree.IffKind.ElseIffDef, annotations, condition, thenPart, elsePart);
             }
 
             return null;
+        }
+
+        private Tree.Expression ThenClause()
+        {
+            Begin(); Match("then", TK.Then);
+
+            var annotations = Annotations();
+            var body = TryRawSeq() ?? throw NoParse("then -- body");
+
+            return new Tree.Then(End(), annotations, body);
         }
 
         private Tree.Expression? TryElseClause()
         {
-            throw NotYet("else");
-        }
-
-        private Tree.String String()
-        {
-            Begin();
-
-            Match("string", TK.String, TK.DocString);
-
-            return new Tree.String(End());
-        }
-
-        private Tree.String? TryString()
-        {
-            if (Iss(TK.String, TK.DocString))
+            if (Iss(TK.Else))
             {
                 Begin();
-
                 Match();
-                return new Tree.String(End());
+
+                var annotations = Annotations();
+                var elsePart = TryRawSeq() ?? throw NoParse("else -- raw-seq");
+
+                return new Tree.Else(End(), annotations, elsePart);
             }
 
             return null;
         }
 
-        private Tree.Expression RawSeq(NL nl = NL.Both)
+        private Tree.Expression? TryRawSeq(NL nl = NL.Both)
         {   
             var expression = TryExprSeq(nl);
             if (expression == null)
             {
-                expression = Jump();
+                expression = TryJump();
             }
 
             return expression;
@@ -319,14 +346,50 @@ namespace Joke.Front.Pony
             return assignment;
         }
 
-        private Tree.Expression Jump()
+        private Tree.Expression? TryJump()
         {
-            throw NotYet("jump");
+            if (More())
+            {
+                var kind = Tree.JumpKind.Missing;
+
+                switch(Kind)
+                {
+                    case TK.Return:
+                        kind = Tree.JumpKind.Return;
+                        break;
+                    case TK.Break:
+                        kind = Tree.JumpKind.Break;
+                        break;
+                    case TK.Continue:
+                        kind = Tree.JumpKind.Continue;
+                        break;
+                    case TK.Error:
+                        kind = Tree.JumpKind.Error;
+                        break;
+                    case TK.CompileIntrinsic:
+                        kind = Tree.JumpKind.CompileIntrinsic;
+                        break;
+                    case TK.CompileError:
+                        kind = Tree.JumpKind.CompileError;
+                        break;
+                }
+
+                if (kind != Tree.JumpKind.Missing)
+                {
+                    Begin(); Match();
+
+                    var value = TryRawSeq();
+
+                    return new Tree.Jump(End(), kind, value);
+                }
+            }
+
+            return null;
         }
 
         private Tree.Expression? TryNoSemi()
         {
-            return RawSeq(NL.Next);
+            return TryRawSeq(NL.Next);
         }
 
         private Tree.Expression? TrySemiExpr()
@@ -334,8 +397,9 @@ namespace Joke.Front.Pony
             if (More() && Iss(TK.Semi))
             {
                 Begin();
+
                 Match();
-                var expression = RawSeq();
+                var expression = TryRawSeq() ?? throw NoParse("semi-expr - raw-seq");
 
                 return new Tree.SemiExpression(End(), expression);
             }
@@ -360,13 +424,13 @@ namespace Joke.Front.Pony
             return infix;
         }
 
-        private Tree.Expression Pattern(NL nl = NL.Both)
+        private Tree.Expression? TryPattern(NL nl = NL.Both)
         {
             var expression = TryLocal();
 
             if (expression == null)
             {
-                expression = ParamPattern(nl);
+                expression = TryParamPattern(nl);
             }
 
             return expression;
@@ -374,43 +438,44 @@ namespace Joke.Front.Pony
 
         private Tree.Expression? TryLocal()
         {
-            Ensure();
-
-            var kind = Tree.LocalKind.Missing;
-
-            switch (Kind)
+            if (More())
             {
-                case TK.Var:
-                    kind = Tree.LocalKind.Var;
-                    break;
-                case TK.Let:
-                    kind = Tree.LocalKind.Let;
-                    break;
-                case TK.Embed:
-                    kind = Tree.LocalKind.Embed;
-                    break;
-            }
+                var kind = Tree.LocalKind.Missing;
 
-            if (kind != Tree.LocalKind.Missing)
-            {
-                Begin();
+                switch (Kind)
+                {
+                    case TK.Var:
+                        kind = Tree.LocalKind.Var;
+                        break;
+                    case TK.Let:
+                        kind = Tree.LocalKind.Let;
+                        break;
+                    case TK.Embed:
+                        kind = Tree.LocalKind.Embed;
+                        break;
+                }
 
-                var name = Identifier();
-                var type = TryColonType();
+                if (kind != Tree.LocalKind.Missing)
+                {
+                    Begin(); Match();
 
-                return new Tree.Local(End(), kind, name, type);
+                    var name = Identifier();
+                    var type = TryColonType();
+
+                    return new Tree.Local(End(), kind, name, type);
+                }
             }
 
             return null;
         }
 
-        private Tree.Expression ParamPattern(NL nl = NL.Both)
+        private Tree.Expression? TryParamPattern(NL nl = NL.Both)
         {
             var expression = TryPrefix(nl);
 
             if (expression == null)
             {
-                expression = Postfix(nl);
+                expression = TryPostfix(nl);
             }
 
             return expression;
@@ -452,7 +517,7 @@ namespace Joke.Front.Pony
 
                 Match();
 
-                var expression = ParamPattern(nl != NL.Case ? NL.Both : nl);
+                var expression = TryParamPattern(nl != NL.Case ? NL.Both : nl) ?? throw NoParse("unary operand missing");
 
                 return new Tree.UnaryOp(End(), kind, expression);
             }
@@ -460,33 +525,36 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Tree.Expression Postfix(NL nl = NL.Both)
+        private Tree.Expression? TryPostfix(NL nl = NL.Both)
         {
-            var atom = Atom(nl);
-            
-            var done = false;
-            while (!done && next < limit)
+            var atom = TryAtom(nl);
+
+            if (atom != null)
             {
-                switch (Kind)
+                var done = false;
+                while (!done && next < limit)
                 {
-                    case TK.Dot:
-                        atom = Dot(atom);
-                        break;
-                    case TK.Tilde:
-                        atom = Tilde(atom);
-                        break;
-                    case TK.Chain:
-                        atom = Tilde(atom);
-                        break;
-                    case TK.LSquare:
-                        atom = Qualify(atom);
-                        break;
-                    case TK.LParen:
-                        atom = Call(atom);
-                        break;
-                    default:
-                        done = true;
-                        break;
+                    switch (Kind)
+                    {
+                        case TK.Dot:
+                            atom = Dot(atom);
+                            break;
+                        case TK.Tilde:
+                            atom = Tilde(atom);
+                            break;
+                        case TK.Chain:
+                            atom = Chain(atom);
+                            break;
+                        case TK.LSquare:
+                            atom = Qualify(atom);
+                            break;
+                        case TK.LParen:
+                            atom = Call(atom);
+                            break;
+                        default:
+                            done = true;
+                            break;
+                    }
                 }
             }
 
@@ -495,7 +563,13 @@ namespace Joke.Front.Pony
 
         private Tree.Expression Dot(Tree.Expression atom)
         {
-            throw NotYet("dot");
+            Debug.Assert(Iss(TK.Dot));
+
+            Begin(); Match();
+
+            var member = Identifier();
+
+            return new Tree.Dot(End(), atom, member);
         }
 
         private Tree.Expression Tilde(Tree.Expression atom)
@@ -510,7 +584,13 @@ namespace Joke.Front.Pony
 
         private Tree.Expression Qualify(Tree.Expression atom)
         {
-            throw NotYet("qualify");
+            Debug.Assert(Iss(TK.LSquare, TK.LSquareNew));
+
+            Begin();
+
+            var arguments = TryTypeArguments() ?? throw NoParse("INTERNAL:Qualify");
+
+            return new Tree.Qualify(End(), atom, arguments);
         }
 
         private Tree.Expression Call(Tree.Expression atom)
@@ -520,8 +600,21 @@ namespace Joke.Front.Pony
             Match("'('", TK.LParen);
             var arguments = Arguments();
             Match("')'", TK.RParen);
+            var partial = TryPartial(); ;
 
-            return new Tree.Call(End(), arguments);
+            return new Tree.Call(End(), atom, arguments, partial);
+        }
+
+        private Tree.Partial? TryPartial()
+        {
+            if (More() && Iss(TK.Question))
+            {
+                Begin();
+                Match();
+                return new Tree.Partial(End());
+            }
+
+            return null;
         }
 
         private Tree.Arguments Arguments()
@@ -558,7 +651,7 @@ namespace Joke.Front.Pony
         {
             Begin();
 
-            var value = RawSeq();
+            var value = TryRawSeq() ?? throw NoParse("positional -- raw-seq");
 
             return new Tree.PositionalArgument(End(), value);
         }
@@ -588,23 +681,213 @@ namespace Joke.Front.Pony
             return new Tree.ThisLiteral(End());
         }
 
-        private Tree.Expression Atom(NL nl = NL.Both)
+        private Tree.Expression? TryAtom(NL nl = NL.Both)
         {
-            Ensure();
-
-            switch (Kind)
+            if (More())
             {
-                case TK.Identifier:
-                    return Ref();
-                case TK.This:
-                    return ThisLiteral();
-                case TK.String:
-                    return String();
-                default:
-                    break;
+                switch (Kind)
+                {
+                    case TK.Identifier:
+                        return Ref();
+                    case TK.This:
+                        return ThisLiteral();
+                    case TK.String:
+                    case TK.DocString:
+                        return String();
+                    case TK.Int:
+                        return Int();
+                    case TK.Float:
+                        return Float();
+                    case TK.True:
+                    case TK.False:
+                        return Bool();
+                    case TK.LParen when nl != NL.Next:
+                    case TK.LParenNew:
+                        return GroupedExpression();
+                    case TK.LSquare when nl != NL.Next:
+                    case TK.LSquareNew:
+                        return Array();
+                    case TK.Object:
+                        throw NotYet("atom -- object");
+                    case TK.LBrace:
+                        throw NotYet("atom -- lambda");
+                    case TK.AtLBrace:
+                        throw NotYet("atom -- barelambda");
+                    case TK.At:
+                        return FfiCall();
+                    case TK.Location:
+                        throw NotYet("atom -- __loc");
+                    case TK.If when nl != NL.Case:
+                        return Iff();
+                    case TK.While:
+                        throw NotYet("atom -- while");
+                    case TK.For:
+                        throw NotYet("atom -- for");
+                    default:
+                        break;
+                }
             }
 
-            throw NotYet("atom");
+            return null;
+        }
+
+        private Tree.Expression? TryLiteral()
+        {
+            if (More())
+            {
+                switch (Kind)
+                {
+                    case TK.String:
+                    case TK.DocString:
+                        return String();
+                    case TK.Int:
+                        return Int();
+                    case TK.Float:
+                        return Float();
+                    case TK.True:
+                    case TK.False:
+                        return Bool();
+                }
+            }
+
+            return null;
+        }
+
+        private Tree.FfiCall FfiCall()
+        {
+            Debug.Assert(Iss(TK.At));
+
+            Begin(); Match();
+
+            var name = FfiName();
+            var returnType = TryTypeArguments();
+            var arguments = Arguments();
+            var partial = TryPartial();
+
+            return new Tree.FfiCall(End(), name, returnType, arguments, partial);
+        }
+
+        private Tree.FfiName FfiName()
+        {
+            Begin();
+
+            var name = (Tree.Expression?)TryString() ?? Identifier();
+
+            return new Tree.FfiName(End(), name);
+        }
+
+        private Tree.GroupedExpression GroupedExpression()
+        {
+            Debug.Assert(Iss(TK.LParen, TK.LParenNew));
+
+            Begin(); Match();
+
+            var expressions = new List<Tree.Expression>();
+
+            if (Issnt(TK.RParen))
+            {
+                var expression = TryRawSeq() ?? throw NoParse("tuple -- raw-seq");
+                expressions.Add(expression);
+
+                while (Iss(TK.Comma))
+                {
+                    Match();
+                    expression = TryRawSeq() ?? throw NoParse("tuple -- raw-seq");
+                    expressions.Add(expression);
+                }
+            }
+            Match("')'", TK.RParen);
+
+            return new Tree.GroupedExpression(End(), expressions);
+        }
+
+        private Tree.Array Array()
+        {
+            Debug.Assert(Iss(TK.LSquare, TK.LSquareNew));
+
+            Begin(); Match();
+            var type = TryArrayType();
+            var elements = TryRawSeq();
+            Match("']'", TK.RSquare);
+
+            return new Tree.Array(End(), type, elements);
+        }
+
+        private Tree.Type? TryArrayType()
+        {
+            if (Iss(TK.As))
+            {
+                Begin(); Match();
+                var type = Type();
+                Match("':'", TK.Colon);
+
+                return new Tree.ArrayType(End(), type);
+            }
+
+            return null;
+        }
+
+        private Tree.Identifier Identifier() => TryIdentifier() ?? throw NoParse("identifier");
+
+        public Tree.Identifier? TryIdentifier()
+        {
+            if (Iss(TK.Identifier))
+            {
+                Begin(); Match();
+
+                return new Tree.Identifier(End());
+            }
+
+            return null;
+        }
+
+        private Tree.String String()
+        {
+            Begin();
+
+            Match("string", TK.String, TK.DocString);
+
+            return new Tree.String(End());
+        }
+
+        private Tree.String? TryString()
+        {
+            if (Iss(TK.String, TK.DocString))
+            {
+                Begin();
+
+                Match();
+                return new Tree.String(End());
+            }
+
+            return null;
+        }
+
+        private Tree.Int Int()
+        {
+            Begin();
+
+            Match("integer", TK.Int);
+
+            return new Tree.Int(End());
+        }
+
+        private Tree.Float Float()
+        {
+            Begin();
+
+            Match("float", TK.Float);
+
+            return new Tree.Float(End());
+        }
+
+        private Tree.Bool Bool()
+        {
+            Begin();
+
+            Match("boolean", TK.True, TK.False);
+
+            return new Tree.Bool(End());
         }
     }
 }

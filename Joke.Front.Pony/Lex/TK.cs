@@ -91,8 +91,11 @@
         True,               // 'true'
         False,              // 'false'
 
-        Actor,
         Addressof,
+        DigestOf,
+        Location,           // '__loc'
+
+        Actor,
         As,
         Be,
         Box,
@@ -102,7 +105,6 @@
         CompileIntrinsic,
         Continue,
         Consume,
-        DigestOf,
         Do,
         Else,
         Elseif,

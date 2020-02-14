@@ -17,7 +17,7 @@ namespace Joke
         internal static void Main(string[] args)
         {
             //EnsureSources();
-            PonyParse(0);
+            PonyParse(29);
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -68,7 +68,7 @@ namespace Joke
 
                 Debug.Assert(content == rebuild);
 
-                var parser = new PonyParser(tokens);
+                var parser = new PonyParser(source, tokens);
 
                 try
                 {
@@ -80,7 +80,7 @@ namespace Joke
                 {
                     var (line, col) = source.GetLineCol(parser.Offset);
 
-                    ErrorMessage(e, line, col);
+                    ErrorMessage(e, parser.Offset, line, col);
 
                     return false;
                 }
@@ -89,15 +89,15 @@ namespace Joke
             {
                 var (line, col) = source.GetLineCol(tokenizer.next);
 
-                ErrorMessage(e, line, col);
+                ErrorMessage(e, tokenizer.next, line, col);
 
                 return false;
             }
 
-            void ErrorMessage(Exception e, int line, int col)
+            void ErrorMessage(Exception e, int offset, int line, int col)
             {
                 var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $" - {e.Message}";
-                Console.WriteLine($"({line},{col}): can't continue @{tokenizer.next}{msg}");
+                Console.WriteLine($"({line},{col}): can't continue @{offset} {msg}");
                 var arrow = new string('-', col - 1) + "^";
                 if (line > 3) Console.WriteLine($" |{source.GetLine(line - 3).ToString()}");
                 if (line > 2) Console.WriteLine($" |{source.GetLine(line - 2).ToString()}");

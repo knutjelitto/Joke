@@ -7,9 +7,16 @@ namespace Joke.Front.Pony.Tree
 {
     public class TypeParameter : Node
     {
-        public TypeParameter(TSpan span)
+        public TypeParameter(TSpan span, Identifier name, Type? type, Type? defaultType)
             : base(span)
         {
+            Name = name;
+            Type = type;
+            DefaultType = defaultType;
         }
+
+        public Identifier Name { get; }
+        public Type? Type { get; }
+        public Type? DefaultType { get; }
     }
 }

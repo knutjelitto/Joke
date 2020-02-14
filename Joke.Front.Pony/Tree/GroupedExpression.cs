@@ -5,14 +5,14 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public class GroupedType : Type
+    public class GroupedExpression : Expression
     {
-        public GroupedType(TSpan span, IReadOnlyList<Type> items)
+        public GroupedExpression(TSpan span, IReadOnlyList<Expression> items)
             : base(span)
         {
             Items = items;
         }
 
-        public IReadOnlyList<Type> Items { get; }
+        public IReadOnlyList<Expression> Items { get; }
     }
 }

@@ -8,16 +8,13 @@ namespace Joke.Front.Pony
 {
     public partial class PonyParser
     {
-        public PonyParser(IReadOnlyList<Token> tokens)
+        public PonyParser(ISource source, IReadOnlyList<Token> tokens)
         {
+            this.source = source;
             toks = tokens;
             next = 0;
             limit = toks.Count;
         }
-
-        private int next;
-        private readonly int limit;
-        private readonly IReadOnlyList<Token> toks;
 
 
         private static readonly TK[] FirstClass = new TK[]
@@ -34,7 +31,7 @@ namespace Joke.Front.Pony
         {
             Begin();
 
-            var doc = OptString();
+            var doc = TryString();
 
             var uses = new List<Tree.Use>();
 
@@ -45,38 +42,96 @@ namespace Joke.Front.Pony
 
             var classes = new List<Tree.Class>();
 
-            while (Iss(FirstClass))
+            var done = false;
+            while (!done && More())
             {
-                classes.Add(Class());
+                switch (Kind)
+                {
+                    case TK.Type:
+                        classes.Add(Class(Tree.ClassKind.Type));
+                        break;
+                    case TK.Interface:
+                        classes.Add(Class(Tree.ClassKind.Interface));
+                        break;
+                    case TK.Trait:
+                        classes.Add(Class(Tree.ClassKind.Trait));
+                        break;
+                    case TK.Primitive:
+                        classes.Add(Class(Tree.ClassKind.Primitive));
+                        break;
+                    case TK.Struct:
+                        classes.Add(Class(Tree.ClassKind.Struct));
+                        break;
+                    case TK.Actor:
+                        classes.Add(Class(Tree.ClassKind.Actor));
+                        break;
+                    default:
+                        done = true;
+                        break;
+                }
             }
 
-            throw NotYet("module");
+            return new Tree.Module(End(), doc, uses, classes);
         }
 
         public Tree.Use Use()
         {
-            throw NotYet("use");
+            Debug.Assert(Iss(TK.Use));
+
+            Begin(); Match();
+
+            var name = TryUseName();
+
+            if (Iss(TK.At))
+            {
+                Match();
+                var ffiName = FfiName();
+                var returnType = TryTypeArguments() ?? throw NoParse("ffi return type");
+                var parameters = Parameters();
+                var partial = TryPartial();
+
+                return new Tree.UseFfi(End(), name, ffiName, returnType, parameters, partial);
+            }
+            else if (Iss(TK.String))
+            {
+                var uri = String();
+                return new Tree.UseUri(End(), name, uri);
+            }
+
+            throw NoParse("use");
         }
 
-        public Tree.Class Class()
+        public Tree.Identifier? TryUseName()
+        {
+            Begin();
+
+            var name = TryIdentifier();
+            if (name != null)
+            {
+                Match("'='", TK.Assign);
+                return new Tree.UseName(End(), name);
+            }
+
+            Discard();
+            return null;
+        }
+
+        public Tree.Class Class(Tree.ClassKind kind)
         {
             Debug.Assert(Iss(FirstClass));
 
-            Begin();
+            Begin(); Match();
 
-            var kind = toks[next].Kind;
-            Match();
-
+            var annotations = Annotations();
             var bare = TryBare();
             var cap = TryCap(false);
             var name = Identifier();
             var typeParams = TryTypeParameters();
-            var provides = OptProvides();
-            var doc = OptString();
+            var provides = TryProvides();
+            var doc = TryString();
             var members = Members();
 
-
-            throw NotYet("class-def");
+            return new Tree.Class(End(), kind, annotations, bare, cap, name, typeParams, provides, doc, members);
         }
 
         private Tree.Members Members()
@@ -94,19 +149,41 @@ namespace Joke.Front.Pony
             Begin();
 
             var fields = new List<Tree.Field>();
-            while (Iss(TK.Var, TK.Let, TK.Embed))
+            var done = false;
+            while (!done && More())
             {
-                fields.Add(Field());
+                switch (Kind)
+                {
+                    case TK.Var:
+                        fields.Add(Field(Tree.FieldKind.Var));
+                        break;
+                    case TK.Let:
+                        fields.Add(Field(Tree.FieldKind.Let));
+                        break;
+                    case TK.Embed:
+                        fields.Add(Field(Tree.FieldKind.Embed));
+                        break;
+                    default:
+                        done = true;
+                        break;
+                }
             }
 
             return new Tree.Fields(End(), fields);
         }
 
-        private Tree.Field Field()
+        private Tree.Field Field(Tree.FieldKind kind)
         {
             Debug.Assert(Iss(TK.Var, TK.Let, TK.Embed));
 
-            throw NotYet("methods");
+            Begin(); Match();
+
+            var name = Identifier();
+            var type = ColonType();
+            var value = TryDefaultArg();
+            var doc = TryString();
+
+            return new Tree.Field(End(), kind, name, type, value, doc);
         }
 
         private Tree.Methods Methods()
@@ -114,7 +191,7 @@ namespace Joke.Front.Pony
             Begin();
 
             var methods = new List<Tree.Method>();
-            while (next < limit)
+            while (More())
             {
                 var kind = Tree.MethodKind.Missing;
 
@@ -158,11 +235,11 @@ namespace Joke.Front.Pony
             var typeParameters = TryTypeParameters();
             var parameters = Parameters();
             var returnType = TryColonType();
-            var partial = MayMatch(TK.Question);
+            var partial = TryPartial();
             var doc = TryString();
             var body = TryBody();
-            
-            throw NotYet("method");
+
+            return new Tree.Method(End(), kind, annotations, bare, cap, name, typeParameters, parameters, returnType, partial, doc, body);
         }
 
         private Tree.Body? TryBody()
@@ -173,7 +250,7 @@ namespace Joke.Front.Pony
 
                 Match();
 
-                var expression = RawSeq();
+                var expression = TryRawSeq() ?? throw NoParse("body -- raw-seq");
 
                 return new Tree.Body(End(), expression);
             }
@@ -222,12 +299,25 @@ namespace Joke.Front.Pony
         {
             if (Iss(TK.Assign))
             {
-                Begin();
+                Begin();Match();
 
-                Match();
                 var expression = TryInfix() ?? throw NoParse("default - value");
 
                 return new Tree.DefaultArg(End(), expression);
+            }
+
+            return null;
+        }
+
+        private Tree.DefaultType? TryDefaultType()
+        {
+            if (Iss(TK.Assign))
+            {
+                Begin(); Match();
+
+                var type = TypeArgument();
+
+                return new Tree.DefaultType(End(), type);
             }
 
             return null;
@@ -258,19 +348,18 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Tree.Bare TryBare()
+        private Tree.Bare? TryBare()
         {
-            Begin();
-
             if (Iss(TK.At))
             {
-                Match();
+                Begin(); Match();
+                return new Tree.Bare(End());
             }
 
-            return new Tree.Bare(End());
+            return null;
         }
 
-        private Tree.Type? OptProvides()
+        private Tree.Type? TryProvides()
         {
             if (Iss(TK.Is))
             {
@@ -283,7 +372,13 @@ namespace Joke.Front.Pony
 
         private Tree.TypeParameter TypeParameter()
         {
-            throw NotYet("type-parameter");
+            Begin();
+
+            var name = Identifier();
+            var type = TryColonType();
+            var defaultType = TryDefaultType();
+
+            return new Tree.TypeParameter(End(), name, type, defaultType);
         }
 
         private Tree.TypeParameters TryTypeParameters()
@@ -307,14 +402,14 @@ namespace Joke.Front.Pony
             return new Tree.TypeParameters(End(), parameters);
         }
 
-        private Tree.Cap TryCap(bool extended)
+        private Tree.Cap? TryCap(bool extended)
         {
-            Begin();
-
-            var cap = Tree.CapKind.Missing;
-
-            if (next < limit)
+            if (More())
             {
+                Begin();
+
+                var cap = Tree.CapKind.Missing;
+
                 switch (Kind)
                 {
                     case TK.Iso:
@@ -354,11 +449,12 @@ namespace Joke.Front.Pony
 
                 if (cap != Tree.CapKind.Missing)
                 {
-                    next += 1;
+                    Match();
+                    return new Tree.Cap(End(), cap);
                 }
             }
 
-            return new Tree.Cap(End(), cap);
+            return null;
         }
 
         public Tree.Annotations Annotations()
@@ -379,149 +475,6 @@ namespace Joke.Front.Pony
             }
 
             return new Tree.Annotations(End(), names);
-        }
-
-        //================= Literals
-
-        public Tree.Identifier Identifier()
-        {
-            if (Iss(TK.Identifier))
-            {
-                Begin();
-
-                Match();
-
-                return new Tree.Identifier(End());
-            }
-
-            throw NoParse("identifier expected");
-        }
-
-        public Tree.String? OptString()
-        {
-            if (Iss(TK.String, TK.DocString))
-            {
-                Begin();
-
-                Match();
-
-                return new Tree.String(End());
-            }
-            return null;
-        }
-
-        //================= Helpers
-
-        private TK Kind => toks[next].Kind;
-
-        private bool MayMatch(TK kind)
-        {
-            if (next < limit && toks[next].Kind == kind)
-            {
-                next += 1;
-                return true;
-            }
-
-            return false;
-        }
-
-        private void Match(string fail, TK kind)
-        {
-            if (next < limit && toks[next].Kind == kind)
-            {
-                next += 1;
-                return;
-            }
-
-            throw NoParse($"{fail} expected");
-        }
-
-        private void Match(string fail, params TK[] kinds)
-        {
-            if (next < limit)
-            {
-                for (var i = 0; i < kinds.Length; ++i)
-                {
-                    if (kinds[i] == toks[next].Kind)
-                    {
-                        next += 1;
-                        return;
-                    }
-                }
-            }
-
-            throw NoParse($"{fail} expected");
-        }
-
-        private bool Iss(TK kind)
-        {
-            return next < limit && toks[next].Kind == kind;
-        }
-
-        private bool Iss(params TK[] kinds)
-        {
-            if (next < limit)
-            {
-                for (var i = 0; i < kinds.Length; ++i)
-                {
-                    if (kinds[i] == toks[next].Kind)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        private bool Issnt(params TK[] kinds)
-        {
-            if (next < limit)
-            {
-                for (var i = 0; i < kinds.Length; ++i)
-                {
-                    if (kinds[i] == toks[next].Kind)
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool More()
-        {
-            return next < limit;
-        }
-
-        private void Next()
-        {
-            if (next < limit)
-            {
-                next += 1;
-            }
-        }
-
-        private void Match()
-        {
-            if (next < limit)
-            {
-                next += 1;
-                return;
-            }
-
-            throw NoParse("expected something (not EOF)");
-        }
-
-        private void Ensure()
-        {
-            if (next >= limit)
-            {
-                throw NoParse("expected something (not EOF)");
-            }
         }
 
         /*
