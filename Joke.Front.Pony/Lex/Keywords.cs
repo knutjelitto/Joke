@@ -26,7 +26,7 @@ namespace Joke.Front.Pony.Lex
                 }
 
                 invers.Add(TK.LParenNew, invers[TK.LParen]);
-                invers.Add(TK.LSquare, invers[TK.LSquareNew]);
+                invers.Add(TK.LSquareNew, invers[TK.LSquare]);
                 invers.Add(TK.MinusNew, invers[TK.Minus]);
                 invers.Add(TK.MinusTildeNew, invers[TK.MinusTilde]);
             }

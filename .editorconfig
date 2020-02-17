@@ -2,3 +2,6 @@
 
 # IDE0009: Member access should be qualified.
 dotnet_style_qualification_for_field = false:silent
+
+# IDE0049: Use framework type
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion

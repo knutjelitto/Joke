@@ -7,6 +7,7 @@ using System.Text;
 using Joke.Front;
 using Joke.Front.Pony;
 using Joke.Front.Pony.Lex;
+using Joke.Front.Pony.Syntax;
 using Joke.Outside;
 using Joke.Outside.Build;
 
@@ -52,7 +53,6 @@ namespace Joke
             lines += source.LineCount;
             var tokenizer = new Tokenizer(source);
 
-#if true
             try
             {
                 var tokens = tokenizer.Tokens().ToList();
@@ -72,7 +72,10 @@ namespace Joke
 
                 try
                 {
-                    parser.Module();
+                    var module = parser.Module();
+
+                    var visitor = new Visitor(module);
+                    visitor.Visit();
 
                     return true;
                 }
@@ -105,37 +108,10 @@ namespace Joke
                 Console.WriteLine($" |{source.GetLine(line).ToString()}");
                 Console.WriteLine($" |{arrow}");
                 Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");
-                //var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
-                var at = e.StackTrace;
-                Console.WriteLine($"{at}");
-            }
-#else
-            var scanner = new PonyScanner(source);
-            var parser = new PonyParser2(scanner);
-
-            try
-            {
-                parser.Parse();
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                var (line, col) = source.GetLineCol(scanner.Current);
-
-                var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $" - {e.Message}";
-                Console.WriteLine($"({line},{col}): can't continue @{scanner.Current}{msg}");
-                var arrow = new string('-', col-1) + "^";
-                Console.WriteLine($" |{source.GetLine(line-1).ToString()}");
-                Console.WriteLine($" |{source.GetLine(line).ToString()}");
-                Console.WriteLine($" |{arrow}");
-                Console.WriteLine($" |{source.GetLine(line+1).ToString()}");
                 var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
+                //var at = e.StackTrace;
                 Console.WriteLine($"{at}");
-
-                return false;
             }
-#endif
         }
 
         private static IEnumerable<FileRef> EnumeratePackagePonies()
@@ -158,7 +134,10 @@ namespace Joke
                 Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories).Concat(
                     Directory.EnumerateFiles(root2, "*.pony", SearchOption.AllDirectories)))
             {
-                if (pony.Contains(@"\ponycc\test\fixtures\"))
+                if (pony.Contains(@"\ponycc\test\fixtures\") ||
+                    pony.Contains(@"\adv5.pony") ||
+                    pony.Contains(@"\bench\bench_pg.pony") ||
+                    pony.Contains(@"\examples\clisample.pony"))
                 {
                     continue;
                 }
