@@ -15,6 +15,27 @@ namespace Joke.Front.Pony.Lex
             return TK.Identifier;
         }
 
+        public static string String(TK kind)
+        {
+            if (invers == null)
+            {
+                invers = new Dictionary<TK, string>();
+                foreach (var pair in keywords)
+                {
+                    invers.Add(pair.Value, pair.Key);
+                }
+
+                invers.Add(TK.LParenNew, invers[TK.LParen]);
+                invers.Add(TK.LSquare, invers[TK.LSquareNew]);
+                invers.Add(TK.MinusNew, invers[TK.Minus]);
+                invers.Add(TK.MinusTildeNew, invers[TK.MinusTilde]);
+            }
+
+            return invers[kind];
+        }
+
+        private static Dictionary<TK, string>? invers = null;
+
         private static Dictionary<string, TK> keywords = new Dictionary<string, TK>
         {
             { "not", TK.Not },
@@ -85,6 +106,62 @@ namespace Joke.Front.Pony.Lex
             { "#share", TK.CapShare },
             { "#alias", TK.CapAlias },
             { "#any", TK.CapAny },
+
+            // add punctuation/operator for inverse lookup
+            { "{", TK.LBrace },
+            { "}", TK.RBrace },
+            { "(", TK.LParen },
+            { ")", TK.RParen },
+            { "[", TK.LSquare },
+            { "]", TK.RSquare },
+            { ",", TK.Comma },
+            { "~", TK.Tilde },
+            { ":", TK.Colon },
+            { ";", TK.Semi },
+            { "?", TK.Question },
+            { "|", TK.Pipe },
+            { "^", TK.Ephemeral },
+            { "&", TK.ISectType },
+            { "#", TK.Constant },
+            { "\\", TK.Backslash },
+            { "@", TK.At },
+            { "@{", TK.AtLBrace },
+            { ".", TK.Dot },
+            { ".>", TK.Chain },
+            { "...", TK.Ellipsis },
+            { "=", TK.Assign },
+            { "=>", TK.DblArrow },
+            { "==", TK.Eq },
+            { "==~", TK.EqTilde },
+            { "!", TK.Aliased },
+            { "!=", TK.Ne },
+            { "!=~", TK.NeTilde },
+            { "<", TK.Lt },
+            { "<:", TK.Subtype },
+            { "<~", TK.LtTilde },
+            { "<=", TK.Le },
+            { "<=~", TK.LeTilde },
+            { "<<", TK.LShift },
+            { "<<~", TK.LShiftTilde },
+            { ">", TK.Gt },
+            { ">~", TK.GtTilde },
+            { ">=", TK.Ge },
+            { ">=~", TK.GeTilde },
+            { ">>", TK.RShift },
+            { ">>~", TK.RShiftTilde },
+            { "+", TK.Plus },
+            { "+~", TK.PlusTilde },
+            { "-", TK.Minus },
+            { "-~", TK.MinusTilde },
+            { "->", TK.Arrow },
+            { "/", TK.Divide },
+            { "/~", TK.DivideTilde },
+            { "*", TK.Multiply },
+            { "*~", TK.MultiplyTilde },
+            { "%", TK.Rem },
+            { "%~", TK.RemTilde },
+            { "%%", TK.Mod },
+            { "%%~", TK.ModTilde },
         };
     }
 }

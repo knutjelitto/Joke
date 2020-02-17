@@ -6,15 +6,16 @@ namespace Joke.Front.Pony.Lex
 {
     public struct TSpan
     {
-        public TSpan(IReadOnlyList<Token> tokens, int start, int next)
+        public TSpan(PonyParser parser, int start, int next)
         {
-            Tokens = tokens;
+            Parser = parser;
             Start = start;
             Next = next;
         }
 
-        public readonly IReadOnlyList<Token> Tokens;
         public readonly int Start;
         public readonly int Next;
+
+        public PonyParser Parser { get; }
     }
 }

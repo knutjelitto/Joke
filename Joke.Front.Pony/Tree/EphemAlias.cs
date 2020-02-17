@@ -1,13 +1,18 @@
-﻿using System;
+﻿using Joke.Front.Pony.Lex;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public enum EphemAlias
+    public class EphemAlias : Node
     {
-        None,
-        Epemeral,
-        Aliased,
+        public EphemAlias(TSpan span, EAKind kind)
+            : base(span)
+        {
+            Kind = kind;
+        }
+
+        public EAKind Kind { get; }
     }
 }

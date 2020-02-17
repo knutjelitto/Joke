@@ -7,7 +7,7 @@ namespace Joke.Front.Pony.Tree
 {
     public class Iff : Expression
     {
-        public Iff(TSpan span, IffKind kind, Annotations annotations, Expression condition, Expression thenPart, Expression? elsePart)
+        public Iff(TSpan span, IffKind kind, Annotations? annotations, Expression condition, Expression thenPart, Expression? elsePart)
             : base(span)
         {
             Kind = kind;
@@ -18,7 +18,7 @@ namespace Joke.Front.Pony.Tree
         }
 
         public IffKind Kind { get; }
-        public Annotations Annotations { get; }
+        public Annotations? Annotations { get; }
         public Expression Condition { get; }
         public Expression ThenPart { get; }
         public Expression? ElsePart { get; }

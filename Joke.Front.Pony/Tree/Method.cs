@@ -9,11 +9,11 @@ namespace Joke.Front.Pony.Tree
     {
         public Method(TSpan span,
             MethodKind kind,
-            Annotations annotations,
+            Annotations? annotations,
             Bare? bare,
             Cap? cap,
             Identifier name,
-            TypeParameters typeParameters,
+            TypeParameters? typeParameters,
             Parameters parameters,
             Type? returnType,
             Partial? partial,
@@ -35,11 +35,11 @@ namespace Joke.Front.Pony.Tree
         }
 
         public MethodKind Kind { get; }
-        public Annotations Annotations { get; }
+        public Annotations? Annotations { get; }
         public Bare? Bare { get; }
         public Cap? Cap { get; }
         public Identifier Name { get; }
-        public TypeParameters TypeParameters { get; }
+        public TypeParameters? TypeParameters { get; }
         public Parameters Parameters { get; }
         public Type? ReturnType { get; }
         public Partial? Partial { get; }

@@ -2,6 +2,8 @@
 {
     public enum TK
     {
+        Missing,
+
         Eof,
 
         Identifier,

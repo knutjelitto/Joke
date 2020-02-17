@@ -1,20 +1,18 @@
-﻿using Joke.Front.Pony.Lex;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using Joke.Front.Pony.Lex;
 
 namespace Joke.Front.Pony
 {
     partial class PonyParser
     {
-        private readonly ISource source;
-        private readonly IReadOnlyList<Token> toks;
+        public ISource Source { get; }
+        public IReadOnlyList<Token> Tokens { get; }
 
         private int next;
         private readonly int limit;
 
-        private TK Kind => toks[next].Kind;
+        private TK TokenKind => next < limit ? Tokens[next].Kind : TK.Missing;
 
         private string Current
         {
@@ -22,7 +20,7 @@ namespace Joke.Front.Pony
             {
                 if (next < limit)
                 {
-                    return $"[{Kind}]";
+                    return $"[{TokenKind}]";
                 }
                 return "[EOF>>]";
             }
@@ -30,7 +28,7 @@ namespace Joke.Front.Pony
 
         private bool MayMatch(TK kind)
         {
-            if (next < limit && toks[next].Kind == kind)
+            if (next < limit && Tokens[next].Kind == kind)
             {
                 next += 1;
                 return true;
@@ -39,37 +37,46 @@ namespace Joke.Front.Pony
             return false;
         }
 
-        private void Match(string fail, TK kind)
+        private void Match(TK kind)
         {
-            if (next < limit && toks[next].Kind == kind)
+            if (next < limit && Tokens[next].Kind == kind)
             {
                 next += 1;
                 return;
             }
 
+            var fail = Keywords.String(kind);
+
             throw NoParse($"{fail} expected");
         }
 
-        private void Match(string fail, params TK[] kinds)
+        private void Match(params TK[] kinds)
         {
+            Debug.Assert(kinds.Length >= 2);
+
+            var ok = false;
             if (next < limit)
             {
-                for (var i = 0; i < kinds.Length; ++i)
+                foreach (var kind in kinds)
                 {
-                    if (kinds[i] == toks[next].Kind)
+                    if (Tokens[next].Kind == kind)
                     {
-                        next += 1;
-                        return;
+                        ok = true;
+                        break;
                     }
                 }
             }
 
-            throw NoParse($"{fail} expected");
+            if (!ok)
+            {
+                throw NoParse("expected something (not EOF)");
+            }
+            next += 1;
         }
 
         private bool Iss(TK kind)
         {
-            return next < limit && toks[next].Kind == kind;
+            return next < limit && Tokens[next].Kind == kind;
         }
 
         private bool Iss(params TK[] kinds)
@@ -78,7 +85,7 @@ namespace Joke.Front.Pony
             {
                 for (var i = 0; i < kinds.Length; ++i)
                 {
-                    if (kinds[i] == toks[next].Kind)
+                    if (kinds[i] == Tokens[next].Kind)
                     {
                         return true;
                     }
@@ -94,7 +101,7 @@ namespace Joke.Front.Pony
             {
                 for (var i = 0; i < kinds.Length; ++i)
                 {
-                    if (kinds[i] == toks[next].Kind)
+                    if (kinds[i] == Tokens[next].Kind)
                     {
                         return false;
                     }
@@ -111,25 +118,6 @@ namespace Joke.Front.Pony
             return next < limit;
         }
 
-        private void Next()
-        {
-            if (next < limit)
-            {
-                next += 1;
-            }
-        }
-
-        private void Match()
-        {
-            if (next < limit)
-            {
-                next += 1;
-                return;
-            }
-
-            throw NoParse("expected something (not EOF)");
-        }
-
         private void Ensure()
         {
             if (next >= limit)
@@ -137,8 +125,5 @@ namespace Joke.Front.Pony
                 throw NoParse("expected something (not EOF)");
             }
         }
-
-
-
     }
 }

@@ -2,16 +2,14 @@
 
 namespace Joke.Front.Pony.Tree
 {
-    public class Dot : Expression
+    public class Dot : PostfixPart
     {
-        public Dot(TSpan span, Expression left, Identifier member)
+        public Dot(TSpan span, Identifier member)
             : base(span)
         {
-            Left = left;
             Member = member;
         }
 
-        public Expression Left { get; }
         public Identifier Member { get; }
     }
 }

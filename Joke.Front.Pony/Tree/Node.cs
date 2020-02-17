@@ -13,5 +13,17 @@ namespace Joke.Front.Pony.Tree
         }
 
         public TSpan Span { get; }
+
+        protected void Check(IReadOnlyCollection<Node> nodes)
+        {
+        }
+
+        public void CheckStart(Node other)
+        {
+            if (Span.Start != other.Span.Start)
+            {
+                throw Span.Parser.NoParse($"{this}.@{Span.Start} doesn't match {other}@{other.Span.Start}");
+            }
+        }
     }
 }

@@ -167,7 +167,7 @@ namespace Joke.Front.Pony.Lex
                             return Token(TK.Arrow);
                         }
                     }
-                    return Token(nl ? TK.Minus : TK.MinusNew);
+                    return Token(nl ? TK.MinusNew : TK.Minus);
 
                 case '/':
                     next += 1;
@@ -374,24 +374,21 @@ namespace Joke.Front.Pony.Lex
             if (content[next] == '0')
             {
                 next += 1;
-                if (next < limit)
+                if (next < limit && (content[next] == 'x' || content[next] == 'X'))
                 {
-                    if (content[next] == 'x' || content[next] == 'X')
+                    next += 1;
+                    // Hex
+                    if (next == limit || !IsHexDigit())
+                    {
+                        throw NoScan("incomplete hex number");
+                    }
+                    do
                     {
                         next += 1;
-                        // Hex
-                        if (next == limit || !IsHexDigit())
-                        {
-                            throw NoScan("incomplete hex number");
-                        }
-                        do
-                        {
-                            next += 1;
-                        }
-                        while (IsHexDigit());
-
-                        return Token(TK.Int);
                     }
+                    while (IsHexDigit());
+
+                    return Token(TK.Int);
                 }
             }
             else
@@ -399,7 +396,7 @@ namespace Joke.Front.Pony.Lex
                 next += 1;
             }
 
-            while (next < limit && IsDigit())
+            while (next < limit && (IsDigit() || content[next] == '_'))
             {
                 next += 1;
             }

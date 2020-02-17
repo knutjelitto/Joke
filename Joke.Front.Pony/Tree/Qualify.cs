@@ -5,16 +5,14 @@ using System.Text;
 
 namespace Joke.Front.Pony.Tree
 {
-    public class Qualify : Expression
+    public class Qualify : PostfixPart
     {
-        public Qualify(TSpan span, Expression left, TypeArguments arguments)
+        public Qualify(TSpan span, TypeArguments arguments)
             : base(span)
         {
-            Left = left;
             Arguments = arguments;
         }
 
-        public Expression Left { get; }
         public TypeArguments Arguments { get; }
     }
 }

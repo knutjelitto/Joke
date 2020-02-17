@@ -1,6 +1,7 @@
 ﻿using Joke.Front.Pony.Lex;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Joke.Front.Pony.Tree
@@ -10,6 +11,8 @@ namespace Joke.Front.Pony.Tree
         public Assignment(TSpan span, Expression left, Expression right)
             : base(span)
         {
+            CheckStart(left);
+
             Left = left;
             Right = right;
         }

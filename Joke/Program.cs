@@ -17,19 +17,19 @@ namespace Joke
         internal static void Main(string[] args)
         {
             //EnsureSources();
-            PonyParse(29);
+            //PonyParse(0, EnumeratePackagePonies());
+            PonyParse(0, EnumerateAllPonies());
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
         }
 
-        private static void PonyParse(int skip = 0)
+        private static void PonyParse(int skip, IEnumerable<FileRef> ponies)
         {
             int no = 0;
             int lines = 0;
 
-            //foreach (var ponyFile in EnumeratePonies())
-            foreach (var ponyFile in EnumeratePackagePonies())
+            foreach (var ponyFile in ponies)
             {
                 no += 1;
                 if (no <= skip)
@@ -105,8 +105,8 @@ namespace Joke
                 Console.WriteLine($" |{source.GetLine(line).ToString()}");
                 Console.WriteLine($" |{arrow}");
                 Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");
-                var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
-                //var at = e.StackTrace;
+                //var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
+                var at = e.StackTrace;
                 Console.WriteLine($"{at}");
             }
 #else
@@ -148,7 +148,7 @@ namespace Joke
             }
         }
 
-        private static IEnumerable<FileRef> EnumeratePonies()
+        private static IEnumerable<FileRef> EnumerateAllPonies()
         {
             //var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages");
             var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");
@@ -158,6 +158,10 @@ namespace Joke
                 Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories).Concat(
                     Directory.EnumerateFiles(root2, "*.pony", SearchOption.AllDirectories)))
             {
+                if (pony.Contains(@"\ponycc\test\fixtures\"))
+                {
+                    continue;
+                }
                 yield return FileRef.From(pony);
             }
         }

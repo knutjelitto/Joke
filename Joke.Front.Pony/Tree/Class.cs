@@ -9,11 +9,11 @@ namespace Joke.Front.Pony.Tree
     {
         public Class(TSpan span,
             ClassKind kind,
-            Annotations annotations,
+            Annotations? annotations,
             Bare? bare,
             Cap? cap,
             Identifier name,
-            TypeParameters typeParameters,
+            TypeParameters? typeParameters,
             Type? provides,
             String? doc,
             Members members)
@@ -31,11 +31,11 @@ namespace Joke.Front.Pony.Tree
         }
 
         public ClassKind Kind { get; }
-        public Annotations Annotations { get; }
+        public Annotations? Annotations { get; }
         public Bare? Bare { get; }
         public Cap? Cap { get; }
         public Identifier Name { get; }
-        public TypeParameters TypeParameters { get; }
+        public TypeParameters? TypeParameters { get; }
         public Type? Provides { get; }
         public String? Doc { get; }
         public Members Members { get; }

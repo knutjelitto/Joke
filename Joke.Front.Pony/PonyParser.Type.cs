@@ -1,15 +1,11 @@
-﻿using Joke.Front.Pony.Lex;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+﻿using System.Collections.Generic;
+
+using Joke.Front.Pony.Lex;
 
 namespace Joke.Front.Pony
 {
     partial class PonyParser
     {
-        private static TK[] FirstViewpoint = new TK[] { TK.Arrow };
-
         private Tree.Type Type() => TryType() ?? throw NoParse("type");
         private Tree.Type? TryType()
         {
@@ -17,30 +13,22 @@ namespace Joke.Front.Pony
 
             var atom = TryAtomType();
 
-            if (atom != null)
+            if (atom != null && Iss(TK.Arrow))
             {
-                if (Iss(FirstViewpoint))
-                {
-                    var arrow = ArrowType();
+                var arrow = ArrowType();
 
-                    return new Tree.ViewpointType(End(), atom, arrow);
-                }
+                return new Tree.ViewpointType(End(), atom, arrow);
             }
-            else
-            {
-                Discard();
-            }
+
+            Discard();
 
             return atom;
         }
 
         private Tree.ArrowType ArrowType()
         {
-            Begin();
-
-            Match("->", TK.Arrow);
+            Begin(TK.Arrow);
             var type = Type();
-
             return new Tree.ArrowType(End(), type);
         }
 
@@ -48,20 +36,19 @@ namespace Joke.Front.Pony
         {
             if (More())
             {
-                switch (Kind)
+                switch (TokenKind)
                 {
                     case TK.This:
-                        Match();
-                        return new Tree.ThisType(End());
+                        return ThisType();
                     case TK.LParen:
                     case TK.LParenNew:
                         return GroupedType();
                     case TK.Identifier:
                         return Nominal();
                     case TK.LBrace:
-                        throw NotYet("atom-type -- lambdatype");
+                        return LambdaType(false);
                     case TK.AtLBrace:
-                        throw NotYet("atom-type -- barelambdatype");
+                        return LambdaType(true);
                     default:
                         var cap = TryCap(false);
                         if (cap != null)
@@ -75,22 +62,58 @@ namespace Joke.Front.Pony
             return null;
         }
 
-        private Tree.GroupedType GroupedType()
+        private Tree.ThisType ThisType()
         {
-            Debug.Assert(Iss(TK.LParen, TK.LParenNew));
+            Begin(TK.This);
+            return new Tree.ThisType(End());
+        }
 
-            Begin();
+        private Tree.LambdaType LambdaType(bool bare)
+        {
+            Begin(TK.LBrace, TK.AtLBrace);
+            var receiverCap = TryCap(false);
+            var name = TryIdentifier();
+            var typeParameters = TryTypeParameters();
+            var parameters = LambdaTypeParameters();
+            var returnType = TryColonType();
+            var partial = TryPartial();
+            Match(TK.RBrace);
+            var referenceCap = TryCap(false);
+            var ea = EphemAlias();
+
+            return new Tree.LambdaType(End(), bare, receiverCap, name, typeParameters, parameters, returnType, partial, referenceCap, ea);
+        }
+
+        private Tree.LambdaTypeParameters LambdaTypeParameters()
+        {
+            Begin(TK.LParen, TK.LParenNew);
 
             var types = new List<Tree.Type>();
 
+            if (Issnt(TK.RParen))
+            {
+                do
+                {
+                    types.Add(Type());
+                }
+                while (MayMatch(TK.Comma));
+            }
+            Match(TK.RParen);
+
+            return new Tree.LambdaTypeParameters(End(), types);
+        }
+
+        private Tree.GroupedType GroupedType()
+        {
+            Begin(TK.LParen, TK.LParenNew);
+            var types = new List<Tree.Type>();
             do
             {
-                Match();
                 var type = InfixType();
                 types.Add(type);
             }
-            while (Iss(TK.Comma));
-            Match("')'", TK.RParen);
+            while (MayMatch(TK.Comma));
+            Match(TK.RParen);
 
             return new Tree.GroupedType(End(), types);
         }
@@ -98,23 +121,22 @@ namespace Joke.Front.Pony
         private Tree.Type InfixType()
         {
             Begin();
-
             var type = Type();
             var parts = new List<Tree.InfixTypePart>();
             var done = false;
             while (!done && More())
             {
-                switch (Kind)
+                switch (TokenKind)
                 {
                     case TK.Pipe:
                         Begin();
-                        Match();
+                        Match(TK.Pipe);
                         var ptype = Type();
                         parts.Add(new Tree.UnionPart(End(), ptype));
                         break;
                     case TK.ISectType:
                         Begin();
-                        Match();
+                        Match(TK.ISectType);
                         var itype = Type();
                         parts.Add(new Tree.IntersectionPart(End(), itype));
                         break;
@@ -124,7 +146,7 @@ namespace Joke.Front.Pony
                 }
             }
 
-            if (parts.Count > 1)
+            if (parts.Count > 0)
             {
                 return new Tree.InfixType(End(), type, parts);
             }
@@ -135,18 +157,8 @@ namespace Joke.Front.Pony
 
         private Tree.Type Nominal()
         {
-            Debug.Assert(Iss(TK.Identifier));
-
             Begin();
-
-            var name = Identifier();
-            if (Iss(TK.Dot))
-            {
-                Match();
-                var name2 = Identifier();
-
-                name = new Tree.DotIdentifier(End(), name, name2);
-            }
+            var name = DotIdentifier();
             var typeArguments = TryTypeArguments();
             var cap = TryCap(true);
             var ea = EphemAlias();
@@ -154,37 +166,60 @@ namespace Joke.Front.Pony
             return new Tree.NominalType(End(), name, typeArguments, cap, ea);
         }
 
-        private Tree.EphemAlias EphemAlias()
+        private Tree.Identifier DotIdentifier()
         {
-            if (MayMatch(TK.Ephemeral))
+            Begin();
+            var name = Identifier();
+            if (Iss(TK.Dot))
             {
-                return Tree.EphemAlias.Epemeral;
+                Match(TK.Dot);
+
+                var name2 = Identifier();
+
+                return new Tree.DotIdentifier(End(), name, name2);
             }
-            if (MayMatch(TK.Aliased))
-            {
-                return Tree.EphemAlias.Aliased;
-            }
-            return Tree.EphemAlias.None;
+
+            Discard();
+            return name;
         }
 
-        private Tree.TypeArguments TryTypeArguments()
+        private Tree.EphemAlias EphemAlias()
         {
             Begin();
 
-            var arguments = new List<Tree.TypeArgument>();
-            if (Iss(TK.LSquare))
+            if (MayMatch(TK.Ephemeral))
             {
-                do
-                {
-                    Match();
-                    var argument = TypeArgument();
-                    arguments.Add(argument);
-                }
-                while (Iss(TK.Comma));
-                Match("']'", TK.RSquare);
+                return new Tree.EphemAlias(End(), Tree.EAKind.Epemeral);
+            }
+            if (MayMatch(TK.Aliased))
+            {
+                return new Tree.EphemAlias(End(), Tree.EAKind.Aliased);
             }
 
-            return new Tree.TypeArguments(End(), arguments);
+            return new Tree.EphemAlias(End(), Tree.EAKind.None);
+        }
+
+        private Tree.TypeArguments TypeArguments() => TryTypeArguments() ?? throw NoParse("type-arguments");
+        private Tree.TypeArguments? TryTypeArguments()
+        {
+            if (MayBegin(TK.LSquare))
+            {
+                var arguments = new List<Tree.TypeArgument>();
+
+                arguments.Add(TypeArgument());
+
+                while (Iss(TK.Comma))
+                {
+                    Match(TK.Comma);
+                    arguments.Add(TypeArgument());
+                }
+
+                Match(TK.RSquare);
+
+                return new Tree.TypeArguments(End(), arguments);
+            }
+
+            return null;
         }
 
         private Tree.TypeArgument TypeArgument()

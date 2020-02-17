@@ -15,23 +15,41 @@ namespace Joke.Front.Pony
             marks.Push(next);
         }
 
+        private void Begin(TK kind)
+        {
+            marks.Push(next);
+            Match(kind);
+        }
+
+        private void Begin(params TK[] kinds)
+        {
+            Debug.Assert(kinds.Length >= 2);
+
+            marks.Push(next);
+            Match(kinds);
+        }
+
+        private bool MayBegin(params TK[] kinds)
+        {
+            if (More() && System.Array.IndexOf(kinds, TokenKind) >= 0)
+            {
+                marks.Push(next);
+                next += 1;
+                return true;
+            }
+            return false;
+        }
+
         private TSpan End()
         {
             Debug.Assert(next <= limit);
-
-            return new TSpan(toks, marks.Pop(), next);
+            Debug.Assert(marks.Count > 0);
+            return new TSpan(this, marks.Pop(), next);
         }
 
         private int Discard()
         {
             return marks.Pop();
-        }
-
-        private TSpan Span(int start)
-        {
-            Debug.Assert(next <= limit);
-
-            return new TSpan(toks, start, next);
         }
     }
 }

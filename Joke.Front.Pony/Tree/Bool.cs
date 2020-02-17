@@ -7,9 +7,12 @@ namespace Joke.Front.Pony.Tree
 {
     public class Bool : Expression
     {
-        public Bool(TSpan span)
+        public Bool(TSpan span, bool value)
             : base(span)
         {
+            Value = value;
         }
+
+        public bool Value { get; }
     }
 }
