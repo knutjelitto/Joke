@@ -334,6 +334,7 @@ namespace Joke.Front.Pony.Lex
 
         private Token IdentifierOrKeyword()
         {
+            Debug.Assert(IsLetter_());
             do
             {
                 next += 1;

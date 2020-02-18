@@ -1,6 +1,4 @@
-﻿using Joke.Front.Pony.Ast;
-
-namespace Joke.Front.Pony.Syntax
+﻿namespace Joke.Front.Pony.Syntax
 {
     partial class PonyParser
     {

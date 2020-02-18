@@ -1,8 +1,7 @@
-﻿using Joke.Front.Pony.Lex;
-using System;
+﻿using Joke.Front.Pony.Ast;
+using Joke.Front.Pony.Lex;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace Joke.Front.Pony.Syntax
 {
@@ -47,9 +46,16 @@ namespace Joke.Front.Pony.Syntax
             return new TSpan(this, marks.Pop(), next);
         }
 
-        private int Discard()
+        private TSpan Mark(Node node)
         {
-            return marks.Pop();
+            Debug.Assert(next <= limit);
+            Debug.Assert(marks.Count > 0);
+            return new TSpan(this, node.Span.Start, next);
+        }
+
+        private void Drop()
+        {
+            marks.Pop();
         }
     }
 }

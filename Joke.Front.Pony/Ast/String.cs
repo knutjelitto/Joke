@@ -1,5 +1,4 @@
 ﻿using Joke.Front.Pony.Lex;
-using System;
 
 namespace Joke.Front.Pony.Ast
 {

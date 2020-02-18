@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Outside", "Joke.Outsid
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front", "Joke.Front\Joke.Front.csproj", "{B7452248-0A57-4511-A0C3-831EB4F3F46A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front.Json", "Joke.Front.Json\Joke.Front.Json.csproj", "{967D1997-B09A-43B9-A379-6CCD8F120E41}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front.Joke", "Joke.Front.Joke\Joke.Front.Joke.csproj", "{597D800C-F9E5-452D-AA80-76B7A616F9F0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Joke.Front.Pony", "Joke.Front.Pony\Joke.Front.Pony.csproj", "{414FB02E-B33D-42EC-AA5B-65C5A9BA7FA7}"
@@ -38,10 +36,6 @@ Global
 		{B7452248-0A57-4511-A0C3-831EB4F3F46A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7452248-0A57-4511-A0C3-831EB4F3F46A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7452248-0A57-4511-A0C3-831EB4F3F46A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{967D1997-B09A-43B9-A379-6CCD8F120E41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{967D1997-B09A-43B9-A379-6CCD8F120E41}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{967D1997-B09A-43B9-A379-6CCD8F120E41}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{967D1997-B09A-43B9-A379-6CCD8F120E41}.Release|Any CPU.Build.0 = Release|Any CPU
 		{597D800C-F9E5-452D-AA80-76B7A616F9F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{597D800C-F9E5-452D-AA80-76B7A616F9F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{597D800C-F9E5-452D-AA80-76B7A616F9F0}.Release|Any CPU.ActiveCfg = Release|Any CPU

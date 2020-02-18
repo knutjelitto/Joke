@@ -14,16 +14,12 @@ namespace Joke.Front.Pony.Syntax
         }
 
         private Ast.Expression Infix(NL nl = NL.Both) => TryInfix(nl) ?? throw NoParse("infix");
-
         private Ast.Expression? TryInfix(NL nl = NL.Both)
         {
-            Begin();
-
             var term = TryTerm(nl);
 
             if (term == null)
             {
-                Discard();
                 return null;
             }
 
@@ -162,22 +158,21 @@ namespace Joke.Front.Pony.Syntax
                         {
                             throw NoParse("binary operator <as> doesn't associate");
                         }
-                        return new Ast.As(End(), term, ((Parts.AsPart)parts[0]).Type);
+                        return new Ast.As(Mark(term), term, ((Parts.AsPart)parts[0]).Type);
                     case Ast.BinaryKind.Is:
                     case Ast.BinaryKind.Isnt:
                         if (parts.Count > 1)
                         {
                             throw NoParse("binary operator <is>/<isnt> doesn't associate");
                         }
-                        return new Ast.Binary(End(), @operator, term, ((Parts.IsPart)parts[0]).Expression);
+                        return new Ast.Binary(Mark(term), @operator, term, ((Parts.IsPart)parts[0]).Expression);
                     default:
                         var operands = new List<Ast.Expression> { term };
                         operands.AddRange(parts.Cast<Parts.BinaryPart>().Select(b => b.Right));
-                        return new Ast.Binary(End(), @operator, operands);
+                        return new Ast.Binary(Mark(term), @operator, operands);
                 }
             }
 
-            Discard();
             return term;
         }
 
@@ -562,8 +557,6 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Expression? TryExprSeq(NL nl = NL.Both)
         {
-            Begin();
-
             var assignment = TryAssignment(nl);
 
             if (assignment != null)
@@ -572,11 +565,9 @@ namespace Joke.Front.Pony.Syntax
 
                 if (next != null)
                 {
-                    return new Ast.Sequence(End(), assignment, next);
+                    return new Ast.Sequence(Mark(assignment), assignment, next);
                 }
             }
-
-            Discard();
 
             return assignment;
         }
@@ -621,23 +612,19 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Expression Assignment(NL nl = NL.Both) => TryAssignment(nl) ?? throw NoParse("assignment");
         private Ast.Expression? TryAssignment(NL nl = NL.Both)
         {
-            Begin();
-
             var infix = TryInfix(nl);
 
             if (infix == null)
             {
-                Discard();
                 return null;
             }
 
             if (MayMatch(TK.Assign))
             {
                 var right = Assignment(NL.Both);
-                return new Ast.Assignment(End(), infix, right);
+                return new Ast.Assignment(Mark(infix), infix, right);
             }
 
-            Discard();
             return infix;
         }
 
@@ -728,13 +715,10 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Expression? TryPostfix(NL nl = NL.Both)
         {
-            Begin();
-
             var atom = TryAtom(nl);
 
             if (atom == null)
             {
-                Discard();
                 return null;
             }
 
@@ -768,10 +752,9 @@ namespace Joke.Front.Pony.Syntax
 
             if (parts.Count > 0)
             {
-                return new Ast.Postfix(End(), atom, parts);
+                return new Ast.Postfix(Mark(atom), atom, parts);
             }
 
-            Discard();
             return atom;
         }
 
@@ -838,7 +821,6 @@ namespace Joke.Front.Pony.Syntax
         private Ast.PositionalArgument Positional()
         {
             Begin();
-
             var value = RawSeq();
             return new Ast.PositionalArgument(End(), value);
         }

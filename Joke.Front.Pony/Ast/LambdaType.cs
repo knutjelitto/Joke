@@ -1,7 +1,4 @@
 ﻿using Joke.Front.Pony.Lex;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
@@ -16,7 +13,7 @@ namespace Joke.Front.Pony.Ast
             Type? returnType,
             bool partial,
             Cap? referenceCap,
-            EphemAlias ea)
+            EphemAlias? ea)
             : base(span)
         {
             Bare = bare;
@@ -38,6 +35,6 @@ namespace Joke.Front.Pony.Ast
         public Type? ReturnType { get; }
         public bool Partial { get; }
         public Cap? ReferenceCap { get; }
-        public EphemAlias Ea { get; }
+        public EphemAlias? Ea { get; }
     }
 }

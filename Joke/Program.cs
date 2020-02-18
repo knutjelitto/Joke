@@ -78,9 +78,15 @@ namespace Joke
                 {
                     var module = parser.Module();
 
-                    stats.Update(module);
+                    var visitor = new TokenCoverageVisitor();
 
-                    return true;
+                    visitor.Visit(module);
+
+                    Console.WriteLine($"{parser.Tokens.Count} :: {visitor.Set.Cardinality}");
+
+                    //stats.Update(module);
+
+                    return false;
                 }
                 catch (Exception e)
                 {

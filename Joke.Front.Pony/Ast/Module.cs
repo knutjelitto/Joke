@@ -1,7 +1,6 @@
-﻿using Joke.Front.Pony.Lex;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+
+using Joke.Front.Pony.Lex;
 
 namespace Joke.Front.Pony.Ast
 {

@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Joke.Front\Joke.Front.csproj" />
+    <ProjectReference Include="..\Joke.Outside\Joke.Outside.csproj" />
   </ItemGroup>
 
 </Project>

@@ -10,18 +10,14 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Type Type() => TryType() ?? throw NoParse("type");
         private Ast.Type? TryType()
         {
-            Begin();
-
             var atom = TryAtomType();
 
             if (atom != null && Iss(TK.Arrow))
             {
                 var arrow = ArrowType();
 
-                return new Ast.ViewpointType(End(), atom, arrow);
+                return new Ast.ViewpointType(Mark(atom), atom, arrow);
             }
-
-            Discard();
 
             return atom;
         }
@@ -79,7 +75,7 @@ namespace Joke.Front.Pony.Syntax
             var partial = MayPartial();
             Match(TK.RBrace);
             var referenceCap = TryCap(false);
-            var ea = EphemAlias();
+            var ea = TryEphemAlias();
 
             return new Ast.LambdaType(End(), bare, receiverCap, name, typeParameters, parameters, returnType, partial, referenceCap, ea);
         }
@@ -104,7 +100,6 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Type InfixType()
         {
-            Begin();
             var type = Type();
             var parts = new List<Parts.InfixTypePart>();
             var done = false;
@@ -140,10 +135,9 @@ namespace Joke.Front.Pony.Syntax
                 var @operator = operators[0];
                 var operands = new List<Ast.Type> { type };
                 operands.AddRange(parts.Cast<Parts.InfixTypePart>().Select(b => b.Right));
-                return new Ast.InfixType(End(), @operator, operands);
+                return new Ast.InfixType(Mark(type), @operator, operands);
             }
 
-            Discard();
             return type;
         }
 
@@ -153,14 +147,13 @@ namespace Joke.Front.Pony.Syntax
             var name = DotIdentifier();
             var typeArguments = TryTypeArguments();
             var cap = TryCap(true);
-            var ea = EphemAlias();
+            var ea = TryEphemAlias();
 
             return new Ast.NominalType(End(), name, typeArguments, cap, ea);
         }
 
         private Ast.Identifier DotIdentifier()
         {
-            Begin();
             var name = Identifier();
             if (Iss(TK.Dot))
             {
@@ -168,27 +161,24 @@ namespace Joke.Front.Pony.Syntax
 
                 var name2 = Identifier();
 
-                return new Ast.DotIdentifier(End(), name, name2);
+                return new Ast.DotIdentifier(Mark(name), name, name2);
             }
 
-            Discard();
             return name;
         }
 
-        private Ast.EphemAlias EphemAlias()
+        private Ast.EphemAlias? TryEphemAlias()
         {
-            Begin();
-
-            if (MayMatch(TK.Ephemeral))
+            if (MayBegin(TK.Ephemeral))
             {
                 return new Ast.EphemAlias(End(), Ast.EAKind.Epemeral);
             }
-            if (MayMatch(TK.Aliased))
+            if (MayBegin(TK.Aliased))
             {
                 return new Ast.EphemAlias(End(), Ast.EAKind.Aliased);
             }
 
-            return new Ast.EphemAlias(End(), Ast.EAKind.None);
+            return null;
         }
 
         private Ast.TypeArguments TypeArguments() => TryTypeArguments() ?? throw NoParse("type-arguments");
@@ -205,16 +195,9 @@ namespace Joke.Front.Pony.Syntax
             return null;
         }
 
-        private Ast.TypeArgument TypeArgument()
+        private Ast.Type TypeArgument()
         {
-            var type = TryType();
-
-            if (type != null)
-            {
-                return new Ast.TypeArgumentType(type.Span, type);
-            }
-
-            throw NotYet("type-argument");
+            return Type();
         }
     }
 }

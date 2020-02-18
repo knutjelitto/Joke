@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Visit
 {
     public class Visitor
     {
-        private readonly Reflect reflect = new Reflect();
+        protected readonly Reflect reflect = new Reflect();
 
         public Visitor()
         {
@@ -47,7 +47,6 @@ namespace Joke.Front.Pony.Visit
         protected virtual void DoVisit(FfiName node) => VisitChildren(node);
         protected virtual void DoVisit(Identifier node) => VisitChildren(node);
         protected virtual void DoVisit(TypeArguments node) => VisitChildren(node);
-        protected virtual void DoVisit(TypeArgumentType node) => VisitChildren(node);
         protected virtual void DoVisit(NominalType node) => VisitChildren(node);
         protected virtual void DoVisit(EphemAlias node) => VisitChildren(node);
         protected virtual void DoVisit(Parameters node) => VisitChildren(node);
@@ -59,8 +58,6 @@ namespace Joke.Front.Pony.Visit
         protected virtual void DoVisit(Fields node) => VisitChildren(node);
         protected virtual void DoVisit(Methods node) => VisitChildren(node);
         protected virtual void DoVisit(Method node) => VisitChildren(node);
-        protected virtual void DoVisit(Provides node) => VisitChildren(node);
-        protected virtual void DoVisit(Body node) => VisitChildren(node);
         protected virtual void DoVisit(Ref node) => VisitChildren(node);
         protected virtual void DoVisit(TypeParameters node) => VisitChildren(node);
         protected virtual void DoVisit(TypeParameter node) => VisitChildren(node);

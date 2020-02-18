@@ -1,8 +1,5 @@
 ﻿using Joke.Front.Pony.Lex;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 
 namespace Joke.Front.Pony.Syntax
 {
@@ -15,17 +12,6 @@ namespace Joke.Front.Pony.Syntax
             next = 0;
             limit = Tokens.Count;
         }
-
-
-        private static readonly TK[] FirstClass = new TK[]
-        {
-            TK.Type, TK.Interface, TK.Trait, TK.Primitive, TK.Struct, TK.Class, TK.Actor
-        };
-
-        private static readonly TK[] FirstParameter = new TK[]
-        {
-            TK.Identifier, TK.Ellipsis
-        };
 
         public Ast.Module Module()
         {
@@ -47,6 +33,9 @@ namespace Joke.Front.Pony.Syntax
             {
                 switch (TokenKind)
                 {
+                    case TK.Class:
+                        classes.Add(Class(Ast.ClassKind.Class));
+                        break;
                     case TK.Type:
                         classes.Add(Class(Ast.ClassKind.Type));
                         break;
@@ -103,22 +92,17 @@ namespace Joke.Front.Pony.Syntax
 
         public Ast.Identifier? TryUseName()
         {
-            Begin();
-
             var name = TryIdentifier();
             if (name != null)
             {
                 Match(TK.Assign);
-                return new Ast.UseName(End(), name);
             }
-
-            Discard();
-            return null;
+            return name;
         }
 
         public Ast.Class Class(Ast.ClassKind kind)
         {
-            Begin(FirstClass);
+            Begin(First.Class);
 
             var annotations = TryAnnotations();
             var bare = MayMatch(TK.At);
@@ -228,13 +212,11 @@ namespace Joke.Front.Pony.Syntax
             return new Ast.Method(End(), kind, annotations, bare, cap, name, typeParameters, parameters, returnType, partial, doc, body);
         }
 
-        private Ast.Body? TryBody()
+        private Ast.Expression? TryBody()
         {
-            if (Iss(TK.DblArrow))
+            if (MayMatch(TK.DblArrow))
             {
-                Begin(TK.DblArrow);
-                var body = RawSeq();
-                return new Ast.Body(End(), body);
+                return RawSeq();
             }
 
             return null;
@@ -293,9 +275,9 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Type? TryColonType()
         {
-            if (Iss(TK.Colon))
+            if (MayMatch(TK.Colon))
             {
-                return ColonType();
+                return Type();
             }
             return null;
         }
@@ -304,8 +286,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayBegin(TK.Is))
             {
-                var type = Type();
-                return new Ast.Provides(End(), type);
+                return Type();
             }
 
             return null;
