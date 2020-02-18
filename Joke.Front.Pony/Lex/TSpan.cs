@@ -18,5 +18,26 @@ namespace Joke.Front.Pony.Lex
         public readonly int Next;
 
         public PonyParser Parser { get; }
+
+        public IEnumerable<Token> GetTokens()
+        {
+            for (var i = Start; i < Next; ++i)
+            {
+                yield return Parser.Tokens[i];
+            }
+        }
+
+        public IEnumerable<string> GetPayloads()
+        {
+            foreach (var token in GetTokens())
+            {
+                yield return token.GetPayload(Parser.Source);
+            }
+        }
+
+        public override string? ToString()
+        {
+            return string.Join("-", GetPayloads());
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Syntax
 {
     partial class PonyParser
     {
-        private List<T> PlusList<T>(System.Func<T> parse, params TK[] iffnt)
+        private List<T> List<T>(System.Func<T> parse, params TK[] iffnt)
         {
             var items = new List<T>();
             if (iffnt.Length == 0 || Issnt(iffnt))

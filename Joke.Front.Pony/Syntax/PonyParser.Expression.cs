@@ -1,6 +1,5 @@
 ﻿using Joke.Front.Pony.Lex;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Joke.Front.Pony.Syntax
@@ -28,7 +27,7 @@ namespace Joke.Front.Pony.Syntax
                 return null;
             }
 
-            var parts = new List<Ast.InfixPart>();
+            var parts = new List<Parts.InfixPart>();
 
             var done = false;
             while (!done && next < limit)
@@ -163,18 +162,18 @@ namespace Joke.Front.Pony.Syntax
                         {
                             throw NoParse("binary operator <as> doesn't associate");
                         }
-                        return new Ast.As(End(), term, ((Ast.AsPart)parts[0]).Type);
+                        return new Ast.As(End(), term, ((Parts.AsPart)parts[0]).Type);
                     case Ast.BinaryKind.Is:
                     case Ast.BinaryKind.Isnt:
                         if (parts.Count > 1)
                         {
                             throw NoParse("binary operator <is>/<isnt> doesn't associate");
                         }
-                        return new Ast.BinaryOp(End(), @operator, term, ((Ast.IsPart)parts[0]).Expression);
+                        return new Ast.Binary(End(), @operator, term, ((Parts.IsPart)parts[0]).Expression);
                     default:
                         var operands = new List<Ast.Expression> { term };
-                        operands.AddRange(parts.Cast<Ast.BinaryOpPart>().Select(b => b.Right));
-                        return new Ast.BinaryOp(End(), @operator, operands);
+                        operands.AddRange(parts.Cast<Parts.BinaryPart>().Select(b => b.Right));
+                        return new Ast.Binary(End(), @operator, operands);
                 }
             }
 
@@ -182,7 +181,7 @@ namespace Joke.Front.Pony.Syntax
             return term;
         }
 
-        private Ast.BinaryOpPart BinaryPart(Ast.BinaryKind kind)
+        private Parts.BinaryPart BinaryPart(Ast.BinaryKind kind)
         {
             var token = Token;
 
@@ -217,21 +216,21 @@ namespace Joke.Front.Pony.Syntax
                 }
             }
 
-            return new Ast.BinaryOpPart(End(), kind, term);
+            return new Parts.BinaryPart(End(), kind, term);
         }
 
-        private Ast.IsPart IsPart(Ast.BinaryKind kind)
+        private Parts.IsPart IsPart(Ast.BinaryKind kind)
         {
             Begin(TK.Is, TK.Isnt);
             var term = Term();
-            return new Ast.IsPart(End(), kind, term);
+            return new Parts.IsPart(End(), kind, term);
         }
 
-        private Ast.AsPart AsPart()
+        private Parts.AsPart AsPart()
         {
             Begin(TK.As);
             var type = Type();
-            return new Ast.AsPart(End(), type);
+            return new Parts.AsPart(End(), type);
         }
 
         private Ast.Expression Term(NL nl = NL.Both) => TryTerm(nl) ?? throw NoParse("term");
@@ -271,7 +270,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.WithElements WithElements()
         {
             Begin();
-            var elements = PlusList(WithElement);
+            var elements = List(WithElement);
             return new Ast.WithElements(End(), elements);
         }
 
@@ -321,7 +320,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.IdsMulti IdsMulti()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var idss = PlusList(Ids);
+            var idss = List(Ids);
             Match(TK.RParen);
 
             return new Ast.IdsMulti(End(), idss);
@@ -704,27 +703,27 @@ namespace Joke.Front.Pony.Syntax
             switch (TokenKind)
             {
                 case TK.Addressof:
-                    return Unary(Ast.UnaryOpKind.Addressof, nl);
+                    return Unary(Ast.UnaryKind.Addressof, nl);
                 case TK.DigestOf:
-                    return Unary(Ast.UnaryOpKind.Digestof, nl);
+                    return Unary(Ast.UnaryKind.Digestof, nl);
                 case TK.Not:
-                    return Unary(Ast.UnaryOpKind.Not, nl);
+                    return Unary(Ast.UnaryKind.Not, nl);
                 case TK.Minus when nl != NL.Next:
                 case TK.MinusNew:
-                    return Unary(Ast.UnaryOpKind.Minus, nl);
+                    return Unary(Ast.UnaryKind.Minus, nl);
                 case TK.MinusTilde when nl != NL.Next:
                 case TK.MinusTildeNew:
-                    return Unary(Ast.UnaryOpKind.MinusUnsafe, nl);
+                    return Unary(Ast.UnaryKind.MinusUnsafe, nl);
             }
 
             return null;
         }
 
-        private Ast.Expression Unary(Ast.UnaryOpKind kind, NL nl)
+        private Ast.Expression Unary(Ast.UnaryKind kind, NL nl)
         {
             Begin(TK.Addressof, TK.DigestOf, TK.Not, TK.Minus, TK.MinusNew, TK.MinusTilde, TK.MinusTildeNew);
             var expression = ParamPattern(nl != NL.Case ? NL.Both : nl);
-            return new Ast.UnaryOp(End(), kind, expression);
+            return new Ast.Unary(End(), kind, expression);
         }
 
         private Ast.Expression? TryPostfix(NL nl = NL.Both)
@@ -823,7 +822,7 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin();
 
-            var arguments = PlusList<Ast.Argument>(Positional, TK.Where, TK.RParen);
+            var arguments = List<Ast.Argument>(Positional, TK.Where, TK.RParen);
             if (MayMatch(TK.Where))
             {
                 do
@@ -961,7 +960,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.LambdaParameters LambdaParameters()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var parameters = PlusList(LambdaParameter, TK.RParen);
+            var parameters = List(LambdaParameter, TK.RParen);
             Match(TK.RParen);
 
             return new Ast.LambdaParameters(End(), parameters);
@@ -981,7 +980,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayBegin(TK.LParen, TK.LParenNew))
             {
-                var captures = PlusList(LambdaCapture);
+                var captures = List(LambdaCapture);
                 Match(TK.RParen);
                 return new Ast.LambdaCaptures(End(), captures);
             }
@@ -1036,7 +1035,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.GroupedExpression GroupedExpression()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var expressions = PlusList(() => RawSeq(), TK.RParen);
+            var expressions = List(() => RawSeq(), TK.RParen);
             Match(TK.RParen);
 
             return new Ast.GroupedExpression(End(), expressions);

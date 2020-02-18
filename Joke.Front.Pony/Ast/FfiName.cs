@@ -14,5 +14,10 @@ namespace Joke.Front.Pony.Ast
         }
 
         public Expression Name { get; }
+
+        public override string? ToString()
+        {
+            return $"@{Name}";
+        }
     }
 }

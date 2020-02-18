@@ -243,7 +243,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Parameters Parameters()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var parameters = PlusList(Parameter, TK.RParen);
+            var parameters = List(Parameter, TK.RParen);
             Match(TK.RParen);
 
             return new Ast.Parameters(End(), parameters);
@@ -276,24 +276,22 @@ namespace Joke.Front.Pony.Syntax
             return null;
         }
 
-        private Ast.DefaultType? TryDefaultType()
+        private Ast.Type? TryDefaultType()
         {
-            if (MayBegin(TK.Assign))
+            if (MayMatch(TK.Assign))
             {
-                var type = TypeArgument();
-                return new Ast.DefaultType(End(), type);
+                return TypeArgument();
             }
             return null;
         }
 
-        private Ast.ColonType ColonType()
+        private Ast.Type ColonType()
         {
-            Begin(TK.Colon);
-            var type = Type();
-            return new Ast.ColonType(End(), type);
+            Match(TK.Colon);
+            return Type();
         }
 
-        private Ast.ColonType? TryColonType()
+        private Ast.Type? TryColonType()
         {
             if (Iss(TK.Colon))
             {
@@ -328,7 +326,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayBegin(TK.LSquare, TK.LSquareNew))
             {
-                var parameters = PlusList(TypeParameter);
+                var parameters = List(TypeParameter);
                 Match(TK.RSquare);
                 return new Ast.TypeParameters(End(), parameters);
             }
@@ -365,7 +363,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayBegin(TK.Backslash))
             {
-                var names = PlusList(Identifier);
+                var names = List(Identifier);
                 Match(TK.Backslash);
                 return new Ast.Annotations(End(), names);
             }

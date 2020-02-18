@@ -4,10 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+
 using Joke.Front;
-using Joke.Front.Pony;
 using Joke.Front.Pony.Lex;
 using Joke.Front.Pony.Syntax;
+using Joke.Front.Pony.Visit;
 using Joke.Outside;
 using Joke.Outside.Build;
 
@@ -29,6 +30,7 @@ namespace Joke
         {
             int no = 0;
             int lines = 0;
+            var stats = new Stats();
 
             foreach (var ponyFile in ponies)
             {
@@ -37,15 +39,17 @@ namespace Joke
                 {
                     continue;
                 }
-                if (!PonyParse(ref lines, no, ponyFile))
+                if (!PonyParse(ref lines, no, ponyFile, stats))
                 {
                     break;
                 }
             }
             Console.WriteLine($"{lines} lines read");
+            Console.WriteLine();
+            stats.Report(Console.Out);
         }
 
-        private static bool PonyParse(ref int lines, int no, FileRef ponyFile)
+        private static bool PonyParse(ref int lines, int no, FileRef ponyFile, Stats stats)
         {
             Console.WriteLine($"{no}. {ponyFile}");
 
@@ -74,8 +78,7 @@ namespace Joke
                 {
                     var module = parser.Module();
 
-                    var visitor = new Visitor(module);
-                    visitor.Visit();
+                    stats.Update(module);
 
                     return true;
                 }

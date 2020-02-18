@@ -26,11 +26,10 @@ namespace Joke.Front.Pony.Syntax
             return atom;
         }
 
-        private Ast.ArrowType ArrowType()
+        private Ast.Type ArrowType()
         {
-            Begin(TK.Arrow);
-            var type = Type();
-            return new Ast.ArrowType(End(), type);
+            Match(TK.Arrow);
+            return Type();
         }
 
         private Ast.Type? TryAtomType()
@@ -88,7 +87,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.LambdaTypeParameters LambdaTypeParameters()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var types = PlusList(Type, TK.RParen);
+            var types = List(Type, TK.RParen);
             Match(TK.RParen);
 
             return new Ast.LambdaTypeParameters(End(), types);
@@ -97,7 +96,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.GroupedType GroupedType()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var types = PlusList(InfixType);
+            var types = List(InfixType);
             Match(TK.RParen);
 
             return new Ast.GroupedType(End(), types);
@@ -107,7 +106,7 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin();
             var type = Type();
-            var parts = new List<Ast.InfixTypePart>();
+            var parts = new List<Parts.InfixTypePart>();
             var done = false;
             while (!done)
             {
@@ -117,13 +116,13 @@ namespace Joke.Front.Pony.Syntax
                         Begin();
                         Match(TK.Pipe);
                         var ptype = Type();
-                        parts.Add(new Ast.InfixTypePart(End(), Ast.InfixTypeKind.Union, ptype));
+                        parts.Add(new Parts.InfixTypePart(End(), Ast.InfixTypeKind.Union, ptype));
                         break;
                     case TK.ISectType:
                         Begin();
                         Match(TK.ISectType);
                         var itype = Type();
-                        parts.Add(new Ast.InfixTypePart(End(), Ast.InfixTypeKind.Intersection, itype));
+                        parts.Add(new Parts.InfixTypePart(End(), Ast.InfixTypeKind.Intersection, itype));
                         break;
                     default:
                         done = true;
@@ -140,7 +139,7 @@ namespace Joke.Front.Pony.Syntax
                 }
                 var @operator = operators[0];
                 var operands = new List<Ast.Type> { type };
-                operands.AddRange(parts.Cast<Ast.InfixTypePart>().Select(b => b.Right));
+                operands.AddRange(parts.Cast<Parts.InfixTypePart>().Select(b => b.Right));
                 return new Ast.InfixType(End(), @operator, operands);
             }
 
@@ -197,7 +196,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayBegin(TK.LSquare))
             {
-                var arguments = PlusList(TypeArgument);
+                var arguments = List(TypeArgument);
                 Match(TK.RSquare);
 
                 return new Ast.TypeArguments(End(), arguments);

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class Int : Expression
+    public class Int : Literal
     {
         public Int(TSpan span)
             : base(span)

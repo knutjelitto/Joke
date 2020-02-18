@@ -7,7 +7,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class ViewpointType : Type
     {
-        public ViewpointType(TSpan span, Type type, ArrowType arrow)
+        public ViewpointType(TSpan span, Type type, Type arrow)
             : base(span)
         {
             Type = type;
@@ -15,6 +15,6 @@ namespace Joke.Front.Pony.Ast
         }
 
         public Type Type { get; }
-        public ArrowType Arrow { get; }
+        public Type Arrow { get; }
     }
 }

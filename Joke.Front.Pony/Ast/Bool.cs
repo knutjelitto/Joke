@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class Bool : Expression
+    public class Bool : Literal
     {
         public Bool(TSpan span, bool value)
             : base(span)

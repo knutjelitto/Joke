@@ -1,9 +1,8 @@
 ﻿using Joke.Front.Pony.Lex;
-using System;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class Identifier : Expression
+    public class Identifier : Literal
     {
         public Identifier(TSpan span)
             : base(span)

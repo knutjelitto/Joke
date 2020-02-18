@@ -3,7 +3,7 @@ using System;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class String : Expression
+    public class String : Literal
     {
         public String(TSpan span)
             : base(span)
