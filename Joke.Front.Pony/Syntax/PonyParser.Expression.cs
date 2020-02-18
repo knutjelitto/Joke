@@ -207,7 +207,8 @@ namespace Joke.Front.Pony.Syntax
                         kind = Ast.BinaryKind.RemPartial;
                         break;
                     default:
-                        throw NoParse($"{token.Kind} can't be partial");
+                        AddError(token, $"{Keywords.String(token.Kind)} can't be made partial");
+                        break;
                 }
             }
 
@@ -642,34 +643,26 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Expression? TryLocal()
         {
-            if (More())
+            switch (TokenKind)
             {
-                var kind = Ast.LocalKind.Missing;
-
-                switch (TokenKind)
-                {
-                    case TK.Var:
-                        kind = Ast.LocalKind.Var;
-                        break;
-                    case TK.Let:
-                        kind = Ast.LocalKind.Let;
-                        break;
-                    case TK.Embed:
-                        kind = Ast.LocalKind.Embed;
-                        break;
-                }
-
-                if (kind != Ast.LocalKind.Missing)
-                {
-                    Begin(TokenKind);
-                    var name = Identifier();
-                    var type = TryColonType();
-
-                    return new Ast.Local(End(), kind, name, type);
-                }
+                case TK.Var:
+                    return Local(Ast.LocalKind.Var);
+                case TK.Let:
+                    return Local(Ast.LocalKind.Let);
+                case TK.Embed:
+                    return Local(Ast.LocalKind.Embed);
             }
 
             return null;
+        }
+
+        private Ast.Local Local(Ast.LocalKind kind)
+        {
+            Begin(TokenKind);
+            var name = Identifier();
+            var type = TryColonType();
+
+            return new Ast.Local(End(), kind, name, type);
         }
 
         private Ast.Expression ParamPattern(NL nl = NL.Both) => TryParamPattern(nl) ?? throw NoParse("param-pattern");
@@ -851,52 +844,49 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Expression? TryAtom(NL nl = NL.Both)
         {
-            if (More())
+            switch (TokenKind)
             {
-                switch (TokenKind)
-                {
-                    case TK.Identifier:
-                        return Ref();
-                    case TK.This:
-                        return ThisLiteral();
-                    case TK.String:
-                    case TK.DocString:
-                        return String();
-                    case TK.Char:
-                        return Char();
-                    case TK.Int:
-                        return Int();
-                    case TK.Float:
-                        return Float();
-                    case TK.True:
-                        return Bool(true);
-                    case TK.False:
-                        return Bool(false);
-                    case TK.LParen when nl != NL.Next:
-                    case TK.LParenNew:
-                        return GroupedExpression();
-                    case TK.LSquare when nl != NL.Next:
-                    case TK.LSquareNew:
-                        return Array();
-                    case TK.Object:
-                        return Object();
-                    case TK.LBrace:
-                        return Lambda(false);
-                    case TK.AtLBrace:
-                        return Lambda(true);
-                    case TK.At:
-                        return FfiCall();
-                    case TK.Location:
-                        return Location();
-                    case TK.If when nl != NL.Case:
-                        return Iff();
-                    case TK.While:
-                        return While();
-                    case TK.For:
-                        return For();
-                    default:
-                        break;
-                }
+                case TK.Identifier:
+                    return Ref();
+                case TK.This:
+                    return ThisLiteral();
+                case TK.String:
+                case TK.DocString:
+                    return String();
+                case TK.Char:
+                    return Char();
+                case TK.Int:
+                    return Int();
+                case TK.Float:
+                    return Float();
+                case TK.True:
+                    return Bool(true);
+                case TK.False:
+                    return Bool(false);
+                case TK.LParen when nl != NL.Next:
+                case TK.LParenNew:
+                    return GroupedExpression();
+                case TK.LSquare when nl != NL.Next:
+                case TK.LSquareNew:
+                    return Array();
+                case TK.Object:
+                    return Object();
+                case TK.LBrace:
+                    return Lambda(false);
+                case TK.AtLBrace:
+                    return Lambda(true);
+                case TK.At:
+                    return FfiCall();
+                case TK.Location:
+                    return Location();
+                case TK.If when nl != NL.Case:
+                    return Iff();
+                case TK.While:
+                    return While();
+                case TK.For:
+                    return For();
+                default:
+                    break;
             }
 
             return null;
@@ -910,8 +900,7 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Object Object()
         {
-            Begin();
-            Match(TK.Object);
+            Begin(TK.Object);
 
             var annotations = TryAnnotations();
             var cap = TryCap(false);

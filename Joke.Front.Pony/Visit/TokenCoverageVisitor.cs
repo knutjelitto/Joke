@@ -20,7 +20,12 @@ namespace Joke.Front.Pony.Visit
                     Set.Add(i);
                 }
                 if (node is Arguments ||
-                    node is Fields)
+                    node is Parameters ||
+                    node is LambdaParameters ||
+                    node is LambdaTypeParameters ||
+                    node is Fields ||
+                    node is Methods ||
+                    node is Module)
                 {
                 }
                 else
@@ -28,7 +33,7 @@ namespace Joke.Front.Pony.Visit
                     var text = node.Span.ToString();
                     Debug.Assert(!string.IsNullOrWhiteSpace(text));
                     Debug.Assert(text != "(-)");
-                    System.Console.WriteLine($"{text}");
+                    //System.Console.WriteLine($"{text}");
                 }
             }
 

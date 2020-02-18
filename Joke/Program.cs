@@ -79,14 +79,12 @@ namespace Joke
                     var module = parser.Module();
 
                     var visitor = new TokenCoverageVisitor();
-
                     visitor.Visit(module);
-
                     Console.WriteLine($"{parser.Tokens.Count} :: {visitor.Set.Cardinality}");
 
                     //stats.Update(module);
 
-                    return false;
+                    return true;
                 }
                 catch (Exception e)
                 {
@@ -146,7 +144,9 @@ namespace Joke
                 if (pony.Contains(@"\ponycc\test\fixtures\") ||
                     pony.Contains(@"\adv5.pony") ||
                     pony.Contains(@"\bench\bench_pg.pony") ||
-                    pony.Contains(@"\examples\clisample.pony"))
+                    pony.Contains(@"\examples\clisample.pony") ||
+                    pony.Contains(@"\pony-stats\stats\test.pony") ||
+                    pony.Contains(@"\pony-queue\queue.pony"))
                 {
                     continue;
                 }

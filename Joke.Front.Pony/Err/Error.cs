@@ -1,8 +1,8 @@
 ﻿namespace Joke.Front.Pony.Err
 {
-    public class Message
+    public class Error
     {
-        public Message(ErrorKind kind, string msg)
+        public Error(ErrorKind kind, string msg)
         {
             Kind = kind;
             Msg = msg;

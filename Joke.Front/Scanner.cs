@@ -21,7 +21,7 @@ namespace Joke.Front
             this.source = source;
             content = source.Content;
             Current = 0;
-            Limit = this.content.Length;
+            Limit = content.Length;
         }
 
         public int Line

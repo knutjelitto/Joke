@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Joke.Front.Joke
+﻿namespace Joke.Front.Joke
 {
     public class JokeScanner : Scanner
     {

@@ -10,7 +10,7 @@ dotnet_style_predefined_type_for_locals_parameters_members = true:error
 dotnet_style_predefined_type_for_member_access = true:error
 
 # IDE0060: Remove unused parameter
-dotnet_code_quality_unused_parameters = non_public:error
+dotnet_code_quality_unused_parameters = all:suggestion
 
 # IDE0005: Using directive is unnecessary.
 dotnet_diagnostic.IDE0005.severity = error
