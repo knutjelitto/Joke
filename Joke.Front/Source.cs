@@ -66,6 +66,12 @@ namespace Joke.Front
 
         public ReadOnlySpan<char> GetLine(int lineNo)
         {
+            if (lineNo == LineCount)
+            {
+                var start1 = GetIndexFromLineNo(lineNo);
+                var next1 = GetIndexFromLineNo(lineNo + 1);
+                return GetSpan(start1, next1 - start1);
+            }
             var start = GetIndexFromLineNo(lineNo);
             var next = GetIndexFromLineNo(lineNo + 1);
             while (next > start && lineEndings.Contains(Content[next - 1]))
@@ -86,8 +92,12 @@ namespace Joke.Front
 
         public int GetIndexFromLineNo(int lineNo)
         {
-            var lineIdx = Math.Max(0, Math.Min(lineNo - 1, Lines.Count - 1));
+            if (lineNo > LineCount)
+            {
+                return Content.Length;
+            }
 
+            var lineIdx = Math.Max(0, Math.Min(lineNo - 1, Lines.Count - 1));
             return Lines[lineIdx];
         }
 

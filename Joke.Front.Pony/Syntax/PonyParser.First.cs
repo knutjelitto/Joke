@@ -17,6 +17,17 @@ namespace Joke.Front.Pony.Syntax
                 TK.Actor
             };
 
+            public static readonly TK[] Module = new TK[]
+            {
+                TK.Class,
+                TK.Type,
+                TK.Interface,
+                TK.Trait,
+                TK.Primitive,
+                TK.Struct,
+                TK.Actor,
+            };
+
             public static readonly TK[] RawSeq = new TK[]
             {
                 TK.If,

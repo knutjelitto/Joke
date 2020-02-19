@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Syntax
 {
     partial class PonyParser
     {
-        public ISource Source { get; }
+        public Source Source { get; }
         public IReadOnlyList<Token> Tokens { get; }
 
         private int next;

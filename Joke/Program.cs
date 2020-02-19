@@ -8,7 +8,6 @@ using System.Text;
 using Joke.Front;
 using Joke.Front.Pony.Lex;
 using Joke.Front.Pony.Syntax;
-using Joke.Front.Pony.Visit;
 using Joke.Outside;
 using Joke.Outside.Build;
 
@@ -16,14 +15,23 @@ namespace Joke
 {
     internal class Program
     {
-        internal static void Main(string[] args)
+        internal static void Main()
         {
             //EnsureSources();
             //PonyParse(0, EnumeratePackagePonies());
-            PonyParse(0, EnumerateAllPonies());
+            //PonyParse(0, EnumerateAllPonies());
+            PonyTest();
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
+        }
+
+        private static void PonyTest()
+        {
+            var fix = DirRef.ProjectDir().Dir("..").Dir("Joke.Front.Pony").Dir("Fixtures").Dir("Expressions");
+
+            Debug.Assert(fix.File("Ops.pony").Exists());
+            PonyParse(0, Enumerable.Repeat(fix.File("Ops.pony"), 1));
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)
@@ -78,46 +86,42 @@ namespace Joke
                 {
                     var module = parser.Module();
 
-                    var visitor = new TokenCoverageVisitor();
-                    visitor.Visit(module);
-                    Console.WriteLine($"{parser.Tokens.Count} :: {visitor.Set.Cardinality}");
-
+                    //var visitor = new TokenCoverageVisitor();
+                    //visitor.Visit(module);
+                    //Console.WriteLine($"{parser.Tokens.Count} :: {visitor.Set.Cardinality}");
                     //stats.Update(module);
+
+                    Debug.Assert(parser.Messages.Count == 0);
 
                     return true;
                 }
                 catch (Exception e)
                 {
-                    var (line, col) = source.GetLineCol(parser.Offset);
-
-                    ErrorMessage(e, parser.Offset, line, col);
+                    ErrorMessage(e, parser.Offset);
 
                     return false;
                 }
             }
             catch (Exception e)
             {
-                var (line, col) = source.GetLineCol(tokenizer.next);
-
-                ErrorMessage(e, tokenizer.next, line, col);
+                ErrorMessage(e, tokenizer.next);
 
                 return false;
             }
 
-            void ErrorMessage(Exception e, int offset, int line, int col)
+            void ErrorMessage(Exception e, int offset)
             {
-                var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $" - {e.Message}";
-                Console.WriteLine($"({line},{col}): can't continue @{offset} {msg}");
+                var (line, col) = source.GetLineCol(offset);
+                var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $"{e.Message}";
+                Console.WriteLine($"({line},{col}): can't continue -- {msg}");
                 var arrow = new string('-', col - 1) + "^";
                 if (line > 3) Console.WriteLine($" |{source.GetLine(line - 3).ToString()}");
                 if (line > 2) Console.WriteLine($" |{source.GetLine(line - 2).ToString()}");
                 if (line > 1) Console.WriteLine($" |{source.GetLine(line - 1).ToString()}");
                 Console.WriteLine($" |{source.GetLine(line).ToString()}");
-                Console.WriteLine($" |{arrow}");
-                Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");
-                var at = e.StackTrace?.Split(" at ", StringSplitOptions.RemoveEmptyEntries)[1];
-                //var at = e.StackTrace;
-                Console.WriteLine($"{at}");
+                Console.WriteLine($" |{arrow} {msg}");
+                Console.WriteLine($" |{source.GetLine(line+1).ToString()}");
+                if (line < source.LineCount) Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");
             }
         }
 

@@ -148,7 +148,9 @@ namespace Joke.Front.Pony.Syntax
                 var operators = parts.Select(p => p.Kind).Distinct().ToList();
                 if (operators.Count >= 2)
                 {
-                    throw NoParse("binary operators have no precedence, use ( ) to group binary expressions");
+                    var part = parts.Where(p => p.Kind != operators[0]).First();
+                    var token = Tokens[part.Span.Start];
+                    AddError(token, "binary operators have no precedence, use ( ) to group binary expressions");
                 }
                 var @operator = operators[0];
                 switch (@operator)

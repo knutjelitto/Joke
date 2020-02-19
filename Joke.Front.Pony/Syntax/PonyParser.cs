@@ -1,11 +1,12 @@
 ﻿using Joke.Front.Pony.Lex;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Joke.Front.Pony.Syntax
 {
     public partial class PonyParser
     {
-        public PonyParser(ISource source, IReadOnlyList<Token> tokens)
+        public PonyParser(Source source, IReadOnlyList<Token> tokens)
         {
             Source = source;
             Tokens = tokens;
@@ -15,79 +16,51 @@ namespace Joke.Front.Pony.Syntax
 
         public Ast.Module Module()
         {
+            Debug.Assert(marks.Count == 0);
+
             Begin();
 
+            Debug.Assert(marks.Count == 1);
             var doc = TryString();
+            Debug.Assert(marks.Count == 1);
+            var uses = Collect(TryUse);
+            Debug.Assert(marks.Count == 1);
+            var classes = Collect(TryClass);
+            Debug.Assert(marks.Count == 1);
 
-            var uses = new List<Ast.Use>();
+            var module = new Ast.Module(End(), doc, uses, classes);
 
-            while (Iss(TK.Use))
+            Debug.Assert(marks.Count == 0);
+
+            return module;
+        }
+
+        public Ast.Use? TryUse()
+        {
+            if (MayBegin(TK.Use))
             {
-                uses.Add(Use());
-            }
+                var name = TryUseName();
 
-            var classes = new List<Ast.Class>();
-
-            var done = false;
-            while (!done)
-            {
-                switch (TokenKind)
+                if (Iss(TK.At))
                 {
-                    case TK.Class:
-                        classes.Add(Class(Ast.ClassKind.Class));
-                        break;
-                    case TK.Type:
-                        classes.Add(Class(Ast.ClassKind.Type));
-                        break;
-                    case TK.Interface:
-                        classes.Add(Class(Ast.ClassKind.Interface));
-                        break;
-                    case TK.Trait:
-                        classes.Add(Class(Ast.ClassKind.Trait));
-                        break;
-                    case TK.Primitive:
-                        classes.Add(Class(Ast.ClassKind.Primitive));
-                        break;
-                    case TK.Struct:
-                        classes.Add(Class(Ast.ClassKind.Struct));
-                        break;
-                    case TK.Actor:
-                        classes.Add(Class(Ast.ClassKind.Actor));
-                        break;
-                    default:
-                        done = true;
-                        break;
+                    Match(TK.At);
+                    var ffiName = FfiName();
+                    var returnType = TypeArguments();
+                    var parameters = Parameters();
+                    var partial = MayPartial();
+
+                    var use = new Ast.UseFfi(End(), name, ffiName, returnType, parameters, partial);
+
+                    return use;
+                }
+                else if (Iss(TK.String))
+                {
+                    var uri = String();
+                    return new Ast.UseUri(End(), name, uri);
                 }
             }
 
-            return new Ast.Module(End(), doc, uses, classes);
-        }
-
-        public Ast.Use Use()
-        {
-            Begin(TK.Use);
-
-            var name = TryUseName();
-
-            if (Iss(TK.At))
-            {
-                Match(TK.At);
-                var ffiName = FfiName();
-                var returnType = TryTypeArguments() ?? throw NoParse("ffi return type");
-                var parameters = Parameters();
-                var partial = MayPartial();
-
-                var use = new Ast.UseFfi(End(), name, ffiName, returnType, parameters, partial);
-
-                return use;
-            }
-            else if (Iss(TK.String))
-            {
-                var uri = String();
-                return new Ast.UseUri(End(), name, uri);
-            }
-
-            throw NoParse("use");
+            return null;
         }
 
         public Ast.Identifier? TryUseName()
@@ -100,20 +73,71 @@ namespace Joke.Front.Pony.Syntax
             return name;
         }
 
+        public Ast.Class? TryClass()
+        {
+            Ast.Class? result = null;
+
+            Debug.Assert(marks.Count == 1);
+
+            switch (TokenKind)
+            {
+                case TK.Class:
+                    result = Class(Ast.ClassKind.Class);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+                case TK.Type:
+                    result = Class(Ast.ClassKind.Type);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+                case TK.Interface:
+                    result = Class(Ast.ClassKind.Interface);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+                case TK.Trait:
+                    result = Class(Ast.ClassKind.Trait);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+                case TK.Primitive:
+                    result = Class(Ast.ClassKind.Primitive);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+                case TK.Struct:
+                    result = Class(Ast.ClassKind.Struct);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+                case TK.Actor:
+                    result = Class(Ast.ClassKind.Actor);
+                    Debug.Assert(marks.Count == 1);
+                    break;
+            }
+
+            return result;
+        }
+
         public Ast.Class Class(Ast.ClassKind kind)
         {
+            Debug.Assert(marks.Count == 1);
             Begin(First.Class);
-
+            Debug.Assert(marks.Count == 2);
             var annotations = TryAnnotations();
+            Debug.Assert(marks.Count == 2);
             var bare = MayMatch(TK.At);
+            Debug.Assert(marks.Count == 2);
             var cap = TryCap(false);
+            Debug.Assert(marks.Count == 2);
             var name = Identifier();
+            Debug.Assert(marks.Count == 2);
             var typeParams = TryTypeParameters();
+            Debug.Assert(marks.Count == 2);
             var provides = TryProvides();
+            Debug.Assert(marks.Count == 2);
             var doc = TryString();
+            Debug.Assert(marks.Count == 2);
             var members = Members();
-
-            return new Ast.Class(End(), kind, annotations, bare, cap, name, typeParams, provides, doc, members);
+            Debug.Assert(marks.Count == 2);
+            var result = new Ast.Class(End(), kind, annotations, bare, cap, name, typeParams, provides, doc, members);
+            Debug.Assert(marks.Count == 1);
+            return result;
         }
 
         private Ast.Members Members()
@@ -284,7 +308,7 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Type? TryProvides()
         {
-            if (MayBegin(TK.Is))
+            if (MayMatch(TK.Is))
             {
                 return Type();
             }

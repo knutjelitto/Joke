@@ -16,6 +16,11 @@ namespace Joke.Outside
 
         public bool OnPladde => IOFile.Exists(this);
 
+        public bool Exists()
+        {
+            return IOFile.Exists(this);
+        }
+
         public string GetContent()
         {
             return IOFile.ReadAllText(this);
