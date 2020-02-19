@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Float : Expression
     {
-        public Float(TSpan span)
+        public Float(TokenSpan span)
             : base(span)
         {
         }

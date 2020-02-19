@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class GroupedType : Type
     {
-        public GroupedType(TSpan span, IReadOnlyList<Type> items)
+        public GroupedType(TokenSpan span, IReadOnlyList<Type> items)
             : base(span)
         {
             Items = items;

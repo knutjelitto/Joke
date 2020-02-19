@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 
 using Joke.Front;
+using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lex;
 using Joke.Front.Pony.Syntax;
 using Joke.Outside;
@@ -18,9 +18,10 @@ namespace Joke
         internal static void Main()
         {
             //EnsureSources();
+            PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
             //PonyParse(0, EnumerateAllPonies());
-            PonyTest();
+            //PonyTest();
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -40,6 +41,8 @@ namespace Joke
             int lines = 0;
             var stats = new Stats();
 
+            var errors = new ErrorAccu();
+
             foreach (var ponyFile in ponies)
             {
                 no += 1;
@@ -47,7 +50,8 @@ namespace Joke
                 {
                     continue;
                 }
-                if (!PonyParse(ref lines, no, ponyFile, stats))
+                errors.Clear();
+                if (!PonyParse(errors, ref lines, no, ponyFile, stats))
                 {
                     break;
                 }
@@ -57,104 +61,98 @@ namespace Joke
             stats.Report(Console.Out);
         }
 
-        private static bool PonyParse(ref int lines, int no, FileRef ponyFile, Stats stats)
+        private static bool PonyParse(ErrorAccu errors, ref int lines, int no, FileRef ponyFile, Stats stats)
         {
             Console.WriteLine($"{no}. {ponyFile}");
 
             var source = Source.FromFile(ponyFile);
             lines += source.LineCount;
-            var tokenizer = new Tokenizer(source);
+
+            var tokenizer = new Tokenizer(errors, source);
 
             try
             {
-                var tokens = tokenizer.Tokens().ToList();
-
-                var builder = new StringBuilder();
-                foreach (var token in tokens)
-                {
-                    builder.Append(token.GetClutter(source));
-                    builder.Append(token.GetPayload(source));
-                }
-                var content = source.Content;
-                var rebuild = builder.ToString();
-
-                Debug.Assert(content == rebuild);
-
-                var parser = new PonyParser(source, tokens);
-
-                try
-                {
-                    var module = parser.Module();
-
-                    //var visitor = new TokenCoverageVisitor();
-                    //visitor.Visit(module);
-                    //Console.WriteLine($"{parser.Tokens.Count} :: {visitor.Set.Cardinality}");
-                    //stats.Update(module);
-
-                    Debug.Assert(parser.Messages.Count == 0);
-
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    ErrorMessage(e, parser.Offset);
-
-                    return false;
-                }
+                tokenizer.Tokenize();
             }
-            catch (Exception e)
+            catch (JokeException joke)
             {
-                ErrorMessage(e, tokenizer.next);
+                joke.Description.Describe(Console.Out);
 
                 return false;
             }
 
-            void ErrorMessage(Exception e, int offset)
+#if false
+            var tokens = tokenizer.Tokens;
+
+            var builder = new StringBuilder();
+            foreach (var token in tokens)
             {
-                var (line, col) = source.GetLineCol(offset);
-                var msg = string.IsNullOrWhiteSpace(e.Message) ? string.Empty : $"{e.Message}";
-                Console.WriteLine($"({line},{col}): can't continue -- {msg}");
-                var arrow = new string('-', col - 1) + "^";
-                if (line > 3) Console.WriteLine($" |{source.GetLine(line - 3).ToString()}");
-                if (line > 2) Console.WriteLine($" |{source.GetLine(line - 2).ToString()}");
-                if (line > 1) Console.WriteLine($" |{source.GetLine(line - 1).ToString()}");
-                Console.WriteLine($" |{source.GetLine(line).ToString()}");
-                Console.WriteLine($" |{arrow} {msg}");
-                Console.WriteLine($" |{source.GetLine(line+1).ToString()}");
-                if (line < source.LineCount) Console.WriteLine($" |{source.GetLine(line + 1).ToString()}");
+                builder.Append(token.GetClutter(source));
+                builder.Append(token.GetPayload(source));
             }
+            var content = source.Content;
+            var rebuild = builder.ToString();
+
+            Debug.Assert(content == rebuild);
+#endif
+
+            var parser = new PonyParser(errors, source, tokenizer.Tokens);
+
+            try
+            {
+                var module = parser.Module();
+
+                errors.Describe(Console.Out);
+
+                return errors.NoError();
+            }
+            catch (JokeException joke)
+            {
+                joke.Description.Describe(Console.Out);
+
+                return false;
+            }
+
+            //var visitor = new TokenCoverageVisitor();
+            //visitor.Visit(module);
+            //Console.WriteLine($"{parser.Tokens.Count} :: {visitor.Set.Cardinality}");
+            //stats.Update(module);
+        }
+
+        private static DirRef Temp => DirRef.ProjectDir().Up.Up.Dir("Temp");
+
+        private static IEnumerable<FileRef> EnumerateBuiltinPonies()
+        {
+            return EnumeratePonies(Temp.Dir("ponyc").Dir("packages").Dir("builtin"));
         }
 
         private static IEnumerable<FileRef> EnumeratePackagePonies()
         {
-            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages");
-
-            foreach (var pony in Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories))
-            {
-                yield return FileRef.From(pony);
-            }
+            return EnumeratePonies(Temp.Dir("ponyc").Dir("packages"));
         }
 
         private static IEnumerable<FileRef> EnumerateAllPonies()
         {
-            //var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc").Dir("packages");
-            var root = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("ponyc");
-            var root2 = DirRef.ProjectDir().Up.Up.Dir("Temp").Dir("pony-source");
+            return EnumeratePonies(Temp.Dir("ponyc"), Temp.Dir("pony-source"));
+        }
 
-            foreach (var pony in
-                Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories).Concat(
-                    Directory.EnumerateFiles(root2, "*.pony", SearchOption.AllDirectories)))
+        private static IEnumerable<FileRef> EnumeratePonies(params DirRef[] roots)
+        {
+            foreach (var root in roots)
             {
-                if (pony.Contains(@"\ponycc\test\fixtures\") ||
-                    pony.Contains(@"\adv5.pony") ||
-                    pony.Contains(@"\bench\bench_pg.pony") ||
-                    pony.Contains(@"\examples\clisample.pony") ||
-                    pony.Contains(@"\pony-stats\stats\test.pony") ||
-                    pony.Contains(@"\pony-queue\queue.pony"))
+                foreach (var pony in Directory.EnumerateFiles(root, "*.pony", SearchOption.AllDirectories))
                 {
-                    continue;
+                    if (pony.Contains(@"\ponycc\test\fixtures\") ||
+                        pony.Contains(@"\adv5.pony") ||
+                        pony.Contains(@"\bench\bench_pg.pony") ||
+                        pony.Contains(@"\examples\clisample.pony") ||
+                        pony.Contains(@"\pony-stats\stats\test.pony") ||
+                        pony.Contains(@"\pony-queue\queue.pony"))
+                    {
+                        continue;
+                    }
+                    yield return FileRef.From(pony);
                 }
-                yield return FileRef.From(pony);
             }
         }
 

@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Syntax.Parts
 {
     public class AsPart : InfixPart
     {
-        public AsPart(TSpan span, Type type)
+        public AsPart(TokenSpan span, Type type)
             : base(span, BinaryKind.As)
         {
             Type = type;

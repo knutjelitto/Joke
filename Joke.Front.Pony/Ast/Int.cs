@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Int : Literal
     {
-        public Int(TSpan span)
+        public Int(TokenSpan span)
             : base(span)
         {
         }

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class SubType : Expression
     {
-        public SubType(TSpan span, Type sub, Type super)
+        public SubType(TokenSpan span, Type sub, Type super)
             : base(span)
         {
             Sub = sub;

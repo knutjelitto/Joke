@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class For : Expression
     {
-        public For(TSpan span, Annotations? annotations, Ids names, Expression iterator, Expression body, Expression? elsePart)
+        public For(TokenSpan span, Annotations? annotations, Ids names, Expression iterator, Expression body, Expression? elsePart)
             : base(span)
         {
             Annotations = annotations;

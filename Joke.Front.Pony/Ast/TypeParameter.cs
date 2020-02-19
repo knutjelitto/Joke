@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class TypeParameter : Node
     {
-        public TypeParameter(TSpan span, Identifier name, Type? type, Type? defaultType)
+        public TypeParameter(TokenSpan span, Identifier name, Type? type, Type? defaultType)
             : base(span)
         {
             Name = name;

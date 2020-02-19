@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Qualify : PostfixPart
     {
-        public Qualify(TSpan span, TypeArguments arguments)
+        public Qualify(TokenSpan span, TypeArguments arguments)
             : base(span)
         {
             Arguments = arguments;

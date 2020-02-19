@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public abstract class LambdaCapture : Node
     {
-        protected LambdaCapture(TSpan span)
+        protected LambdaCapture(TokenSpan span)
             : base(span)
         {
         }

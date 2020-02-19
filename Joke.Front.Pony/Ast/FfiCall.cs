@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class FfiCall : Expression
     {
-        public FfiCall(TSpan span, Expression name, TypeArguments? returnType, Arguments arguments, bool partial)
+        public FfiCall(TokenSpan span, Expression name, TypeArguments? returnType, Arguments arguments, bool partial)
             : base(span)
         {
             Name = name;

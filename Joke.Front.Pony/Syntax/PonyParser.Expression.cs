@@ -399,7 +399,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Consume Consume()
         {
             Begin(TK.Consume);
-            var cap = TryCap(false);
+            var cap = TryCap();
             var term = Term();
             return new Ast.Consume(End(), cap, term);
         }
@@ -408,7 +408,7 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.Recover);
             var annotations = TryAnnotations();
-            var cap = TryCap(false);
+            var cap = TryCap();
             var body = RawSeq();
             Match(TK.End);
 
@@ -685,25 +685,25 @@ namespace Joke.Front.Pony.Syntax
             switch (TokenKind)
             {
                 case TK.Addressof:
-                    return Unary(Ast.UnaryKind.Addressof, nl);
+                    return Prefix(Ast.UnaryKind.Addressof, nl);
                 case TK.DigestOf:
-                    return Unary(Ast.UnaryKind.Digestof, nl);
+                    return Prefix(Ast.UnaryKind.Digestof, nl);
                 case TK.Not:
-                    return Unary(Ast.UnaryKind.Not, nl);
+                    return Prefix(Ast.UnaryKind.Not, nl);
                 case TK.Minus when nl != NL.Next:
                 case TK.MinusNew:
-                    return Unary(Ast.UnaryKind.Minus, nl);
+                    return Prefix(Ast.UnaryKind.Minus, nl);
                 case TK.MinusTilde when nl != NL.Next:
                 case TK.MinusTildeNew:
-                    return Unary(Ast.UnaryKind.MinusUnsafe, nl);
+                    return Prefix(Ast.UnaryKind.MinusUnsafe, nl);
             }
 
             return null;
         }
 
-        private Ast.Expression Unary(Ast.UnaryKind kind, NL nl)
+        private Ast.Expression Prefix(Ast.UnaryKind kind, NL nl)
         {
-            Begin(TK.Addressof, TK.DigestOf, TK.Not, TK.Minus, TK.MinusNew, TK.MinusTilde, TK.MinusTildeNew);
+            Begin(First.Prefix);
             var expression = ParamPattern(nl != NL.Case ? NL.Both : nl);
             return new Ast.Unary(End(), kind, expression);
         }
@@ -905,7 +905,7 @@ namespace Joke.Front.Pony.Syntax
             Begin(TK.Object);
 
             var annotations = TryAnnotations();
-            var cap = TryCap(false);
+            var cap = TryCap();
             var provides = TryProvides();
             var members = Members();
             Match(TK.End);
@@ -914,9 +914,9 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Lambda Lambda(bool bare)
         {
-            Begin(TK.LBrace, TK.AtLBrace);
+            Begin(First.Lambda);
             var annotations = TryAnnotations();
-            var recCap = TryCap(false);
+            var recCap = TryCap();
             var name = TryIdentifier();
             var typeParameters = TryTypeParameters();
             var parameters = LambdaParameters();
@@ -925,7 +925,7 @@ namespace Joke.Front.Pony.Syntax
             var partial = MayPartial();
             var body = TryBody();
             Match(TK.RBrace);
-            var refCap = TryCap(false);
+            var refCap = TryCap();
 
             return new Ast.Lambda(End(), bare, annotations, recCap, name, typeParameters, parameters, captures, returnType, partial, body, refCap);
         }
@@ -963,8 +963,6 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.LambdaCapture LambdaCapture()
         {
-            Ensure();
-
             switch (TokenKind)
             {
                 case TK.Identifier:

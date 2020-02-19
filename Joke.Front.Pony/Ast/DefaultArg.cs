@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class DefaultArg : Expression
     {
-        public DefaultArg(TSpan span, Expression expression)
+        public DefaultArg(TokenSpan span, Expression expression)
             : base(span)
         {
             Expression = expression;

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class SemiExpression : Expression
     {
-        public SemiExpression(TSpan span, Expression expression)
+        public SemiExpression(TokenSpan span, Expression expression)
             : base(span)
         {
             Expression = expression;

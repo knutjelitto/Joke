@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Annotations : Node
     {
-        public Annotations(TSpan span, IReadOnlyList<Identifier> names)
+        public Annotations(TokenSpan span, IReadOnlyList<Identifier> names)
             : base(span)
         {
             Names = names;

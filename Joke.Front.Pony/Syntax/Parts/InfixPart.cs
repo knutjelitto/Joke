@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Syntax.Parts
 {
     public class InfixPart : Node
     {
-        public InfixPart(TSpan span, BinaryKind kind)
+        public InfixPart(TokenSpan span, BinaryKind kind)
             : base(span)
         {
             Kind = kind;

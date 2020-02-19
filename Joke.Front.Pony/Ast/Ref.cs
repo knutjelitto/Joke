@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Ref : Expression
     {
-        public Ref(TSpan span, Identifier name)
+        public Ref(TokenSpan span, Identifier name)
             : base(span)
         {
             Name = name;

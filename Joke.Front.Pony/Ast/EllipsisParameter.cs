@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class EllipsisParameter : Parameter
     {
-        public EllipsisParameter(TSpan span)
+        public EllipsisParameter(TokenSpan span)
             : base(span)
         {
         }

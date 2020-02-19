@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class FfiName : Identifier
     {
-        public FfiName(TSpan span, Expression name)
+        public FfiName(TokenSpan span, Expression name)
             : base(span)
         {
             Name = name;

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class NamedArgument : Argument
     {
-        public NamedArgument(TSpan span, Identifier name, Expression value)
+        public NamedArgument(TokenSpan span, Identifier name, Expression value)
             : base(span)
         {
             Name = name;

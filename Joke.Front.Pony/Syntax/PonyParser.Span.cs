@@ -20,6 +20,26 @@ namespace Joke.Front.Pony.Syntax
             Match(kind);
         }
 
+        private void Begin(TokenSet set)
+        {
+            if (next < limit)
+            {
+                marks.Push(next);
+            }
+            Match(set);
+        }
+
+        private void Match(TokenSet set)
+        {
+            if (next < limit && set[Tokens[next].Kind])
+            {
+                next += 1;
+                return;
+            }
+
+            throw NoParse("expected something (not EOF)");
+        }
+
         private void Begin(params TK[] kinds)
         {
             Debug.Assert(kinds.Length >= 2);
@@ -30,7 +50,7 @@ namespace Joke.Front.Pony.Syntax
 
         private bool MayBegin(params TK[] kinds)
         {
-            if (More() && System.Array.IndexOf(kinds, TokenKind) >= 0)
+            if (System.Array.IndexOf(kinds, TokenKind) >= 0)
             {
                 marks.Push(next);
                 next += 1;
@@ -39,18 +59,18 @@ namespace Joke.Front.Pony.Syntax
             return false;
         }
 
-        private TSpan End()
+        private TokenSpan End()
         {
             Debug.Assert(next <= limit);
             Debug.Assert(marks.Count > 0);
-            return new TSpan(this, marks.Pop(), next);
+            return new TokenSpan(this, marks.Pop(), next);
         }
 
-        private TSpan Mark(Node node)
+        private TokenSpan Mark(Node node)
         {
             Debug.Assert(next <= limit);
             Debug.Assert(marks.Count > 0);
-            return new TSpan(this, node.Span.Start, next);
+            return new TokenSpan(this, node.Span.Start, next);
         }
 
         private void Drop()

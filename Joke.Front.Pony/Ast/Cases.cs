@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Cases : Node
     {
-        public Cases(TSpan span, IReadOnlyList<Case> items)
+        public Cases(TokenSpan span, IReadOnlyList<Case> items)
             : base(span)
         {
             Items = items;

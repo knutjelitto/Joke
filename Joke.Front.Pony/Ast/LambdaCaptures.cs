@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class LambdaCaptures : Node
     {
-        public LambdaCaptures(TSpan span, IReadOnlyList<LambdaCapture> captures)
+        public LambdaCaptures(TokenSpan span, IReadOnlyList<LambdaCapture> captures)
             : base(span)
         {
             Captures = captures;

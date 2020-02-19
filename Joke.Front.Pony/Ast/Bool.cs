@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Bool : Literal
     {
-        public Bool(TSpan span, bool value)
+        public Bool(TokenSpan span, bool value)
             : base(span)
         {
             Value = value;

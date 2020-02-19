@@ -1,3 +1,4 @@
 ﻿class test
     fun test() =>
-        "y
+        (x + y) - z
+        2 + 3

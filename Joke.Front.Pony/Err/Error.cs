@@ -2,13 +2,13 @@
 {
     public class Error
     {
-        public Error(ErrorKind kind, string msg)
+        public Error(Severity severity, IDescription description)
         {
-            Kind = kind;
-            Msg = msg;
+            Severity = severity;
+            Description = description;
         }
 
-        public ErrorKind Kind { get; }
-        public string Msg { get; }
+        public Severity Severity { get; }
+        public IDescription Description { get; }
     }
 }

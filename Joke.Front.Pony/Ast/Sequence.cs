@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Sequence : Expression
     {
-        public Sequence(TSpan span, Expression first, Expression next)
+        public Sequence(TokenSpan span, Expression first, Expression next)
             : base(span)
         {
             First = first;

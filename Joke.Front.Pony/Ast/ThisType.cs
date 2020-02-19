@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class ThisType : Type
     {
-        public ThisType(TSpan span)
+        public ThisType(TokenSpan span)
             : base(span)
         {
         }

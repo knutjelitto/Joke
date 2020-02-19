@@ -1,6 +1,6 @@
 ﻿namespace Joke.Front.Pony.Err
 {
-    public enum ErrorKind
+    public enum Severity
     {
         Info,
         Warning,

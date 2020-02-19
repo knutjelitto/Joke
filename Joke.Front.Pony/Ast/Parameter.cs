@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public abstract class Parameter : Node
     {
-        public Parameter(TSpan span)
+        public Parameter(TokenSpan span)
             : base(span)
         {
         }

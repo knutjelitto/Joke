@@ -30,32 +30,22 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Type? TryAtomType()
         {
-            if (More())
+            switch (TokenKind)
             {
-                switch (TokenKind)
-                {
-                    case TK.This:
-                        return ThisType();
-                    case TK.LParen:
-                    case TK.LParenNew:
-                        return GroupedType();
-                    case TK.Identifier:
-                        return Nominal();
-                    case TK.LBrace:
-                        return LambdaType(false);
-                    case TK.AtLBrace:
-                        return LambdaType(true);
-                    default:
-                        var cap = TryCap(false);
-                        if (cap != null)
-                        {
-                            return cap;
-                        }
-                        break;
-                }
+                case TK.This:
+                    return ThisType();
+                case TK.LParen:
+                case TK.LParenNew:
+                    return GroupedType();
+                case TK.Identifier:
+                    return Nominal();
+                case TK.LBrace:
+                    return LambdaType(false);
+                case TK.AtLBrace:
+                    return LambdaType(true);
+                default:
+                    return TryCap();
             }
-
-            return null;
         }
 
         private Ast.ThisType ThisType()
@@ -66,15 +56,15 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.LambdaType LambdaType(bool bare)
         {
-            Begin(TK.LBrace, TK.AtLBrace);
-            var receiverCap = TryCap(false);
+            Begin(First.Lambda);
+            var receiverCap = TryCap();
             var name = TryIdentifier();
             var typeParameters = TryTypeParameters();
             var parameters = LambdaTypeParameters();
             var returnType = TryColonType();
             var partial = MayPartial();
             Match(TK.RBrace);
-            var referenceCap = TryCap(false);
+            var referenceCap = TryCap();
             var ea = TryEphemAlias();
 
             return new Ast.LambdaType(End(), bare, receiverCap, name, typeParameters, parameters, returnType, partial, referenceCap, ea);
@@ -146,7 +136,7 @@ namespace Joke.Front.Pony.Syntax
             Begin();
             var name = DotIdentifier();
             var typeArguments = TryTypeArguments();
-            var cap = TryCap(true);
+            var cap = TryCapEx();
             var ea = TryEphemAlias();
 
             return new Ast.NominalType(End(), name, typeArguments, cap, ea);

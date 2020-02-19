@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Tilde : PostfixPart
     {
-        public Tilde(TSpan span, Identifier method)
+        public Tilde(TokenSpan span, Identifier method)
             : base(span)
         {
             Method = method;

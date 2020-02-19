@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Assignment : Expression
     {
-        public Assignment(TSpan span, Expression left, Expression right)
+        public Assignment(TokenSpan span, Expression left, Expression right)
             : base(span)
         {
             Left = left;

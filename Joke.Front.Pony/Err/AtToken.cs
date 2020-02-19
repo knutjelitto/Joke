@@ -4,7 +4,8 @@ namespace Joke.Front.Pony.Err
 {
     public class AtToken : AtOffset
     {
-        public AtToken(Source source, Token token, string msg) : base(source, token.Payload, msg)
+        public AtToken(ISource source, Token token, string msg)
+            : base(source, token.Payload, token.Next - token.Payload, msg)
         {
             Token = token;
         }

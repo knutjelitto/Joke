@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Repeat : Expression
     {
-        public Repeat(TSpan span, Annotations? annotations, Expression body, Expression condition, Else? elsePart)
+        public Repeat(TokenSpan span, Annotations? annotations, Expression body, Expression condition, Else? elsePart)
             : base(span)
         {
             Annotations = annotations;

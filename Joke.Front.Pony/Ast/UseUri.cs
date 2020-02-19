@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class UseUri : Use
     {
-        public UseUri(TSpan span, Identifier? name, String uri)
+        public UseUri(TokenSpan span, Identifier? name, String uri)
             : base(span, name)
         {
             Uri = uri;

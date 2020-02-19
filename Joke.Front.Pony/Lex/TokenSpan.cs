@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Joke.Front.Pony.Lex
 {
-    public struct TSpan
+    public struct TokenSpan
     {
-        public TSpan(PonyParser parser, int start, int next)
+        public TokenSpan(PonyParser parser, int start, int next)
         {
             Parser = parser;
             Start = start;

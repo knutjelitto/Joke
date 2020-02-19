@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Joke.Front.Pony.Err;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Joke.Front.Pony.Lex
 {
@@ -25,9 +27,13 @@ namespace Joke.Front.Pony.Lex
         /// </summary>
         public int payload;
 
-        public Tokenizer(ISource source)
+        public Tokens Tokens { get; private set; }
+
+        public Tokenizer(ErrorAccu errors, ISource source)
         {
+            Errors = errors;
             Source = source;
+            Tokens = new Tokens(Source, new Token[] { });
 
             content = Source.Content;
             limit = content.Length;
@@ -36,9 +42,15 @@ namespace Joke.Front.Pony.Lex
             payload = 0;
         }
 
+        public ErrorAccu Errors { get; }
         public ISource Source { get; }
 
-        public IEnumerable<Token> Tokens()
+        public void Tokenize()
+        {
+            Tokens = new Tokens(Source, GetTokens().ToList());
+        }
+
+        private IEnumerable<Token> GetTokens()
         {
             Token next;
             do
@@ -49,7 +61,7 @@ namespace Joke.Front.Pony.Lex
             while (next.Kind != TK.Eof);
         }
 
-        public Token Next()
+        private Token Next()
         {
             clutter = next;
 
@@ -732,15 +744,14 @@ namespace Joke.Front.Pony.Lex
             return nl;
         }
 
-        protected NotYetException NotYet(string message)
+        protected JokeException NotYet(string message)
         {
-            return new NotYetException(message);
+            return new JokeException(new AtOffset(Source, next, 0, "not implemented: " + message));
         }
 
-        protected NoScanException NoScan(string message)
+        protected JokeException NoScan(string message)
         {
-            return new NoScanException(message);
+            return new JokeException(new AtOffset(Source, next, 0, message));
         }
-
     }
 }

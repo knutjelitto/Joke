@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Members : Node
     {
-        public Members(TSpan span, Fields fields, Methods methods)
+        public Members(TokenSpan span, Fields fields, Methods methods)
             : base(span)
         {
             Fields = fields;

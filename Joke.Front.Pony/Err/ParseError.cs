@@ -2,8 +2,8 @@
 {
     public class ParseError : Error
     {
-        public ParseError(ErrorKind kind, string msg)
-            : base(kind, msg)
+        public ParseError(IDescription err)
+            : base(Severity.Error, err)
         {
         }
     }

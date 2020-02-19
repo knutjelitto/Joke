@@ -2,7 +2,7 @@
 
 namespace Joke.Front
 {
-    public struct SourceSpan : ISpan
+    public struct SourceSpan : ISourceSpan
     {
         public SourceSpan(ISource source, int start, int length)
         {

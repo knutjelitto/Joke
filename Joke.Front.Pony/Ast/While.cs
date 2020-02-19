@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class While : Expression
     {
-        public While(TSpan span, Annotations? annotations, Expression condition, Expression body, Expression? elsePart)
+        public While(TokenSpan span, Annotations? annotations, Expression condition, Expression body, Expression? elsePart)
             : base(span)
         {
             Annotations = annotations;

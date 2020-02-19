@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class WithElement : Node
     {
-        public WithElement(TSpan span, Ids names, Expression initializer)
+        public WithElement(TokenSpan span, Ids names, Expression initializer)
             : base(span)
         {
             Names = names;

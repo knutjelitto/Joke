@@ -1,13 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Joke.Front.Pony.Lex;
 
 namespace Joke.Front.Pony.Syntax
 {
     partial class PonyParser
     {
-        public Source Source { get; }
-        public IReadOnlyList<Token> Tokens { get; }
+        public ISource Source { get; }
+        public Tokens Tokens { get; }
 
         private int next;
         private readonly int limit;
@@ -112,19 +111,6 @@ namespace Joke.Front.Pony.Syntax
             }
 
             return false;
-        }
-
-        private bool More()
-        {
-            return next < limit;
-        }
-
-        private void Ensure()
-        {
-            if (next >= limit)
-            {
-                throw NoParse("expected something (not EOF)");
-            }
         }
     }
 }

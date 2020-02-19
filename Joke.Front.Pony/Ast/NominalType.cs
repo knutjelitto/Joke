@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class NominalType : Type
     {
-        public NominalType(TSpan span, Identifier name, TypeArguments? typeArguments, Cap? cap, EphemAlias? ea)
+        public NominalType(TokenSpan span, Identifier name, TypeArguments? typeArguments, Cap? cap, EphemAlias? ea)
             : base(span)
         {
             Name = name;

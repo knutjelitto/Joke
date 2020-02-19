@@ -1,29 +1,23 @@
-﻿using System.Collections.Generic;
-
-using Joke.Front.Pony.Err;
+﻿using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lex;
 
 namespace Joke.Front.Pony.Syntax
 {
     partial class PonyParser
     {
-        public List<Error> Messages = new List<Error>();
-
-        public int Offset => Tokens[next].Payload;
-
-        protected NotYetException NotYet(string message)
+        protected JokeException NotYet(string message)
         {
-            return new NotYetException(message);
+            return new JokeException(new AtToken(Source, Token, "not implemented: " + message));
         }
 
-        public NoParseException NoParse(string message)
+        public JokeException NoParse(string message)
         {
-            return new NoParseException(message);
+            return new JokeException(new AtToken(Source, Token, message));
         }
 
         public void AddError(Token token, string msg)
         {
-            Messages.Add(new AtTokenError(ErrorKind.Error, token, msg));
+            Errors.Add(new ParseError(new AtToken(Source, token, msg)));
         }
     }
 }

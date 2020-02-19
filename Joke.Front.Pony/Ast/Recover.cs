@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Recover : Expression
     {
-        public Recover(TSpan span, Annotations? annotations, Cap? cap, Expression body) : base(span)
+        public Recover(TokenSpan span, Annotations? annotations, Cap? cap, Expression body) : base(span)
         {
             Annotations = annotations;
             Cap = cap;

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Jump : Expression
     {
-        public Jump(TSpan span, JumpKind kind, Expression? value)
+        public Jump(TokenSpan span, JumpKind kind, Expression? value)
             : base(span)
         {
             Kind = kind;

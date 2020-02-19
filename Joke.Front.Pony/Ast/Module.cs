@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Module : Node
     {
-        public Module(TSpan span, String? doc, IReadOnlyList<Use> uses, IReadOnlyList<Class> classes)
+        public Module(TokenSpan span, String? doc, IReadOnlyList<Use> uses, IReadOnlyList<Class> classes)
             : base(span)
         {
             Doc = doc;

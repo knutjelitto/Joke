@@ -1,4 +1,5 @@
-﻿using Joke.Front.Pony.Lex;
+﻿using Joke.Front.Pony.Err;
+using Joke.Front.Pony.Lex;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -6,10 +7,14 @@ namespace Joke.Front.Pony.Syntax
 {
     public partial class PonyParser
     {
-        public PonyParser(Source source, IReadOnlyList<Token> tokens)
+        public ErrorAccu Errors { get; }
+
+        public PonyParser(ErrorAccu errors, ISource source, Tokens tokens)
         {
+            Errors = errors;
             Source = source;
             Tokens = tokens;
+
             next = 0;
             limit = Tokens.Count;
         }
@@ -116,27 +121,16 @@ namespace Joke.Front.Pony.Syntax
 
         public Ast.Class Class(Ast.ClassKind kind)
         {
-            Debug.Assert(marks.Count == 1);
             Begin(First.Class);
-            Debug.Assert(marks.Count == 2);
             var annotations = TryAnnotations();
-            Debug.Assert(marks.Count == 2);
             var bare = MayMatch(TK.At);
-            Debug.Assert(marks.Count == 2);
-            var cap = TryCap(false);
-            Debug.Assert(marks.Count == 2);
+            var cap = TryCap();
             var name = Identifier();
-            Debug.Assert(marks.Count == 2);
             var typeParams = TryTypeParameters();
-            Debug.Assert(marks.Count == 2);
             var provides = TryProvides();
-            Debug.Assert(marks.Count == 2);
             var doc = TryString();
-            Debug.Assert(marks.Count == 2);
             var members = Members();
-            Debug.Assert(marks.Count == 2);
             var result = new Ast.Class(End(), kind, annotations, bare, cap, name, typeParams, provides, doc, members);
-            Debug.Assert(marks.Count == 1);
             return result;
         }
 
@@ -180,7 +174,7 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Field Field(Ast.FieldKind kind)
         {
-            Begin(TK.Var, TK.Let, TK.Embed);
+            Begin(First.Field);
 
             var name = Identifier();
             var type = ColonType();
@@ -220,11 +214,11 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Method Method(Ast.MethodKind kind)
         {
-            Begin(TK.Fun, TK.Be, TK.New);
+            Begin(First.Method);
 
             var annotations = TryAnnotations();
             var bare = MayMatch(TK.At);
-            var cap = TryCap(false);
+            var cap = TryCap();
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = Parameters();
@@ -339,7 +333,7 @@ namespace Joke.Front.Pony.Syntax
             return null;
         }
 
-        private Ast.Cap? TryCap(bool extended)
+        private Ast.Cap? TryCap()
         {
             return TokenKind switch
             {
@@ -349,11 +343,25 @@ namespace Joke.Front.Pony.Syntax
                 TK.Val => Cap(Ast.CapKind.Val),
                 TK.Box => Cap(Ast.CapKind.Box),
                 TK.Tag => Cap(Ast.CapKind.Tag),
-                TK.CapRead when extended => Cap(Ast.CapKind.HashRead),
-                TK.CapSend when extended => Cap(Ast.CapKind.HashSend),
-                TK.CapShare when extended => Cap(Ast.CapKind.HashShare),
-                TK.CapAlias when extended => Cap(Ast.CapKind.HashAlias),
-                TK.CapAny when extended => Cap(Ast.CapKind.HashAny),
+                _ => null,
+            };
+        }
+
+        private Ast.Cap? TryCapEx()
+        {
+            return TokenKind switch
+            {
+                TK.Iso => Cap(Ast.CapKind.Iso),
+                TK.Trn => Cap(Ast.CapKind.Trn),
+                TK.Ref => Cap(Ast.CapKind.Ref),
+                TK.Val => Cap(Ast.CapKind.Val),
+                TK.Box => Cap(Ast.CapKind.Box),
+                TK.Tag => Cap(Ast.CapKind.Tag),
+                TK.CapRead => Cap(Ast.CapKind.HashRead),
+                TK.CapSend => Cap(Ast.CapKind.HashSend),
+                TK.CapShare => Cap(Ast.CapKind.HashShare),
+                TK.CapAlias => Cap(Ast.CapKind.HashAlias),
+                TK.CapAny => Cap(Ast.CapKind.HashAny),
                 _ => null,
             };
         }

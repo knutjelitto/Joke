@@ -2,7 +2,7 @@
 
 namespace Joke.Front
 {
-    public interface ISpan
+    public interface ISourceSpan
     {
         public int Start { get; }
         ReadOnlySpan<char> Value { get; }

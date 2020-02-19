@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Else : Expression
     {
-        public Else(TSpan span, Annotations? annotations, Expression body)
+        public Else(TokenSpan span, Annotations? annotations, Expression body)
             : base(span)
         {
             Annotations = annotations;

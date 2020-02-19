@@ -13,7 +13,7 @@ namespace Joke.Front.Pony
         }
 
         public PonyParser Parser { get; }
-        public Source Source => Parser.Source;
+        public ISource Source => Parser.Source;
         public IReadOnlyList<Token> Tokens => Parser.Tokens;
     }
 }

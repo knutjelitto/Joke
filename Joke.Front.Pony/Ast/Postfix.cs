@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Postfix : Expression
     {
-        public Postfix(TSpan span, Expression atom, IReadOnlyList<PostfixPart> parts)
+        public Postfix(TokenSpan span, Expression atom, IReadOnlyList<PostfixPart> parts)
             : base(span)
         {
             Atom = atom;
