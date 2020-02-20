@@ -81,6 +81,9 @@ namespace Joke.Front.Pony.Syntax
                 ExprSeq = Assignment;
                 RawSeq = TokenSet.Union(Jump, ExprSeq);
                 Lambda = new TokenSet(TK.LBrace, TK.AtLBrace);
+
+                RecoverInModule = Module;
+                RecoverInClass = TokenSet.Union(RecoverInModule, Method, Field);
             }
 
             public static readonly TokenSet Class;
@@ -101,6 +104,9 @@ namespace Joke.Front.Pony.Syntax
             public static readonly TokenSet ExprSeq;
             public static readonly TokenSet RawSeq;
             public static readonly TokenSet Lambda;
+
+            public static readonly TokenSet RecoverInClass;
+            public static readonly TokenSet RecoverInModule;
         }
     }
 }

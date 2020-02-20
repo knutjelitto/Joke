@@ -1,8 +1,8 @@
 ﻿namespace Joke.Front.Pony.Err
 {
-    public class ParseError : Error
+    public class JokeError : Error
     {
-        public ParseError(IDescription err)
+        public JokeError(IDescription err)
             : base(Severity.Error, err)
         {
         }

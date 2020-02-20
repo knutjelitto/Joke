@@ -1,4 +1,8 @@
 ﻿class test
     fun test() =>
-        (x + y) - z
-        2 + 3
+        x + y - z
+
+class test
+    fun test() =>
+        x * y / z
+        ""

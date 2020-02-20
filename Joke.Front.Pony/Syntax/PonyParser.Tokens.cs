@@ -112,5 +112,13 @@ namespace Joke.Front.Pony.Syntax
 
             return false;
         }
+
+        private void SkipUntil(TokenSet tokens)
+        {
+            while (next < limit && !tokens[Tokens[next].Kind])
+            {
+                next += 1;
+            }
+        }
     }
 }

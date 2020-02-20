@@ -1,6 +1,5 @@
 ﻿using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lex;
-using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Joke.Front.Pony.Syntax
@@ -28,9 +27,9 @@ namespace Joke.Front.Pony.Syntax
             Debug.Assert(marks.Count == 1);
             var doc = TryString();
             Debug.Assert(marks.Count == 1);
-            var uses = Collect(TryUse);
+            var uses = CollectRecover(First.RecoverInModule, TryUse);
             Debug.Assert(marks.Count == 1);
-            var classes = Collect(TryClass);
+            var classes = CollectRecover(First.RecoverInModule, TryClass);
             Debug.Assert(marks.Count == 1);
 
             var module = new Ast.Module(End(), doc, uses, classes);
@@ -147,29 +146,19 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Fields Fields()
         {
             Begin();
-
-            var fields = new List<Ast.Field>();
-            var done = false;
-            while (!done)
-            {
-                switch (TokenKind)
-                {
-                    case TK.Var:
-                        fields.Add(Field(Ast.FieldKind.Var));
-                        break;
-                    case TK.Let:
-                        fields.Add(Field(Ast.FieldKind.Let));
-                        break;
-                    case TK.Embed:
-                        fields.Add(Field(Ast.FieldKind.Embed));
-                        break;
-                    default:
-                        done = true;
-                        break;
-                }
-            }
-
+            var fields = CollectRecover(First.RecoverInClass, TryField);
             return new Ast.Fields(End(), fields);
+        }
+
+        private Ast.Field? TryField()
+        {
+            return TokenKind switch
+            {
+                TK.Var => Field(Ast.FieldKind.Var),
+                TK.Let => Field(Ast.FieldKind.Let),
+                TK.Embed => Field(Ast.FieldKind.Embed),
+                _ => null,
+            };
         }
 
         private Ast.Field Field(Ast.FieldKind kind)
@@ -187,29 +176,19 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Methods Methods()
         {
             Begin();
-
-            var methods = new List<Ast.Method>();
-            var done = false;
-            while (!done)
-            {
-                switch(TokenKind)
-                {
-                    case TK.Fun:
-                        methods.Add(Method(Ast.MethodKind.Fun));
-                        break;
-                    case TK.Be:
-                        methods.Add(Method(Ast.MethodKind.Be));
-                        break;
-                    case TK.New:
-                        methods.Add(Method(Ast.MethodKind.New));
-                        break;
-                    default:
-                        done = true;
-                        break;
-                }
-            }
-
+            var methods = CollectRecover(First.RecoverInClass, TryMethod);
             return new Ast.Methods(End(), methods);
+        }
+
+        private Ast.Method? TryMethod()
+        {
+            return TokenKind switch
+            {
+                TK.Fun => Method(Ast.MethodKind.Fun),
+                TK.Be => Method(Ast.MethodKind.Be),
+                TK.New => Method(Ast.MethodKind.New),
+                _ => null,
+            };
         }
 
         private Ast.Method Method(Ast.MethodKind kind)
@@ -234,7 +213,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayMatch(TK.DblArrow))
             {
-                return RawSeq();
+                return RawSequence();
             }
 
             return null;

@@ -1,7 +1,6 @@
 ﻿using Joke.Front.Pony.Err;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Joke.Front.Pony.Lex
 {
@@ -47,18 +46,33 @@ namespace Joke.Front.Pony.Lex
 
         public void Tokenize()
         {
-            Tokens = new Tokens(Source, GetTokens().ToList());
+            Tokens = new Tokens(Source, GetTokens());
         }
 
-        private IEnumerable<Token> GetTokens()
+        private List<Token> GetTokens()
         {
+            var tokens = new List<Token>();
+
             Token next;
-            do
+            while (true)
             {
-                next = Next();
-                yield return next;
+                try
+                {
+                    next = Next();
+                    tokens.Add(next);
+                    if (next.Kind == TK.Eof)
+                    {
+                        break;
+                    }
+                }
+                catch (JokeException joke)
+                {
+                    // simple catch, report & slurp
+                    Errors.Add(joke.Error);
+                }
             }
-            while (next.Kind != TK.Eof);
+
+            return tokens;
         }
 
         private Token Next()
@@ -746,12 +760,12 @@ namespace Joke.Front.Pony.Lex
 
         protected JokeException NotYet(string message)
         {
-            return new JokeException(new AtOffset(Source, next, 0, "not implemented: " + message));
+            return new JokeException(new JokeError(new AtOffset(Source, next, 0, "not implemented: " + message)));
         }
 
         protected JokeException NoScan(string message)
         {
-            return new JokeException(new AtOffset(Source, next, 0, message));
+            return new JokeException(new JokeError(new AtOffset(Source, next, 0, message)));
         }
     }
 }

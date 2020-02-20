@@ -1,4 +1,5 @@
 ﻿using Joke.Front.Pony.Lex;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -26,7 +27,7 @@ namespace Joke.Front.Pony.Syntax
             var parts = new List<Parts.InfixPart>();
 
             var done = false;
-            while (!done && next < limit)
+            while (!done)
             {
                 switch (TokenKind)
                 {
@@ -258,8 +259,8 @@ namespace Joke.Front.Pony.Syntax
             var annotations = TryAnnotations();
             var elements = WithElements();
             Match(TK.Do);
-            var body = RawSeq();
-            var elsePart = TryElseClause();
+            var body = RawSequence();
+            var elsePart = TryElse();
             Match(TK.End);
 
             return new Ast.With(End(), annotations, elements, body, elsePart);
@@ -278,7 +279,7 @@ namespace Joke.Front.Pony.Syntax
 
             var names = Ids();
             Match(TK.Assign);
-            var initializer = RawSeq();
+            var initializer = RawSequence();
 
             return new Ast.WithElement(End(), names, initializer);
         }
@@ -289,10 +290,10 @@ namespace Joke.Front.Pony.Syntax
             var annotations = TryAnnotations();
             var ids = Ids();
             Match(TK.In);
-            var iterator = RawSeq();
+            var iterator = RawSequence();
             Match(TK.Do);
-            var body = RawSeq();
-            var elsePart = TryElseClause();
+            var body = RawSequence();
+            var elsePart = TryElse();
             Match(TK.End);
 
             return new Ast.For(End(), annotations, ids, iterator, body, elsePart);
@@ -328,10 +329,10 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.Repeat);
             var annotations = TryAnnotations();
-            var body = RawSeq();
+            var body = RawSequence();
             Match(TK.Until);
-            var condition = RawSeq();
-            var elsePart = TryElseClause();
+            var condition = RawSequence();
+            var elsePart = TryElse();
             Match(TK.End);
 
             return new Ast.Repeat(End(), annotations, body, condition, elsePart);
@@ -341,10 +342,10 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.While);
             var annotations = TryAnnotations();
-            var condition = RawSeq();
+            var condition = RawSequence();
             Match(TK.Do);
-            var body = RawSeq();
-            var elsePart = TryElseClause();
+            var body = RawSequence();
+            var elsePart = TryElse();
             Match(TK.End);
 
             return new Ast.While(End(), annotations, condition, body, elsePart);
@@ -354,9 +355,9 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.Match);
             var annotations = TryAnnotations();
-            var expr = RawSeq();
+            var expr = RawSequence();
             var cases = Cases();
-            var elsePart = TryElseClause();
+            var elsePart = TryElse();
             Match(TK.End);
 
             return new Ast.Match(End(), annotations, expr, cases, elsePart);
@@ -389,7 +390,7 @@ namespace Joke.Front.Pony.Syntax
         {
             if (MayBegin(TK.If))
             {
-                var expression = RawSeq();
+                var expression = RawSequence();
                 return new Ast.Guard(End(), expression);
             }
 
@@ -409,7 +410,7 @@ namespace Joke.Front.Pony.Syntax
             Begin(TK.Recover);
             var annotations = TryAnnotations();
             var cap = TryCap();
-            var body = RawSeq();
+            var body = RawSequence();
             Match(TK.End);
 
             return new Ast.Recover(End(), annotations, cap, body);
@@ -419,93 +420,54 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.Try);
             var annotations = TryAnnotations();
-            var body = RawSeq();
-            var elsePart = TryElseClause();
+            var body = RawSequence();
+            var elsePart = TryElse();
             var thenPart = TryThenClause();
             Match(TK.End);
 
             return new Ast.Try(End(), annotations, body, elsePart, thenPart);
         }
 
-        private Ast.Expression Iff()
+        private Ast.Expression Iff(TK iffToken, Func<Ast.Expression> parseCondition, Ast.IffKind iff, Ast.IffKind elseIf)
         {
-            Begin(TK.If);
+            Begin(iffToken);
             var annotations = TryAnnotations();
-            var condition = RawSeq();
+            var condition = parseCondition();
             var thenPart = ThenClause();
-            var elsePart = TryElseIf() ?? TryElseClause();
+            var elsePart = TryElseIf(parseCondition, elseIf) ?? TryElse();
             Match(TK.End);
 
-            return new Ast.Iff(End(), Ast.IffKind.Iff, annotations, condition, thenPart, elsePart);
+            return new Ast.Iff(End(), iff, annotations, condition, thenPart, elsePart);
         }
 
-        private Ast.Expression? TryElseIf()
+        private Ast.Expression? TryElseIf(Func<Ast.Expression> parseCondition, Ast.IffKind elseIf)
         {
             if (MayBegin(TK.Elseif))
             {
                 var annotations = TryAnnotations();
-                var condition = RawSeq();
+                var condition = parseCondition();
                 var thenPart = ThenClause();
-                var elsePart = TryElseIfdef() ?? TryElseClause();
+                var elsePart = TryElseIf(parseCondition, elseIf) ?? TryElse();
 
-                return new Ast.Iff(End(), Ast.IffKind.ElseIff, annotations, condition, thenPart, elsePart);
+                return new Ast.Iff(End(), elseIf, annotations, condition, thenPart, elsePart);
             }
 
             return null;
+        }
+
+        private Ast.Expression Iff()
+        {
+            return Iff(TK.If, () => RawSequence(), Ast.IffKind.Iff, Ast.IffKind.ElseIff);
         }
 
         private Ast.Expression Iffdef()
         {
-            Begin(TK.Ifdef);
-            var annotations = TryAnnotations();
-            var condition = Infix();
-            var thenPart = ThenClause();
-            var elsePart = TryElseIfdef() ?? TryElseClause();
-            Match(TK.End);
-
-            return new Ast.Iff(End(), Ast.IffKind.IffDef, annotations, condition, thenPart, elsePart);
-        }
-
-        private Ast.Expression? TryElseIfdef()
-        {
-            if (MayBegin(TK.Elseif))
-            {
-                var annotations = TryAnnotations();
-                var condition = Infix();
-                var thenPart = ThenClause();
-                var elsePart = TryElseIfdef() ?? TryElseClause();
-
-                return new Ast.Iff(End(), Ast.IffKind.ElseIffDef, annotations, condition, thenPart, elsePart);
-            }
-
-            return null;
+            return Iff(TK.Ifdef, () => Infix(), Ast.IffKind.IffDef, Ast.IffKind.ElseIffDef);
         }
 
         private Ast.Expression Ifftype()
         {
-            Begin(TK.Iftype);
-            var annotations = TryAnnotations();
-            var condition = SubType();
-            var thenPart = ThenClause();
-            var elsePart = TryElseIftype() ?? TryElseClause();
-            Match(TK.End);
-
-            return new Ast.Iff(End(), Ast.IffKind.IffType, annotations, condition, thenPart, elsePart);
-        }
-
-        private Ast.Expression? TryElseIftype()
-        {
-            if (MayBegin(TK.Elseif))
-            {
-                var annotations = TryAnnotations();
-                var condition = SubType();
-                var thenPart = ThenClause();
-                var elsePart = TryElseIftype() ?? TryElseClause();
-
-                return new Ast.Iff(End(), Ast.IffKind.ElseIffType, annotations, condition, thenPart, elsePart);
-            }
-
-            return null;
+            return Iff(TK.Iftype, SubType, Ast.IffKind.IffType, Ast.IffKind.ElseIffType);
         }
 
         private Ast.Expression SubType()
@@ -525,7 +487,7 @@ namespace Joke.Front.Pony.Syntax
             if (MayBegin(TK.Then))
             {
                 var annotations = TryAnnotations();
-                var body = RawSeq();
+                var body = RawSequence();
 
                 return new Ast.Then(End(), annotations, body);
             }
@@ -533,12 +495,12 @@ namespace Joke.Front.Pony.Syntax
             return null;
         }
 
-        private Ast.Else? TryElseClause()
+        private Ast.Else? TryElse()
         {
             if (MayBegin(TK.Else))
             {
                 var annotations = TryAnnotations();
-                var elsePart = RawSeq();
+                var elsePart = RawSequence();
 
                 return new Ast.Else(End(), annotations, elsePart);
             }
@@ -546,10 +508,10 @@ namespace Joke.Front.Pony.Syntax
             return null;
         }
 
-        private Ast.Expression RawSeq(NL nl = NL.Both) => TryRawSeq(nl) ?? throw NoParse("raw-seq");
-        private Ast.Expression? TryRawSeq(NL nl = NL.Both)
+        private Ast.Expression RawSequence(NL nl = NL.Both) => TryRawSequence(nl) ?? throw NoParse("raw-sequence");
+        private Ast.Expression? TryRawSequence(NL nl = NL.Both)
         {
-            var expression = TryExprSeq(nl);
+            var expression = TryExpressionSequence(nl);
             if (expression == null)
             {
                 expression = TryJump();
@@ -558,7 +520,7 @@ namespace Joke.Front.Pony.Syntax
             return expression;
         }
 
-        private Ast.Expression? TryExprSeq(NL nl = NL.Both)
+        private Ast.Expression? TryExpressionSequence(NL nl = NL.Both)
         {
             var assignment = TryAssignment(nl);
 
@@ -592,20 +554,20 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Jump Jump(Ast.JumpKind kind)
         {
             Begin(TokenKind);
-            var value = TryRawSeq();
+            var value = TryRawSequence();
             return new Ast.Jump(End(), kind, value);
         }
 
         private Ast.Expression? TryNoSemi()
         {
-            return TryRawSeq(NL.Next);
+            return TryRawSequence(NL.Next);
         }
 
         private Ast.Expression? TrySemiExpr()
         {
             if (MayBegin(TK.Semi))
             {
-                var expression = RawSeq();
+                var expression = RawSequence();
                 return new Ast.SemiExpression(End(), expression);
             }
 
@@ -816,7 +778,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.PositionalArgument Positional()
         {
             Begin();
-            var value = RawSeq();
+            var value = RawSequence();
             return new Ast.PositionalArgument(End(), value);
         }
 
@@ -826,7 +788,7 @@ namespace Joke.Front.Pony.Syntax
 
             var name = Identifier();
             Match(TK.Assign);
-            var value = RawSeq();
+            var value = RawSequence();
             return new Ast.NamedArgument(End(), name, value);
         }
 
@@ -1006,7 +968,7 @@ namespace Joke.Front.Pony.Syntax
         private Ast.GroupedExpression GroupedExpression()
         {
             Begin(TK.LParen, TK.LParenNew);
-            var expressions = List(() => RawSeq(), TK.RParen);
+            var expressions = List(() => RawSequence(), TK.RParen);
             Match(TK.RParen);
 
             return new Ast.GroupedExpression(End(), expressions);
@@ -1016,7 +978,7 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.LSquare, TK.LSquareNew);
             var type = TryArrayType();
-            var elements = TryRawSeq();
+            var elements = TryRawSequence();
             Match(TK.RSquare);
 
             return new Ast.Array(End(), type, elements);

@@ -4,11 +4,10 @@ namespace Joke.Front.Pony.Err
 {
     public class JokeException : Exception
     {
-        public JokeException(IDescription description)
+        public JokeException(Error error)
         {
-            Description = description;
+            Error = error;
         }
-
-        public IDescription Description { get; }
+        public Error Error { get; }
     }
 }

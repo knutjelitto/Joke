@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lex;
 
 namespace Joke.Front.Pony.Syntax
@@ -20,20 +21,28 @@ namespace Joke.Front.Pony.Syntax
             return items;
         }
 
-        private List<T> Collect<T>(System.Func<T?> tryParse) where T : class
+        private List<T> CollectRecover<T>(TokenSet recover, System.Func<T?> tryParse) where T : class
         {
             var items = new List<T>();
 
             while (true)
             {
-                var item = tryParse();
-                if (item != null)
+                try
                 {
-                    items.Add(item);
+                    var item = tryParse();
+                    if (item != null)
+                    {
+                        items.Add(item);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
+                catch (JokeException joke)
                 {
-                    break;
+                    Errors.Add(joke.Error);
+                    SkipUntil(recover);
                 }
             }
 

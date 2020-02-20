@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
+using Joke.Compiler;
 using Joke.Front;
 using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lex;
@@ -18,10 +18,10 @@ namespace Joke
         internal static void Main()
         {
             //EnsureSources();
-            PonyParse(0, EnumerateBuiltinPonies());
+            //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
             //PonyParse(0, EnumerateAllPonies());
-            //PonyTest();
+            PonyTest();
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -32,14 +32,16 @@ namespace Joke
             var fix = DirRef.ProjectDir().Dir("..").Dir("Joke.Front.Pony").Dir("Fixtures").Dir("Expressions");
 
             Debug.Assert(fix.File("Ops.pony").Exists());
-            PonyParse(0, Enumerable.Repeat(fix.File("Ops.pony"), 1));
+
+            var errors = new ErrorAccu();
+
+            var module = new PonyModule(errors, fix.File("Ops.pony"));
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)
         {
             int no = 0;
             int lines = 0;
-            var stats = new Stats();
 
             var errors = new ErrorAccu();
 
@@ -51,17 +53,16 @@ namespace Joke
                     continue;
                 }
                 errors.Clear();
-                if (!PonyParse(errors, ref lines, no, ponyFile, stats))
+                if (!PonyParse(errors, ref lines, no, ponyFile))
                 {
                     break;
                 }
             }
             Console.WriteLine($"{lines} lines read");
             Console.WriteLine();
-            stats.Report(Console.Out);
         }
 
-        private static bool PonyParse(ErrorAccu errors, ref int lines, int no, FileRef ponyFile, Stats stats)
+        private static bool PonyParse(ErrorAccu errors, ref int lines, int no, FileRef ponyFile)
         {
             Console.WriteLine($"{no}. {ponyFile}");
 
@@ -76,25 +77,10 @@ namespace Joke
             }
             catch (JokeException joke)
             {
-                joke.Description.Describe(Console.Out);
+                joke.Error.Description.Describe(Console.Out);
 
                 return false;
             }
-
-#if false
-            var tokens = tokenizer.Tokens;
-
-            var builder = new StringBuilder();
-            foreach (var token in tokens)
-            {
-                builder.Append(token.GetClutter(source));
-                builder.Append(token.GetPayload(source));
-            }
-            var content = source.Content;
-            var rebuild = builder.ToString();
-
-            Debug.Assert(content == rebuild);
-#endif
 
             var parser = new PonyParser(errors, source, tokenizer.Tokens);
 
@@ -108,7 +94,7 @@ namespace Joke
             }
             catch (JokeException joke)
             {
-                joke.Description.Describe(Console.Out);
+                joke.Error.Description.Describe(Console.Out);
 
                 return false;
             }
