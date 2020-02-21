@@ -49,9 +49,9 @@ namespace Joke.Outside
 
         public bool Exists => IODirectory.Exists(Path);
 
-        public IEnumerable<FileRef> Files()
+        public IEnumerable<FileRef> Files(string searchPattern = "*.*")
         {
-            foreach (var fileName in IODirectory.EnumerateFiles(Path))
+            foreach (var fileName in IODirectory.EnumerateFiles(Path, searchPattern))
             {
                 yield return File(fileName);
             }

@@ -1,11 +1,10 @@
-﻿using Joke.Front;
+﻿using System;
+
+using Joke.Front;
 using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lex;
 using Joke.Front.Pony.Syntax;
 using Joke.Outside;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Joke.Compiler
 {

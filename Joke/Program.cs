@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Joke.Compiler;
 using Joke.Front;
 using Joke.Front.Pony.Err;
@@ -35,7 +34,7 @@ namespace Joke
 
             var errors = new ErrorAccu();
 
-            var module = new PonyModule(errors, fix.File("Ops.pony"));
+            var module = new PonyPackage(errors, Packages.Dir("builtin"));
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)
@@ -106,6 +105,7 @@ namespace Joke
         }
 
         private static DirRef Temp => DirRef.ProjectDir().Up.Up.Dir("Temp");
+        private static DirRef Packages => Temp.Dir("ponyc").Dir("packages");
 
         private static IEnumerable<FileRef> EnumerateBuiltinPonies()
         {
