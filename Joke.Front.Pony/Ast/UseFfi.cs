@@ -4,8 +4,8 @@ namespace Joke.Front.Pony.Ast
 {
     public class UseFfi : Use
     {
-        public UseFfi(TokenSpan span, Identifier? name, FfiName ffiName, TypeArguments typeArguments, Parameters parameters, bool partial)
-            : base(span, name)
+        public UseFfi(TokenSpan span, Identifier? name, FfiName ffiName, TypeArguments typeArguments, Parameters parameters, bool partial, Guard? guard)
+            : base(span, name, guard)
         {
             FfiName = ffiName;
             TypeArguments = typeArguments;

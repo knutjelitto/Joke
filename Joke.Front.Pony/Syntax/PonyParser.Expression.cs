@@ -24,6 +24,9 @@ namespace Joke.Front.Pony.Syntax
                 return null;
             }
 
+#if true
+            var parts = Collect(TryInfixPart);
+#else
             var parts = new List<Parts.InfixPart>();
 
             var done = false;
@@ -143,6 +146,7 @@ namespace Joke.Front.Pony.Syntax
                         break;
                 }
             }
+#endif
 
             if (parts.Count >= 1)
             {
@@ -177,6 +181,48 @@ namespace Joke.Front.Pony.Syntax
             }
 
             return term;
+        }
+
+        private Parts.InfixPart? TryInfixPart()
+        {
+            return TokenKind switch
+            {
+                TK.And => BinaryPart(Ast.BinaryKind.And),
+                TK.Or => BinaryPart(Ast.BinaryKind.Or),
+                TK.Xor => BinaryPart(Ast.BinaryKind.Xor),
+                TK.Plus => BinaryPart(Ast.BinaryKind.Plus),
+                TK.PlusTilde => BinaryPart(Ast.BinaryKind.PlusUnsafe),
+                TK.Minus => BinaryPart(Ast.BinaryKind.Minus),
+                TK.MinusTilde => BinaryPart(Ast.BinaryKind.MinusUnsafe),
+                TK.Multiply => BinaryPart(Ast.BinaryKind.Multiply),
+                TK.MultiplyTilde => BinaryPart(Ast.BinaryKind.MultiplyUnsafe),
+                TK.Divide => BinaryPart(Ast.BinaryKind.Divide),
+                TK.DivideTilde => BinaryPart(Ast.BinaryKind.DivideUnsafe),
+                TK.Rem => BinaryPart(Ast.BinaryKind.Rem),
+                TK.RemTilde => BinaryPart(Ast.BinaryKind.RemUnsafe),
+                TK.Mod => BinaryPart(Ast.BinaryKind.Mod),
+                TK.ModTilde => BinaryPart(Ast.BinaryKind.ModUnsafe),
+                TK.LShift => BinaryPart(Ast.BinaryKind.LShift),
+                TK.LShiftTilde => BinaryPart(Ast.BinaryKind.LShiftUnsafe),
+                TK.RShift => BinaryPart(Ast.BinaryKind.RShift),
+                TK.RShiftTilde => BinaryPart(Ast.BinaryKind.RShiftUnsafe),
+                TK.Eq => BinaryPart(Ast.BinaryKind.Eq),
+                TK.EqTilde => BinaryPart(Ast.BinaryKind.EqUnsafe),
+                TK.Ne => BinaryPart(Ast.BinaryKind.Ne),
+                TK.NeTilde => BinaryPart(Ast.BinaryKind.NeUnsafe),
+                TK.Lt => BinaryPart(Ast.BinaryKind.Lt),
+                TK.LtTilde => BinaryPart(Ast.BinaryKind.LtUnsafe),
+                TK.Le => BinaryPart(Ast.BinaryKind.Le),
+                TK.LeTilde => BinaryPart(Ast.BinaryKind.LeUnsafe),
+                TK.Gt => BinaryPart(Ast.BinaryKind.Gt),
+                TK.GtTilde => BinaryPart(Ast.BinaryKind.GtUnsafe),
+                TK.Ge => BinaryPart(Ast.BinaryKind.Ge),
+                TK.GeTilde => BinaryPart(Ast.BinaryKind.GeUnsafe),
+                TK.Is => IsPart(Ast.BinaryKind.Is),
+                TK.Isnt => IsPart(Ast.BinaryKind.Isnt),
+                TK.As => AsPart(),
+                _ => null,
+            };
         }
 
         private Parts.BinaryPart BinaryPart(Ast.BinaryKind kind)
@@ -380,13 +426,13 @@ namespace Joke.Front.Pony.Syntax
             Begin(TK.Pipe);
             var annotations = TryAnnotations();
             var pattern = TryPattern(NL.Case);
-            var guard = TryGuard();
+            var guard = TryCaseGuard();
             var body = TryBody();
 
             return new Ast.Case(End(), annotations, pattern, guard, body);
         }
 
-        private Ast.Guard? TryGuard()
+        private Ast.Guard? TryCaseGuard()
         {
             if (MayBegin(TK.If))
             {
@@ -595,29 +641,18 @@ namespace Joke.Front.Pony.Syntax
 
         private Ast.Expression? TryPattern(NL nl = NL.Both)
         {
-            var expression = TryLocal();
-
-            if (expression == null)
-            {
-                expression = TryParamPattern(nl);
-            }
-
-            return expression;
+            return TryLocal() ?? TryParamPattern(nl);
         }
 
         private Ast.Expression? TryLocal()
         {
-            switch (TokenKind)
+            return TokenKind switch
             {
-                case TK.Var:
-                    return Local(Ast.LocalKind.Var);
-                case TK.Let:
-                    return Local(Ast.LocalKind.Let);
-                case TK.Embed:
-                    return Local(Ast.LocalKind.Embed);
-            }
-
-            return null;
+                TK.Var => Local(Ast.LocalKind.Var),
+                TK.Let => Local(Ast.LocalKind.Let),
+                TK.Embed => Local(Ast.LocalKind.Embed),
+                _ => null,
+            };
         }
 
         private Ast.Local Local(Ast.LocalKind kind)
@@ -679,6 +714,9 @@ namespace Joke.Front.Pony.Syntax
                 return null;
             }
 
+#if true
+            var parts = Collect(TryPostfixPart);
+#else
             var parts = new List<Ast.PostfixPart>();
 
             var done = false;
@@ -707,12 +745,26 @@ namespace Joke.Front.Pony.Syntax
                 }
             }
 
+#endif
             if (parts.Count > 0)
             {
                 return new Ast.Postfix(Mark(atom), atom, parts);
             }
 
             return atom;
+        }
+
+        private Ast.PostfixPart? TryPostfixPart()
+        {
+            return TokenKind switch
+            {
+                TK.Dot => Dot(),
+                TK.Tilde => Tilde(),
+                TK.Chain => Chain(),
+                TK.LSquare => Qualify(),
+                TK.LParen => Call(),
+                _ => null,
+            };
         }
 
         private Ast.Dot Dot()

@@ -48,5 +48,25 @@ namespace Joke.Front.Pony.Syntax
 
             return items;
         }
+
+        private List<T> Collect<T>(System.Func<T?> tryParse) where T : class
+        {
+            var items = new List<T>();
+
+            while (true)
+            {
+                var item = tryParse();
+                if (item != null)
+                {
+                    items.Add(item);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return items;
+        }
     }
 }

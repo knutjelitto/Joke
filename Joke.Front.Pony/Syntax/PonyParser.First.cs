@@ -84,6 +84,7 @@ namespace Joke.Front.Pony.Syntax
 
                 RecoverInModule = Module;
                 RecoverInClass = TokenSet.Union(RecoverInModule, Method, Field);
+                RecoverNothing = new TokenSet();
             }
 
             public static readonly TokenSet Class;
@@ -107,6 +108,8 @@ namespace Joke.Front.Pony.Syntax
 
             public static readonly TokenSet RecoverInClass;
             public static readonly TokenSet RecoverInModule;
+
+            public static readonly TokenSet RecoverNothing;
         }
     }
 }

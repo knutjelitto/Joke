@@ -52,16 +52,29 @@ namespace Joke.Front.Pony.Syntax
                     var returnType = TypeArguments();
                     var parameters = Parameters();
                     var partial = MayPartial();
+                    var guard = TryUseGuard();
 
-                    var use = new Ast.UseFfi(End(), name, ffiName, returnType, parameters, partial);
+                    var use = new Ast.UseFfi(End(), name, ffiName, returnType, parameters, partial, guard);
 
                     return use;
                 }
                 else if (Iss(TK.String))
                 {
                     var uri = String();
-                    return new Ast.UseUri(End(), name, uri);
+                    var guard = TryUseGuard();
+                    return new Ast.UseUri(End(), name, uri, guard);
                 }
+            }
+
+            return null;
+        }
+
+        private Ast.Guard? TryUseGuard()
+        {
+            if (MayBegin(TK.If))
+            {
+                var expression = Infix();
+                return new Ast.Guard(End(), expression);
             }
 
             return null;
