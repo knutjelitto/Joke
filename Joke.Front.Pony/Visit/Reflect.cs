@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 
 using Joke.Front.Pony.Ast;
-using Joke.Front.Pony.Lex;
+using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Visit
 {

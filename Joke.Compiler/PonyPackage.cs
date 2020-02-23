@@ -13,10 +13,10 @@ namespace Joke.Compiler
 
             Console.WriteLine($"package: {packageDir}");
 
-            var modules = new List<PonyModule>();
+            var modules = new List<PonyFile>();
             foreach (var ponyFile in packageDir.Files("*.pony"))
             {
-                modules.Add(new PonyModule(errors, ponyFile));
+                modules.Add(new PonyFile(errors, ponyFile));
             }
         }
 

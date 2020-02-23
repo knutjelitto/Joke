@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Joke.Front.Pony.Lex
+namespace Joke.Front.Pony.Lexing
 {
     public class Keywords
     {

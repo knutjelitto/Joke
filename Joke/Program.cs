@@ -5,7 +5,7 @@ using System.IO;
 using Joke.Compiler;
 using Joke.Front;
 using Joke.Front.Pony.Err;
-using Joke.Front.Pony.Lex;
+using Joke.Front.Pony.Lexing;
 using Joke.Front.Pony.Syntax;
 using Joke.Outside;
 using Joke.Outside.Build;
@@ -19,8 +19,8 @@ namespace Joke
             //EnsureSources();
             //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
-            //PonyParse(0, EnumerateAllPonies());
-            PonyTest();
+            PonyParse(0, EnumerateAllPonies());
+            //PonyTest();
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);

@@ -1,4 +1,4 @@
-﻿using Joke.Front.Pony.Lex;
+﻿using Joke.Front.Pony.Lexing;
 using System.Collections.Generic;
 using System.Diagnostics;
 
