@@ -42,10 +42,9 @@ namespace Joke.Front.Pony.Visit
             }
         }
 
-        protected virtual void DoVisit(Module node) => VisitChildren(node);
+        protected virtual void DoVisit(File node) => VisitChildren(node);
         protected virtual void DoVisit(UseFfi node) => VisitChildren(node);
         protected virtual void DoVisit(FfiName node) => VisitChildren(node);
-        protected virtual void DoVisit(Identifier node) => VisitChildren(node);
         protected virtual void DoVisit(TypeArguments node) => VisitChildren(node);
         protected virtual void DoVisit(NominalType node) => VisitChildren(node);
         protected virtual void DoVisit(EphemAlias node) => VisitChildren(node);
@@ -93,7 +92,6 @@ namespace Joke.Front.Pony.Visit
         protected virtual void DoVisit(Chain node) => VisitChildren(node);
         protected virtual void DoVisit(UseUri node) => VisitChildren(node);
         protected virtual void DoVisit(Field node) => VisitChildren(node);
-        protected virtual void DoVisit(DefaultArg node) => VisitChildren(node);
         protected virtual void DoVisit(For node) => VisitChildren(node);
         protected virtual void DoVisit(IdsSingle node) => VisitChildren(node);
         protected virtual void DoVisit(As node) => VisitChildren(node);
@@ -124,5 +122,6 @@ namespace Joke.Front.Pony.Visit
         protected virtual void DoVisit(Repeat node) => VisitChildren(node);
         protected virtual void DoVisit(Location node) => VisitChildren(node);
         protected virtual void DoVisit(Annotations node) => VisitChildren(node);
+        protected virtual void DoVisit(Identifier node) => VisitChildren(node);
     }
 }

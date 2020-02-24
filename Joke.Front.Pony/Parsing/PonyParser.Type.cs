@@ -66,7 +66,6 @@ namespace Joke.Front.Pony.Syntax
             Match(TK.RBrace);
             var referenceCap = TryCap();
             var ea = TryEphemAlias();
-
             return new Ast.LambdaType(End(), bare, receiverCap, name, typeParameters, parameters, returnType, partial, referenceCap, ea);
         }
 
@@ -74,8 +73,6 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.LParen, TK.LParenNew);
             var types = List(Type, TK.RParen);
-
-
             return new Ast.LambdaTypeParameters(End(TK.RParen), types);
         }
 
@@ -83,8 +80,6 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.LParen, TK.LParenNew);
             var types = List(InfixType);
-
-
             return new Ast.GroupedType(End(TK.RParen), types);
         }
 
@@ -98,14 +93,12 @@ namespace Joke.Front.Pony.Syntax
                 switch (TokenKind)
                 {
                     case TK.Pipe:
-                        Begin();
-                        Match(TK.Pipe);
+                        Begin(TK.Pipe);
                         var ptype = Type();
                         parts.Add(new Parts.InfixTypePart(End(), Ast.InfixTypeKind.Union, ptype));
                         break;
                     case TK.ISectType:
-                        Begin();
-                        Match(TK.ISectType);
+                        Begin(TK.ISectType);
                         var itype = Type();
                         parts.Add(new Parts.InfixTypePart(End(), Ast.InfixTypeKind.Intersection, itype));
                         break;

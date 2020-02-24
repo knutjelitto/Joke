@@ -1,7 +1,7 @@
-﻿using Joke.Front.Pony.Ast;
+﻿using System.Diagnostics;
+
+using Joke.Front.Pony.Ast;
 using Joke.Front.Pony.Lexing;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Joke.Front.Pony.Syntax
 {

@@ -578,38 +578,7 @@ namespace Joke.Front.Pony.Syntax
                 return null;
             }
 
-#if true
             var parts = Collect(TryPostfixPart);
-#else
-            var parts = new List<Ast.PostfixPart>();
-
-            var done = false;
-            while (!done)
-            {
-                switch (TokenKind)
-                {
-                    case TK.Dot:
-                        parts.Add(Dot());
-                        break;
-                    case TK.Tilde:
-                        parts.Add(Tilde());
-                        break;
-                    case TK.Chain:
-                        parts.Add(Chain());
-                        break;
-                    case TK.LSquare:
-                        parts.Add(Qualify());
-                        break;
-                    case TK.LParen:
-                        parts.Add(Call());
-                        break;
-                    default:
-                        done = true;
-                        break;
-                }
-            }
-
-#endif
             if (parts.Count > 0)
             {
                 return new Ast.Postfix(Mark(atom), atom, parts);
@@ -812,18 +781,15 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.LParen, TK.LParenNew);
             var parameters = List(LambdaParameter, TK.RParen);
-
-
             return new Ast.LambdaParameters(End(TK.RParen), parameters);
         }
 
         private Ast.LambdaParameter LambdaParameter()
         {
             Begin();
-
             var name = Identifier();
             var type = TryColonType();
-            var value = TryDefaultInfixArg();
+            var value = TryAssignInfix();
             return new Ast.LambdaParameter(End(), name, type, value);
         }
 
@@ -832,10 +798,8 @@ namespace Joke.Front.Pony.Syntax
             if (MayBegin(TK.LParen, TK.LParenNew))
             {
                 var captures = List(LambdaCapture);
-
                 return new Ast.LambdaCaptures(End(TK.RParen), captures);
             }
-
             return null;
         }
 
@@ -847,7 +811,7 @@ namespace Joke.Front.Pony.Syntax
                     Begin();
                     var name = Identifier();
                     var type = TryColonType();
-                    var value = TryDefaultInfixArg();
+                    var value = TryAssignInfix();
                     return new Ast.LambdaCaptureName(End(), name, type, value);
                 case TK.This:
                     Begin();
@@ -868,16 +832,13 @@ namespace Joke.Front.Pony.Syntax
             var arguments = Arguments();
             Match(TK.RParen);
             var partial = MayPartial();
-
             return new Ast.FfiCall(End(), name, returnType, arguments, partial);
         }
 
         private Ast.FfiName FfiName()
         {
             Begin();
-
             var name = (Ast.Expression?)TryString() ?? Identifier();
-
             return new Ast.FfiName(End(), name);
         }
 
@@ -885,8 +846,6 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.LParen, TK.LParenNew);
             var expressions = List(() => RawSequence(), TK.RParen);
-
-
             return new Ast.GroupedExpression(End(TK.RParen), expressions);
         }
 
@@ -895,8 +854,6 @@ namespace Joke.Front.Pony.Syntax
             Begin(TK.LSquare, TK.LSquareNew);
             var type = TryArrayType();
             var elements = TryRawSequence();
-
-
             return new Ast.Array(End(TK.RSquare), type, elements);
         }
 
@@ -905,11 +862,8 @@ namespace Joke.Front.Pony.Syntax
             if (MayBegin(TK.As))
             {
                 var type = Type();
-
-
                 return new Ast.ArrayType(End(TK.Colon), type);
             }
-
             return null;
         }
 
@@ -925,7 +879,6 @@ namespace Joke.Front.Pony.Syntax
             {
                 return Identifier();
             }
-
             return null;
         }
 
@@ -947,7 +900,6 @@ namespace Joke.Front.Pony.Syntax
             {
                 return String();
             }
-
             return null;
         }
 

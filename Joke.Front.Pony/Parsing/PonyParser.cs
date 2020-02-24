@@ -1,8 +1,7 @@
-﻿using Joke.Front.Pony.Err;
+﻿using System.Collections.Generic;
+
+using Joke.Front.Pony.Err;
 using Joke.Front.Pony.Lexing;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Joke.Front.Pony.Syntax
 {
@@ -13,28 +12,6 @@ namespace Joke.Front.Pony.Syntax
             Both,
             Next,
             Case
-        }
-
-        private bool inCase = false;
-        private bool inNext = false;
-
-        private T WithIn<T>(Func<T> parse, ref bool state)
-        {
-            var tmp = state;
-            state = true;
-            var result = parse();
-            state = tmp;
-            return result;
-        }
-
-        private T WithInCase<T>(Func<T> parse)
-        {
-            return WithIn(parse, ref inCase);
-        }
-
-        private T WithInNext<T>(Func<T> parse)
-        {
-            return WithIn(parse, ref inNext);
         }
 
         private readonly Stack<int> marks = new Stack<int>();
@@ -56,13 +33,13 @@ namespace Joke.Front.Pony.Syntax
             limit = Tokens.Count;
         }
 
-        public Ast.Module Module()
+        public Ast.File Module()
         {
             Begin();
             var doc = TryString();
             var uses = CollectRecover(First.RecoverInModule, TryUse);
             var classes = CollectRecover(First.RecoverInModule, TryClass);
-            var module = new Ast.Module(End(), doc, uses, classes);
+            var module = new Ast.File(End(), doc, uses, classes);
             return module;
         }
 
@@ -119,43 +96,17 @@ namespace Joke.Front.Pony.Syntax
 
         public Ast.Class? TryClass()
         {
-            Ast.Class? result = null;
-
-            Debug.Assert(marks.Count == 1);
-
-            switch (TokenKind)
+            return TokenKind switch
             {
-                case TK.Class:
-                    result = Class(Ast.ClassKind.Class);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-                case TK.Type:
-                    result = Class(Ast.ClassKind.Type);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-                case TK.Interface:
-                    result = Class(Ast.ClassKind.Interface);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-                case TK.Trait:
-                    result = Class(Ast.ClassKind.Trait);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-                case TK.Primitive:
-                    result = Class(Ast.ClassKind.Primitive);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-                case TK.Struct:
-                    result = Class(Ast.ClassKind.Struct);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-                case TK.Actor:
-                    result = Class(Ast.ClassKind.Actor);
-                    Debug.Assert(marks.Count == 1);
-                    break;
-            }
-
-            return result;
+                TK.Class => Class(Ast.ClassKind.Class),
+                TK.Type => Class(Ast.ClassKind.Type),
+                TK.Interface => Class(Ast.ClassKind.Interface),
+                TK.Trait => Class(Ast.ClassKind.Trait),
+                TK.Primitive => Class(Ast.ClassKind.Primitive),
+                TK.Struct => Class(Ast.ClassKind.Struct),
+                TK.Actor => Class(Ast.ClassKind.Actor),
+                _ => null,
+            };
         }
 
         public Ast.Class Class(Ast.ClassKind kind)
@@ -176,10 +127,8 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Members Members()
         {
             Begin();
-
             var fields = Fields();
             var methods = Methods();
-
             return new Ast.Members(End(), fields, methods);
         }
 
@@ -204,12 +153,10 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Field Field(Ast.FieldKind kind)
         {
             Begin(First.Field);
-
             var name = Identifier();
             var type = ColonType();
-            var value = TryDefaultInfixArg();
+            var value = TryAssignInfix();
             var doc = TryString();
-
             return new Ast.Field(End(), kind, name, type, value, doc);
         }
 
@@ -234,7 +181,6 @@ namespace Joke.Front.Pony.Syntax
         private Ast.Method Method(Ast.MethodKind kind)
         {
             Begin(First.Method);
-
             var annotations = TryAnnotations();
             var bare = MayMatch(TK.At);
             var cap = TryCap();
@@ -245,7 +191,6 @@ namespace Joke.Front.Pony.Syntax
             var partial = MayPartial();
             var doc = TryString();
             var body = TryBody();
-
             return new Ast.Method(End(), kind, annotations, bare, cap, name, typeParameters, parameters, returnType, partial, doc, body);
         }
 
@@ -263,8 +208,6 @@ namespace Joke.Front.Pony.Syntax
         {
             Begin(TK.LParen, TK.LParenNew);
             var parameters = List(Parameter, TK.RParen);
-
-
             return new Ast.Parameters(End(TK.RParen), parameters);
         }
 
@@ -279,20 +222,14 @@ namespace Joke.Front.Pony.Syntax
 
             var name = Identifier();
             var type = ColonType();
-            var value = TryDefaultInfixArg();
+            var value = TryAssignInfix();
 
             return new Ast.RegularParameter(End(), name, type, value);
         }
 
-        private Ast.DefaultArg? TryDefaultInfixArg()
+        private Ast.Expression? TryAssignInfix()
         {
-            if (MayBegin(TK.Assign))
-            {
-                var expression = Infix();
-                return new Ast.DefaultArg(End(), expression);
-            }
-
-            return null;
+            return MayMatch(TK.Assign) ? Infix() : null;
         }
 
         private Ast.Type? TryDefaultType()

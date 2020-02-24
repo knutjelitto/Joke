@@ -25,7 +25,7 @@ namespace Joke.Front.Pony.Visit
                     node is LambdaTypeParameters ||
                     node is Fields ||
                     node is Methods ||
-                    node is Module)
+                    node is File)
                 {
                 }
                 else
