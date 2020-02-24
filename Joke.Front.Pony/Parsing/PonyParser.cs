@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-using Joke.Front.Pony.Err;
+using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Syntax
@@ -21,9 +21,9 @@ namespace Joke.Front.Pony.Syntax
 
         public ErrorAccu Errors { get; }
         public ISource Source { get; }
-        public Tokens Tokens { get; }
+        public PonyTokens Tokens { get; }
 
-        public PonyParser(ErrorAccu errors, ISource source, Tokens tokens)
+        public PonyParser(ErrorAccu errors, ISource source, PonyTokens tokens)
         {
             Errors = errors;
             Source = source;

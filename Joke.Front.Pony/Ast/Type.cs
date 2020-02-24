@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public abstract class Type : Node
     {
-        protected Type(TokenSpan span)
+        protected Type(PonyTokenSpan span)
             : base(span)
         {
         }

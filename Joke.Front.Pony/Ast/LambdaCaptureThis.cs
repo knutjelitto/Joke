@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class LambdaCaptureThis : LambdaCapture
     {
-        public LambdaCaptureThis(TokenSpan span, ThisLiteral thisLiteral)
+        public LambdaCaptureThis(PonyTokenSpan span, ThisLiteral thisLiteral)
             : base(span)
         {
             ThisLiteral = thisLiteral;

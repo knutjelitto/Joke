@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class LambdaCaptureName : LambdaCapture
     {
-        public LambdaCaptureName(TokenSpan span, Identifier name, Type? type, Expression? value)
+        public LambdaCaptureName(PonyTokenSpan span, Identifier name, Type? type, Expression? value)
             : base(span)
         {
             Name = name;

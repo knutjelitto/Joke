@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class File : Node
     {
-        public File(TokenSpan span, String? doc, IReadOnlyList<Use> uses, IReadOnlyList<Class> classes)
+        public File(PonyTokenSpan span, String? doc, IReadOnlyList<Use> uses, IReadOnlyList<Class> classes)
             : base(span)
         {
             Doc = doc;

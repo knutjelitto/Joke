@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class PostfixPart : Expression
     {
-        public PostfixPart(TokenSpan span) : base(span)
+        public PostfixPart(PonyTokenSpan span) : base(span)
         {
         }
     }

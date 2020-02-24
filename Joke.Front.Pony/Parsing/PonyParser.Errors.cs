@@ -1,4 +1,4 @@
-﻿using Joke.Front.Pony.Err;
+﻿using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Syntax
@@ -15,7 +15,7 @@ namespace Joke.Front.Pony.Syntax
             return new JokeException(new JokeError(new AtToken(Source, Token, message)));
         }
 
-        public void AddError(Token token, string msg)
+        public void AddError(PonyToken token, string msg)
         {
             Errors.Add(new JokeError(new AtToken(Source, token, msg)));
         }

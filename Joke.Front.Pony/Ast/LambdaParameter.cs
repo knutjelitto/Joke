@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class LambdaParameter : Parameter
     {
-        public LambdaParameter(TokenSpan span, Identifier name, Type? type, Expression? value)
+        public LambdaParameter(PonyTokenSpan span, Identifier name, Type? type, Expression? value)
             : base(span)
         {
             Name = name;

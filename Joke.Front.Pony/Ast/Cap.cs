@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Cap : Type
     {
-        public Cap(TokenSpan span, CapKind kind)
+        public Cap(PonyTokenSpan span, CapKind kind)
             : base(span)
         {
             Kind = kind;

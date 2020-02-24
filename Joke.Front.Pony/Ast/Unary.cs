@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Unary : Expression
     {
-        public Unary(TokenSpan span, UnaryKind kind, Expression expression)
+        public Unary(PonyTokenSpan span, UnaryKind kind, Expression expression)
             : base(span)
         {
             Kind = kind;

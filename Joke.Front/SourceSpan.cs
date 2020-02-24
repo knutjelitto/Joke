@@ -11,9 +11,9 @@ namespace Joke.Front
             Length = length;
         }
 
-        public readonly ISource Source;
+        public ISource Source { get; }
         public int Start { get; }
-        public readonly int Length;
+        public int Length { get; }
 
         public ReadOnlySpan<char> Value => Source.Content.AsSpan(Start, Length);
 

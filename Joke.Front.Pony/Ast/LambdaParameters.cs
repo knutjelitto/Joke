@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class LambdaParameters : Node
     {
-        public LambdaParameters(TokenSpan span, IReadOnlyList<LambdaParameter> parameters)
+        public LambdaParameters(PonyTokenSpan span, IReadOnlyList<LambdaParameter> parameters)
             : base(span)
         {
             Items = parameters;

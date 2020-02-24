@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class DotIdentifier : Identifier
     {
-        public DotIdentifier(TokenSpan span, Identifier before, Identifier after)
+        public DotIdentifier(PonyTokenSpan span, Identifier before, Identifier after)
             : base(span)
         {
             Before = before;

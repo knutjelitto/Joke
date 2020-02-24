@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Then : Expression
     {
-        public Then(TokenSpan span, Annotations? annotations, Expression body)
+        public Then(PonyTokenSpan span, Annotations? annotations, Expression body)
             : base(span)
         {
             Annotations = annotations;

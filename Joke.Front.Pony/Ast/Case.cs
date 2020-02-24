@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Case : Node
     {
-        public Case(TokenSpan span, Annotations? annotations, Expression? pattern, Expression? guard, Expression? body)
+        public Case(PonyTokenSpan span, Annotations? annotations, Expression? pattern, Expression? guard, Expression? body)
             : base(span)
         {
             Annotations = annotations;

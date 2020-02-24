@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Partial : Node
     {
-        public Partial(TokenSpan span)
+        public Partial(PonyTokenSpan span)
             : base(span)
         {
         }

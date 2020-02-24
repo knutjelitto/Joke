@@ -1,13 +1,12 @@
-﻿using Joke.Front.Pony.Syntax;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Joke.Front.Pony.Lexing
 {
-    public struct TokenSpan
+    public class TokenSpan<T,N> where T: IToken where N : Tokens<T>
     {
-        public TokenSpan(PonyParser parser, int start, int next)
+        public TokenSpan(N tokens, int start, int next)
         {
-            Parser = parser;
+            Tokens = tokens;
             Start = start;
             Next = next;
         }
@@ -15,13 +14,13 @@ namespace Joke.Front.Pony.Lexing
         public readonly int Start;
         public readonly int Next;
 
-        public PonyParser Parser { get; }
+        public N Tokens { get; }
 
-        public IEnumerable<Token> GetTokens()
+        public IEnumerable<T> GetTokens()
         {
             for (var i = Start; i < Next; ++i)
             {
-                yield return Parser.Tokens[i];
+                yield return Tokens[i];
             }
         }
 
@@ -29,7 +28,7 @@ namespace Joke.Front.Pony.Lexing
         {
             foreach (var token in GetTokens())
             {
-                yield return token.GetPayload(Parser.Source);
+                yield return token.GetPayload();
             }
         }
 

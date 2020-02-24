@@ -57,24 +57,24 @@ namespace Joke.Front.Pony.Syntax
             return false;
         }
 
-        private TokenSpan End()
+        private PonyTokenSpan End()
         {
             Debug.Assert(next <= limit);
             Debug.Assert(marks.Count > 0);
-            return new TokenSpan(this, marks.Pop(), next);
+            return new PonyTokenSpan(Tokens, marks.Pop(), next);
         }
 
-        private TokenSpan End(TK token)
+        private PonyTokenSpan End(TK token)
         {
             Match(token);
             return End();
         }
 
-        private TokenSpan Mark(Node node)
+        private PonyTokenSpan Mark(Node node)
         {
             Debug.Assert(next <= limit);
             Debug.Assert(marks.Count > 0);
-            return new TokenSpan(this, node.Span.Start, next);
+            return new PonyTokenSpan(Tokens, node.Span.Start, next);
         }
     }
 }

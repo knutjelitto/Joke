@@ -1,8 +1,8 @@
 ﻿namespace Joke.Front.Joke.Ast
 {
-    public class Item
+    public class Node
     {
-        public Item(SourceSpan span)
+        public Node(SourceSpan span)
         {
             Span = span;
         }

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Joke.Front.Pony.Err;
+using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Syntax

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Chain : PostfixPart
     {
-        public Chain(TokenSpan span, Identifier method)
+        public Chain(PonyTokenSpan span, Identifier method)
             : base(span)
         {
             Method = method;

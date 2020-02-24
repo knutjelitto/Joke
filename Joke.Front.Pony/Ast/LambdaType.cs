@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class LambdaType : Type
     {
-        public LambdaType(TokenSpan span,
+        public LambdaType(PonyTokenSpan span,
             bool bare,
             Cap? receiverCap,
             Identifier? name,

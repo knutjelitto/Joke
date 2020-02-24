@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public abstract class Use : Node
     {
-        public Use(TokenSpan span, Identifier? name, Guard? guard)
+        public Use(PonyTokenSpan span, Identifier? name, Guard? guard)
             : base(span)
         {
             Name = name;

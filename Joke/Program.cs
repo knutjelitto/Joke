@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Joke.Compiler;
 using Joke.Front;
-using Joke.Front.Pony.Err;
+using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 using Joke.Front.Pony.Syntax;
 using Joke.Outside;
@@ -68,7 +68,7 @@ namespace Joke
             var source = Source.FromFile(ponyFile);
             lines += source.LineCount;
 
-            var tokenizer = new Tokenizer(errors, source);
+            var tokenizer = new PonyTokenizer(errors, source);
 
             try
             {

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class PositionalArgument : Argument
     {
-        public PositionalArgument(TokenSpan span, Expression value)
+        public PositionalArgument(PonyTokenSpan span, Expression value)
             : base(span)
         {
             Value = value;

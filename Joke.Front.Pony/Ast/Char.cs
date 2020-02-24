@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Char : Expression
     {
-        public Char(TokenSpan span)
+        public Char(PonyTokenSpan span)
             : base(span)
         {
         }

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Lambda : Expression
     {
-        public Lambda(TokenSpan span,
+        public Lambda(PonyTokenSpan span,
             bool bare,
             Annotations? annotations,
             Cap? receiverCap,

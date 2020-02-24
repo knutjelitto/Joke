@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Array : Expression
     {
-        public Array(TokenSpan span, Type? type, Expression? elements)
+        public Array(PonyTokenSpan span, Type? type, Expression? elements)
             : base(span)
         {
             Type = type;

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Iff : Expression
     {
-        public Iff(TokenSpan span, IffKind kind, Annotations? annotations, Expression condition, Expression thenPart, Expression? elsePart)
+        public Iff(PonyTokenSpan span, IffKind kind, Annotations? annotations, Expression condition, Expression thenPart, Expression? elsePart)
             : base(span)
         {
             Kind = kind;

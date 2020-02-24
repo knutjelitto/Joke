@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Identifier : Literal
     {
-        public Identifier(TokenSpan span)
+        public Identifier(PonyTokenSpan span)
             : base(span)
         {
         }

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Guard : Expression
     {
-        public Guard(TokenSpan span, Expression expression)
+        public Guard(PonyTokenSpan span, Expression expression)
             : base(span)
         {
             Expression = expression;

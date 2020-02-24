@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Binary : Expression
     {
-        public Binary(TokenSpan span, BinaryKind kind, IReadOnlyList<Expression> operands)
+        public Binary(PonyTokenSpan span, BinaryKind kind, IReadOnlyList<Expression> operands)
             : base(span)
         {
             Debug.Assert(operands.Count >= 2);
@@ -14,7 +14,7 @@ namespace Joke.Front.Pony.Ast
             Kind = kind;
             Operands = operands;
         }
-        public Binary(TokenSpan span, BinaryKind kind, params Expression[] operands)
+        public Binary(PonyTokenSpan span, BinaryKind kind, params Expression[] operands)
             : this(span, kind, (IReadOnlyList<Expression>)operands)
         {
         }

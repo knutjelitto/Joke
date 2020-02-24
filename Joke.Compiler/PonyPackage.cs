@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Joke.Front.Pony.Err;
+
+using Joke.Front.Err;
 using Joke.Outside;
 
 namespace Joke.Compiler

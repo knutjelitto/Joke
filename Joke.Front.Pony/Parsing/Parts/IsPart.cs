@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Syntax.Parts
 {
     public class IsPart : InfixPart
     {
-        public IsPart(TokenSpan span, BinaryKind kind, Expression expression)
+        public IsPart(PonyTokenSpan span, BinaryKind kind, Expression expression)
             : base(span, kind)
         {
             Expression = expression;

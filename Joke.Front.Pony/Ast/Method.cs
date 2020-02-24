@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Method : Node
     {
-        public Method(TokenSpan span,
+        public Method(PonyTokenSpan span,
             MethodKind kind,
             Annotations? annotations,
             bool bare,

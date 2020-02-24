@@ -23,7 +23,7 @@ namespace Joke.Front.Pony.Visit
                         yield return child;
                     }
                 }
-                else if (typeof(TokenSpan).IsAssignableFrom(info.PropertyType))
+                else if (typeof(PonyTokenSpan).IsAssignableFrom(info.PropertyType))
                 {
                 }
                 else if (typeof(bool).IsAssignableFrom(info.PropertyType))

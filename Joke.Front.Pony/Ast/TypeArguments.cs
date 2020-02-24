@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class TypeArguments : Node
     {
-        public TypeArguments(TokenSpan span, IReadOnlyList<Type> arguments)
+        public TypeArguments(PonyTokenSpan span, IReadOnlyList<Type> arguments)
             : base(span)
         {
             Arguments = arguments;

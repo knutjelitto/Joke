@@ -4,11 +4,11 @@ namespace Joke.Front.Pony.Ast
 {
     public abstract class Node
     {
-        protected Node(TokenSpan span)
+        protected Node(PonyTokenSpan span)
         {
             Span = span;
         }
 
-        public TokenSpan Span { get; }
+        public PonyTokenSpan Span { get; }
     }
 }

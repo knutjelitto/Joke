@@ -1,26 +1,25 @@
 ﻿using System;
 using System.IO;
 
-namespace Joke.Front.Pony.Err
+namespace Joke.Front.Err
 {
     public class AtOffset : IDescription
     {
-        public AtOffset(ISource source, int offset, int length, string msg)
+        public AtOffset(ISourceSpan span, string msg)
         {
-            Source = source;
-            Offset = offset;
-            Length = length;
+            Span = span;
             Msg = msg;
         }
 
-        public ISource Source { get; }
-        public int Offset { get; }
-        public int Length { get; }
+        public ISource Source => Span.Source;
+        public int Start => Span.Start;
+        public int Length => Span.Length;
+        public ISourceSpan Span { get; }
         public string Msg { get; }
 
         public virtual void Describe(TextWriter writer)
         {
-            var (line, col) = Source.GetLineCol(Offset);
+            var (line, col) = Source.GetLineCol(Start);
             var msg = string.IsNullOrWhiteSpace(Msg) ? string.Empty : $"{Msg}";
             writer.WriteLine($"({line},{col}): can't continue -- {msg}");
             var arrow = new string('-', col - 1) + new string('^', Math.Max(1, Length));

@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Try : Expression
     {
-        public Try(TokenSpan span, Annotations? annotations, Expression body, Expression? elsePart, Expression? thenPart)
+        public Try(PonyTokenSpan span, Annotations? annotations, Expression body, Expression? elsePart, Expression? thenPart)
             : base(span)
         {
             Annotations = annotations;

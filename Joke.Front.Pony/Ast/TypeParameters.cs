@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class TypeParameters : Node
     {
-        public TypeParameters(TokenSpan span, IReadOnlyList<TypeParameter> parameters)
+        public TypeParameters(PonyTokenSpan span, IReadOnlyList<TypeParameter> parameters)
             : base(span)
         {
             Parameters = parameters;

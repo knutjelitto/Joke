@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class With : Expression
     {
-        public With(TokenSpan span, Annotations? annotations, WithElements elements, Expression body, Else? elsePart)
+        public With(PonyTokenSpan span, Annotations? annotations, WithElements elements, Expression body, Else? elsePart)
             : base(span)
         {
             Annotations = annotations;

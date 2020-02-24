@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Joke.Front.Pony.Err
+namespace Joke.Front.Err
 {
     public interface IDescription
     {

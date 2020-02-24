@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Call : PostfixPart
     {
-        public Call(TokenSpan span, Arguments arguments, bool partial)
+        public Call(PonyTokenSpan span, Arguments arguments, bool partial)
             : base(span)
         {
             Arguments = arguments;

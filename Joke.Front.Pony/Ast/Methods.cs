@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Methods : Node
     {
-        public Methods(TokenSpan span, IReadOnlyList<Method> items)
+        public Methods(PonyTokenSpan span, IReadOnlyList<Method> items)
             : base(span)
         {
             Items = items;

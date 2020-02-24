@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public abstract class Expression : Node
     {
-        protected Expression(TokenSpan span)
+        protected Expression(PonyTokenSpan span)
             : base(span)
         {
         }

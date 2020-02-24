@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 
-namespace Joke.Front.Pony.Err
+namespace Joke.Front.Err
 {
     public class ErrorAccu : IDescription
     {

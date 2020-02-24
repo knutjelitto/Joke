@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Field : Node
     {
-        public Field(TokenSpan span, FieldKind kind, Identifier name, Type type, Expression? value, String? doc)
+        public Field(PonyTokenSpan span, FieldKind kind, Identifier name, Type type, Expression? value, String? doc)
             : base(span)
         {
             Kind = kind;

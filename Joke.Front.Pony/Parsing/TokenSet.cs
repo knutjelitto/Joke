@@ -6,7 +6,7 @@ using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Syntax
 {
-    public class TokenSet
+    public class TokenSet<T> where TK: struct, IConvertible
     {
         private static int tokenCount = Enum.GetValues(typeof(TK)).Cast<int>().Max() + 1;
         private readonly BitArray bits;
@@ -16,7 +16,7 @@ namespace Joke.Front.Pony.Syntax
             bits = new BitArray(tokenCount);
         }
 
-        public TokenSet(TokenSet other)
+        public TokenSet(TokenSet<TK> other)
         {
             bits = new BitArray(other.bits);
         }

@@ -5,7 +5,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class InfixType : Type
     {
-        public InfixType(TokenSpan span, InfixTypeKind kind, IReadOnlyList<Type> types)
+        public InfixType(PonyTokenSpan span, InfixTypeKind kind, IReadOnlyList<Type> types)
             : base(span)
         {
             Kind = kind;

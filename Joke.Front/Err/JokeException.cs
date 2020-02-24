@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Joke.Front.Pony.Err
+namespace Joke.Front.Err
 {
     public class JokeException : Exception
     {

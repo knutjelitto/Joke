@@ -1,7 +1,7 @@
 ﻿using System;
 
 using Joke.Front;
-using Joke.Front.Pony.Err;
+using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 using Joke.Front.Pony.Syntax;
 using Joke.Outside;
@@ -16,7 +16,7 @@ namespace Joke.Compiler
             File = file;
 
             var source = Source.FromFile(file);
-            var tokenizer = new Tokenizer(errors, source);
+            var tokenizer = new PonyTokenizer(errors, source);
             try
             {
                 tokenizer.Tokenize();

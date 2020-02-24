@@ -6,7 +6,7 @@ namespace Joke.Front.Pony.Syntax
     partial class PonyParser
     {
         private TK TokenKind => next < limit ? Tokens[next].Kind : TK.Missing;
-        private Token Token => next < limit ? Tokens[next] : new Token(TK.Missing, 0, 0, 0);
+        private PonyToken Token => next < limit ? Tokens[next] : new PonyToken(TK.Missing, Source, 0, 0, 0);
 
         private string Current
         {

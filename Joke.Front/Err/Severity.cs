@@ -1,4 +1,4 @@
-﻿namespace Joke.Front.Pony.Err
+﻿namespace Joke.Front.Err
 {
     public enum Severity
     {

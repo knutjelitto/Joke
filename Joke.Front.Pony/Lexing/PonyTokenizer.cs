@@ -1,10 +1,11 @@
-﻿using Joke.Front.Pony.Err;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
+
+using Joke.Front.Err;
 
 namespace Joke.Front.Pony.Lexing
 {
-    public class Tokenizer
+    public class PonyTokenizer
     {
         public const char NoCharacter = '\uFFFF';
 
@@ -26,13 +27,13 @@ namespace Joke.Front.Pony.Lexing
         /// </summary>
         public int payload;
 
-        public Tokens Tokens { get; private set; }
+        public PonyTokens Tokens { get; private set; }
 
-        public Tokenizer(ErrorAccu errors, ISource source)
+        public PonyTokenizer(ErrorAccu errors, ISource source)
         {
             Errors = errors;
             Source = source;
-            Tokens = new Tokens(Source, new Token[] { });
+            Tokens = new PonyTokens(Source, new PonyToken[] { });
 
             content = Source.Content;
             limit = content.Length;
@@ -46,14 +47,14 @@ namespace Joke.Front.Pony.Lexing
 
         public void Tokenize()
         {
-            Tokens = new Tokens(Source, GetTokens());
+            Tokens = new PonyTokens(Source, GetTokens());
         }
 
-        private List<Token> GetTokens()
+        private List<PonyToken> GetTokens()
         {
-            var tokens = new List<Token>();
+            var tokens = new List<PonyToken>();
 
-            Token next;
+            PonyToken next;
             while (true)
             {
                 try
@@ -75,7 +76,7 @@ namespace Joke.Front.Pony.Lexing
             return tokens;
         }
 
-        private Token Next()
+        private PonyToken Next()
         {
             clutter = next;
 
@@ -358,7 +359,7 @@ namespace Joke.Front.Pony.Lexing
             throw NotYet("Next");
         }
 
-        private Token IdentifierOrKeyword()
+        private PonyToken IdentifierOrKeyword()
         {
             Debug.Assert(IsLetter_());
             do
@@ -377,7 +378,7 @@ namespace Joke.Front.Pony.Lexing
             return Token(tk);
         }
 
-        private Token CapOrConstant()
+        private PonyToken CapOrConstant()
         {
             do
             {
@@ -396,7 +397,7 @@ namespace Joke.Front.Pony.Lexing
             return Token(tk);
         }
 
-        private Token Number()
+        private PonyToken Number()
         {
             if (content[next] == '0')
             {
@@ -470,7 +471,7 @@ namespace Joke.Front.Pony.Lexing
             return Token(floating ? TK.Float : TK.Int);
         }
 
-        private Token String()
+        private PonyToken String()
         {
             Debug.Assert(StartsWith("\""));
 
@@ -505,7 +506,7 @@ namespace Joke.Front.Pony.Lexing
             return Token(TK.String);
         }
 
-        private Token Char()
+        private PonyToken Char()
         {
             Debug.Assert(content[next] == '\'');
             next += 1;
@@ -591,7 +592,7 @@ namespace Joke.Front.Pony.Lexing
             }
         }
 
-        private Token DocString()
+        private PonyToken DocString()
         {
             Debug.Assert(StartsWith("\"\"\""));
 
@@ -667,9 +668,9 @@ namespace Joke.Front.Pony.Lexing
             return '0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || 'A' <= ch && ch <= 'F';
         }
 
-        private Token Token(TK kind)
+        private PonyToken Token(TK kind)
         {
-            return new Token(kind, clutter, payload, next);
+            return new PonyToken(kind, Source, clutter, payload, next);
         }
 
         private bool StartsWith(string start)
@@ -760,12 +761,12 @@ namespace Joke.Front.Pony.Lexing
 
         protected JokeException NotYet(string message)
         {
-            return new JokeException(new JokeError(new AtOffset(Source, next, 0, "not implemented: " + message)));
+            return new JokeException(new JokeError(new AtOffset(new SourceSpan(Source, next, 0), "not implemented: " + message)));
         }
 
         protected JokeException NoScan(string message)
         {
-            return new JokeException(new JokeError(new AtOffset(Source, next, 0, message)));
+            return new JokeException(new JokeError(new AtOffset(new SourceSpan(Source, next, 0), message)));
         }
     }
 }

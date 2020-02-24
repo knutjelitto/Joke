@@ -4,7 +4,7 @@ namespace Joke.Front.Pony.Ast
 {
     public class Local : Expression
     {
-        public Local(TokenSpan span, LocalKind kind, Identifier name, Type? type)
+        public Local(PonyTokenSpan span, LocalKind kind, Identifier name, Type? type)
             : base(span)
         {
             Kind = kind;
