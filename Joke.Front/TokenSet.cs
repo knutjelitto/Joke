@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Linq;
 
-namespace Joke.Front.Pony.Parsing
+namespace Joke.Front
 {
     public class TokenSet<TS, TK> where TS : TokenSet<TS, TK>, new() where TK: struct, IConvertible
     {

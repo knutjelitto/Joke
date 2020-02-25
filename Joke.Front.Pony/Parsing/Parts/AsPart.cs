@@ -1,7 +1,7 @@
 ﻿using Joke.Front.Pony.Ast;
 using Joke.Front.Pony.Lexing;
 
-namespace Joke.Front.Pony.Syntax.Parts
+namespace Joke.Front.Pony.Parsing.Parts
 {
     public class AsPart : InfixPart
     {

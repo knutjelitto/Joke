@@ -1,0 +1,11 @@
+﻿grammar Joke
+{
+    module =
+        file EOF
+        ;
+
+    file =
+        doc? use* member*
+        ;
+        
+}

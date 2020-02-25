@@ -3,7 +3,7 @@ using System.Linq;
 
 using Joke.Front.Pony.Lexing;
 
-namespace Joke.Front.Pony.Syntax
+namespace Joke.Front.Pony.Parsing
 {
     partial class PonyParser
     {

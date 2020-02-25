@@ -2,7 +2,7 @@
 using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 
-namespace Joke.Front.Pony.Syntax
+namespace Joke.Front.Pony.Parsing
 {
     partial class PonyParser
     {
@@ -21,7 +21,7 @@ namespace Joke.Front.Pony.Syntax
             return items;
         }
 
-        private List<T> CollectRecover<T>(TokenSet recover, System.Func<T?> tryParse) where T : class
+        private List<T> CollectRecover<T>(PonyTokenSet recover, System.Func<T?> tryParse) where T : class
         {
             var items = new List<T>();
 

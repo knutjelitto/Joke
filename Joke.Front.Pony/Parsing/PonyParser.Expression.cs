@@ -1,9 +1,10 @@
-﻿using Joke.Front.Pony.Lexing;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Joke.Front.Pony.Syntax
+using Joke.Front.Pony.Lexing;
+
+namespace Joke.Front.Pony.Parsing
 {
     partial class PonyParser
     {

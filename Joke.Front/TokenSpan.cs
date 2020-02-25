@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace Joke.Front.Pony.Lexing
+namespace Joke.Front
 {
-    public class TokenSpan<T,N> where T: IToken where N : Tokens<T>
+    public class TokenSpan<T> where T: IToken
     {
-        public TokenSpan(N tokens, int start, int next)
+        public TokenSpan(IReadOnlyList<T> tokens, int start, int next)
         {
             Tokens = tokens;
             Start = start;
@@ -14,7 +14,7 @@ namespace Joke.Front.Pony.Lexing
         public readonly int Start;
         public readonly int Next;
 
-        public N Tokens { get; }
+        public IReadOnlyList<T> Tokens { get; }
 
         public IEnumerable<T> GetTokens()
         {

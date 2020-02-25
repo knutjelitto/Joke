@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Joke.Front
+﻿namespace Joke.Front
 {
     public interface ISource
     {
@@ -10,7 +8,6 @@ namespace Joke.Front
         (int lineNo, int colNo) GetLineCol(int index);
         string GetText(int start, int length);
         bool AtEnd(int offset);
-        ReadOnlySpan<char> GetLine(int lineNo);
-        bool StartsWith(int offset, string start);
+        string GetLine(int lineNo);
     }
 }

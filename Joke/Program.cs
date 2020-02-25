@@ -6,7 +6,7 @@ using Joke.Compiler;
 using Joke.Front;
 using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
-using Joke.Front.Pony.Syntax;
+using Joke.Front.Pony.Parsing;
 using Joke.Outside;
 using Joke.Outside.Build;
 

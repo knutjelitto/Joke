@@ -44,18 +44,6 @@ namespace Joke.Front
             return new Source(file, file.GetContent());
         }
 
-        public bool StartsWith(int offset, string prefix)
-        {
-            var length = prefix.Length;
-
-            if (offset + length <= Length)
-            {
-                return Content.AsSpan(offset, length).ToString() == prefix;
-            }
-
-            return false;
-        }
-
         public (int lineNo, int colNo) GetLineCol(int index)
         {
             var lineNo = GetLineNoFromIndex(index);
@@ -64,7 +52,7 @@ namespace Joke.Front
             return (lineNo, colNo);
         }
 
-        public ReadOnlySpan<char> GetLine(int lineNo)
+        public string GetLine(int lineNo)
         {
             if (lineNo == LineCount)
             {
@@ -86,7 +74,7 @@ namespace Joke.Front
         {
             for (var lineNo = 1; lineNo <= LineCount; ++lineNo)
             {
-                yield return GetLine(lineNo).ToString();
+                yield return GetLine(lineNo);
             }
         }
 
@@ -111,9 +99,9 @@ namespace Joke.Front
             return line + 1;
         }
 
-        public ReadOnlySpan<char> GetSpan(int start, int length)
+        public string GetSpan(int start, int length)
         {
-            return Content.AsSpan(start, length);
+            return Content.Substring(start, length);
         }
 
         public string GetText(int start, int length)

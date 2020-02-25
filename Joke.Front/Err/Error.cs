@@ -1,6 +1,6 @@
 ﻿namespace Joke.Front.Err
 {
-    public class Error
+    public class Error : IError
     {
         public Error(Severity severity, IDescription description)
         {

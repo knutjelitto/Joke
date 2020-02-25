@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Joke.Front.Pony.Lexing;
 
-namespace Joke.Front.Pony.Syntax
+namespace Joke.Front.Pony.Parsing
 {
     partial class PonyParser
     {
@@ -107,7 +107,7 @@ namespace Joke.Front.Pony.Syntax
             return false;
         }
 
-        private void SkipUntil(TokenSet tokens)
+        private void SkipUntil(PonyTokenSet tokens)
         {
             while (next < limit && !tokens[Tokens[next].Kind])
             {

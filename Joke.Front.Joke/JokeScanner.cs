@@ -1,10 +1,18 @@
-﻿namespace Joke.Front.Joke
+﻿using Joke.Front.Err;
+
+namespace Joke.Front.Joke
 {
-    public class JokeScanner : Scanner
+    public class JokeScanner
     {
-        public JokeScanner(ISource source)
-            : base(source)
+        public JokeScanner(IErrors errors, ISource source)
         {
+            Errors = errors;
+            Source = source;
+            Content = Source.Content;
         }
+
+        public IErrors Errors { get; }
+        public ISource Source { get; }
+        public string Content { get; }
     }
 }

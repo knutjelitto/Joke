@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if false
+using System.Collections.Generic;
 
 using Joke.Front.Pony.Lexing;
 using Joke.Front.Pony.Syntax;
@@ -17,3 +18,4 @@ namespace Joke.Front.Pony
         public IReadOnlyList<PonyToken> Tokens => Parser.Tokens;
     }
 }
+#endif

@@ -3,7 +3,7 @@
 using Joke.Front.Pony.Ast;
 using Joke.Front.Pony.Lexing;
 
-namespace Joke.Front.Pony.Syntax
+namespace Joke.Front.Pony.Parsing
 {
     partial class PonyParser
     {
@@ -18,7 +18,7 @@ namespace Joke.Front.Pony.Syntax
             Match(kind);
         }
 
-        private void Begin(TokenSet set)
+        private void Begin(PonyTokenSet set)
         {
             if (next < limit)
             {
@@ -27,7 +27,7 @@ namespace Joke.Front.Pony.Syntax
             Match(set);
         }
 
-        private void Match(TokenSet set)
+        private void Match(PonyTokenSet set)
         {
             if (next < limit && set[Tokens[next].Kind])
             {

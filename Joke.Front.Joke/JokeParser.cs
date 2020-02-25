@@ -2,12 +2,15 @@
 
 namespace Joke.Front.Joke
 {
-    public class JokeParser : Parser<JokeScanner>
+    public class JokeParser
     {
         public JokeParser(JokeScanner scanner)
-            : base(scanner)
         {
+            Scanner = scanner;
         }
+
+        public JokeScanner Scanner { get; }
+
 
         public Ast.Unit Parse()
         {

@@ -2,7 +2,7 @@
 {
     public class AtToken : AtOffset
     {
-        public AtToken(ISource source, IToken token, string msg)
+        public AtToken(IToken token, string msg)
             : base(token.PayloadSpan, msg)
         {
             Token = token;

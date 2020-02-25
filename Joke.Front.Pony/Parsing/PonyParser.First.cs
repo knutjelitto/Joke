@@ -1,6 +1,6 @@
 ﻿using Joke.Front.Pony.Lexing;
 
-namespace Joke.Front.Pony.Syntax
+namespace Joke.Front.Pony.Parsing
 {
     partial class PonyParser
     {
@@ -8,7 +8,7 @@ namespace Joke.Front.Pony.Syntax
         {
             static First()
             {
-                Class = new TokenSet(
+                Class = new PonyTokenSet(
                     TK.Class,
                     TK.Type,
                     TK.Interface,
@@ -16,10 +16,10 @@ namespace Joke.Front.Pony.Syntax
                     TK.Primitive,
                     TK.Struct,
                     TK.Actor);
-                Use = new TokenSet(
+                Use = new PonyTokenSet(
                     TK.Use);
-                Module = TokenSet.Union(Use, Class);
-                Atom = new TokenSet(
+                Module = PonyTokenSet.Union(Use, Class);
+                Atom = new PonyTokenSet(
                     TK.Identifier,
                     TK.This,
                     TK.String,
@@ -41,7 +41,7 @@ namespace Joke.Front.Pony.Syntax
                     TK.If,
                     TK.While,
                     TK.For);
-                Prefix = new TokenSet(
+                Prefix = new PonyTokenSet(
                     TK.Addressof,
                     TK.DigestOf,
                     TK.Not,
@@ -50,12 +50,12 @@ namespace Joke.Front.Pony.Syntax
                     TK.MinusTilde,
                     TK.MinusTildeNew);
                 Postfix = Atom;
-                ParamPattern = TokenSet.Union(Prefix, Postfix);
-                Local = new TokenSet(TK.Var, TK.Let, TK.Embed);
+                ParamPattern = PonyTokenSet.Union(Prefix, Postfix);
+                Local = new PonyTokenSet(TK.Var, TK.Let, TK.Embed);
                 Field = Local;
-                Method = new TokenSet(TK.Fun, TK.Be, TK.New);
-                Pattern = TokenSet.Union(ParamPattern, Local);
-                Term = new TokenSet(
+                Method = new PonyTokenSet(TK.Fun, TK.Be, TK.New);
+                Pattern = PonyTokenSet.Union(ParamPattern, Local);
+                Term = new PonyTokenSet(
                     TK.If,
                     TK.Ifdef,
                     TK.Iftype,
@@ -69,7 +69,7 @@ namespace Joke.Front.Pony.Syntax
                     TK.Consume,
                     TK.Constant)
                     .Union(Pattern);
-                Jump = new TokenSet(
+                Jump = new PonyTokenSet(
                     TK.Return,
                     TK.Break,
                     TK.Continue,
@@ -79,37 +79,37 @@ namespace Joke.Front.Pony.Syntax
                 Infix = Term;
                 Assignment = Infix;
                 ExprSeq = Assignment;
-                RawSeq = TokenSet.Union(Jump, ExprSeq);
-                Lambda = new TokenSet(TK.LBrace, TK.AtLBrace);
+                RawSeq = PonyTokenSet.Union(Jump, ExprSeq);
+                Lambda = new PonyTokenSet(TK.LBrace, TK.AtLBrace);
 
                 RecoverInModule = Module;
-                RecoverInClass = TokenSet.Union(RecoverInModule, Method, Field);
-                RecoverNothing = new TokenSet();
+                RecoverInClass = PonyTokenSet.Union(RecoverInModule, Method, Field);
+                RecoverNothing = new PonyTokenSet();
             }
 
-            public static readonly TokenSet Class;
-            public static readonly TokenSet Use;
-            public static readonly TokenSet Module;
-            public static readonly TokenSet Atom;
-            public static readonly TokenSet Prefix;
-            public static readonly TokenSet Postfix;
-            public static readonly TokenSet ParamPattern;
-            public static readonly TokenSet Pattern;
-            public static readonly TokenSet Infix;
-            public static readonly TokenSet Jump;
-            public static readonly TokenSet Local;
-            public static readonly TokenSet Field;
-            public static readonly TokenSet Method;
-            public static readonly TokenSet Term;
-            public static readonly TokenSet Assignment;
-            public static readonly TokenSet ExprSeq;
-            public static readonly TokenSet RawSeq;
-            public static readonly TokenSet Lambda;
+            public static readonly PonyTokenSet Class;
+            public static readonly PonyTokenSet Use;
+            public static readonly PonyTokenSet Module;
+            public static readonly PonyTokenSet Atom;
+            public static readonly PonyTokenSet Prefix;
+            public static readonly PonyTokenSet Postfix;
+            public static readonly PonyTokenSet ParamPattern;
+            public static readonly PonyTokenSet Pattern;
+            public static readonly PonyTokenSet Infix;
+            public static readonly PonyTokenSet Jump;
+            public static readonly PonyTokenSet Local;
+            public static readonly PonyTokenSet Field;
+            public static readonly PonyTokenSet Method;
+            public static readonly PonyTokenSet Term;
+            public static readonly PonyTokenSet Assignment;
+            public static readonly PonyTokenSet ExprSeq;
+            public static readonly PonyTokenSet RawSeq;
+            public static readonly PonyTokenSet Lambda;
 
-            public static readonly TokenSet RecoverInClass;
-            public static readonly TokenSet RecoverInModule;
+            public static readonly PonyTokenSet RecoverInClass;
+            public static readonly PonyTokenSet RecoverInModule;
 
-            public static readonly TokenSet RecoverNothing;
+            public static readonly PonyTokenSet RecoverNothing;
         }
     }
 }
