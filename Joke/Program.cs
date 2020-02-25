@@ -19,8 +19,9 @@ namespace Joke
             //EnsureSources();
             //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
-            PonyParse(0, EnumerateAllPonies());
+            //PonyParse(0, EnumerateAllPonies());
             //PonyTest();
+            PonyExample("mandelbrot");
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -35,6 +36,14 @@ namespace Joke
             var errors = new ErrorAccu();
 
             var module = new PonyPackage(errors, Packages.Dir("builtin"));
+        }
+
+        private static void PonyExample(string packageName)
+        {
+            var packageDir = Examples.Dir(packageName);
+
+            var errors = new ErrorAccu();
+            var module = new PonyPackage(errors, packageDir);
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)
@@ -106,6 +115,7 @@ namespace Joke
 
         private static DirRef Temp => DirRef.ProjectDir().Up.Up.Dir("Temp");
         private static DirRef Packages => Temp.Dir("ponyc").Dir("packages");
+        private static DirRef Examples => Temp.Dir("ponyc").Dir("examples");
 
         private static IEnumerable<FileRef> EnumerateBuiltinPonies()
         {

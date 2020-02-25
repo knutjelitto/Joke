@@ -12,12 +12,13 @@ namespace Joke.Compiler
         {
             PackageDir = packageDir;
 
-            Console.WriteLine($"package: {packageDir}");
+            Console.WriteLine($"package: {packageDir.FileName}");
 
-            var modules = new List<PonyFile>();
+            var files = new List<PonyFile>();
             foreach (var ponyFile in packageDir.Files("*.pony"))
             {
-                modules.Add(new PonyFile(errors, ponyFile));
+                Console.WriteLine($"  .. {ponyFile.FileName}");
+                files.Add(new PonyFile(errors, ponyFile));
             }
         }
 
