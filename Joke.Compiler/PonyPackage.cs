@@ -8,8 +8,10 @@ namespace Joke.Compiler
 {
     public class PonyPackage
     {
-        public PonyPackage(ErrorAccu errors, DirRef packageDir)
+        public PonyPackage(CompilerContext context, ErrorAccu errors, DirRef packageDir)
         {
+            Context = context;
+            Errors = errors;
             PackageDir = packageDir;
 
             Console.WriteLine($"package: {packageDir.FileName}");
@@ -22,6 +24,8 @@ namespace Joke.Compiler
             }
         }
 
+        public CompilerContext Context { get; }
+        public ErrorAccu Errors { get; }
         public DirRef PackageDir { get; }
     }
 }

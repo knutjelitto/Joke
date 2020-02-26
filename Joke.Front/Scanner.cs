@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Joke.Front
+﻿namespace Joke.Front
 {
     public abstract class Scanner
     {
