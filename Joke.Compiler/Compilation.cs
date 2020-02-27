@@ -10,7 +10,7 @@ namespace Joke.Compiler
         public List<Package> Packages { get; } = new List<Package>();
 
 
-        public Compilation(CompilerContext context, DirRef packageDir, string name, bool isBuiltin = false)
+        public Compilation(Context context, DirRef packageDir, string name, bool isBuiltin = false)
         {
             Context = context;
             PackageDir = packageDir;
@@ -18,7 +18,7 @@ namespace Joke.Compiler
             IsBuiltin = isBuiltin;
         }
 
-        public CompilerContext Context { get; }
+        public Context Context { get; }
         public ErrorAccu Errors => Context.Errors;
         public IndentWriter Logger => Context.Logger;
         public DirRef PackageDir { get; }

@@ -13,14 +13,16 @@ namespace Joke.Front.Pony.ParseTree
 
         private static double CreateValue(PonyTokenSpan span)
         {
+#if true
+            return 0.0;
+#else
             Debug.Assert(span.Length == 1);
 
-            var str = span[0].GetPayload();
-            double value = 0;
-            value = double.Parse(str, NumberStyles.Float, CultureInfo.InvariantCulture);
+            var str = span[0].GetPayload().Replace("_", string.Empty);
+            var value = double.Parse(str, NumberStyles.Float, CultureInfo.InvariantCulture);
 
             return value;
-
+#endif
         }
     }
 }

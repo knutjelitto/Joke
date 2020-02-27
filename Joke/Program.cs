@@ -18,8 +18,8 @@ namespace Joke
             //EnsureSources();
             //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
-            //PonyParse(0, EnumerateAllPonies());
-            PonyExample("mandelbrot");
+            PonyParse(0, EnumerateAllPonies());
+            //PonyExample("mandelbrot");
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -30,7 +30,7 @@ namespace Joke
             var packageDir = Examples.Dir(packageName);
 
             var errors = new ErrorAccu();
-            var context = new CompilerContext(errors, Packages);
+            var context = new Context(errors, Packages);
             var compilation = new Compilation(context, packageDir, packageName, false);
             compilation.Load();
         }

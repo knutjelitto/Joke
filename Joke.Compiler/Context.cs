@@ -3,12 +3,11 @@
 using Joke.Front.Err;
 using Joke.Outside;
 
-
 namespace Joke.Compiler
 {
-    public class CompilerContext
+    public class Context
     {
-        public CompilerContext(ErrorAccu errors, DirRef packagesDir)
+        public Context(ErrorAccu errors, DirRef packagesDir)
         {
             Errors = errors;
             PackagesDir = packagesDir;

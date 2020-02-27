@@ -14,6 +14,9 @@ namespace Joke.Front.Pony.ParseTree
 
         private static BigInteger CreateValue(PonyTokenSpan span)
         {
+#if true
+            return BigInteger.Zero;
+#else
             Debug.Assert(span.Length == 1);
 
             var str = span[0].GetPayload().Replace("_", string.Empty);
@@ -28,6 +31,7 @@ namespace Joke.Front.Pony.ParseTree
             }
 
             return value;
+#endif
         }
     }
 }
