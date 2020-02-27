@@ -327,7 +327,7 @@ namespace Joke.Front.Pony.Parsing
             return new Ast.Recover(End(TK.End), annotations, cap, body);
         }
 
-        public Ast.Expression Try()
+        private Ast.Expression Try()
         {
             Begin(TK.Try);
             var annotations = TryAnnotations();
@@ -868,13 +868,13 @@ namespace Joke.Front.Pony.Parsing
             return null;
         }
 
-        public Ast.Identifier Identifier()
+        private Ast.Identifier Identifier()
         {
             Begin(TK.Identifier);
             return new Ast.Identifier(End());
         }
 
-        public Ast.Identifier? TryIdentifier()
+        private Ast.Identifier? TryIdentifier()
         {
             if (Iss(TK.Identifier))
             {

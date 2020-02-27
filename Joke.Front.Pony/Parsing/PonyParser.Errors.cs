@@ -10,12 +10,12 @@ namespace Joke.Front.Pony.Parsing
             return new JokeException(new JokeError(new AtToken(Token, "not implemented: " + message)));
         }
 
-        public JokeException NoParse(string message)
+        private JokeException NoParse(string message)
         {
             return new JokeException(new JokeError(new AtToken(Token, message)));
         }
 
-        public void AddError(PonyToken token, string msg)
+        private void AddError(PonyToken token, string msg)
         {
             Errors.Add(new JokeError(new AtToken(token, msg)));
         }

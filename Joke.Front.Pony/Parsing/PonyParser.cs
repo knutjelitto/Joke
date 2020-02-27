@@ -33,17 +33,17 @@ namespace Joke.Front.Pony.Parsing
             limit = Tokens.Count;
         }
 
-        public Ast.File Module()
+        public Ast.Unit Unit()
         {
             Begin();
             var doc = TryString();
             var uses = CollectRecover(First.RecoverInModule, TryUse);
             var classes = CollectRecover(First.RecoverInModule, TryClass);
-            var module = new Ast.File(End(), doc, uses, classes);
+            var module = new Ast.Unit(End(), doc, uses, classes);
             return module;
         }
 
-        public Ast.Use? TryUse()
+        private Ast.Use? TryUse()
         {
             if (MayBegin(TK.Use))
             {
@@ -84,7 +84,7 @@ namespace Joke.Front.Pony.Parsing
             return null;
         }
 
-        public Ast.Identifier? TryUseName()
+        private Ast.Identifier? TryUseName()
         {
             var name = TryIdentifier();
             if (name != null)
@@ -94,7 +94,7 @@ namespace Joke.Front.Pony.Parsing
             return name;
         }
 
-        public Ast.Class? TryClass()
+        private Ast.Class? TryClass()
         {
             return TokenKind switch
             {
@@ -109,7 +109,7 @@ namespace Joke.Front.Pony.Parsing
             };
         }
 
-        public Ast.Class Class(Ast.ClassKind kind)
+        private Ast.Class Class(Ast.ClassKind kind)
         {
             Begin(First.Class);
             var annotations = TryAnnotations();
@@ -328,7 +328,7 @@ namespace Joke.Front.Pony.Parsing
             return new Ast.Cap(End(), kind);
         }
 
-        public Ast.Annotations? TryAnnotations()
+        private Ast.Annotations? TryAnnotations()
         {
             if (MayBegin(TK.Backslash))
             {

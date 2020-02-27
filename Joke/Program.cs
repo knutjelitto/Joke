@@ -34,9 +34,9 @@ namespace Joke
             Debug.Assert(fix.File("Ops.pony").Exists());
 
             var errors = new ErrorAccu();
-            var context = new CompilerContext(Packages);
+            var context = new CompilerContext(errors, Packages);
 
-            var module = new PonyPackage(context, errors, Packages.Dir("builtin"));
+            var module = new PonyPackage(context, Packages.Dir("builtin"));
         }
 
         private static void PonyExample(string packageName)
@@ -44,8 +44,8 @@ namespace Joke
             var packageDir = Examples.Dir(packageName);
 
             var errors = new ErrorAccu();
-            var context = new CompilerContext(Packages);
-            var module = new PonyPackage(context, errors, packageDir);
+            var context = new CompilerContext(errors, Packages);
+            var module = new PonyPackage(context, packageDir);
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)
@@ -96,7 +96,7 @@ namespace Joke
 
             try
             {
-                var module = parser.Module();
+                var module = parser.Unit();
 
                 errors.Describe(Console.Out);
 

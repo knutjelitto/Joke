@@ -4,9 +4,9 @@ using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Ast
 {
-    public class File : Node
+    public class Unit : Node
     {
-        public File(PonyTokenSpan span, String? doc, IReadOnlyList<Use> uses, IReadOnlyList<Class> classes)
+        public Unit(PonyTokenSpan span, String? doc, IReadOnlyList<Use> uses, IReadOnlyList<Class> classes)
             : base(span)
         {
             Doc = doc;

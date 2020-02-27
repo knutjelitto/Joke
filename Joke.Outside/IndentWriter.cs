@@ -15,12 +15,24 @@ namespace Joke.Outside
         public IndentWriter(string tab = "    ")
         {
             lines = new List<string>();
+            Writer = null;
+            this.tab = tab;
+            prefix = string.Empty;
+            current = null;
+        }
+
+        public IndentWriter(TextWriter writer, string tab = "    ")
+        {
+            lines = new List<string>();
+            Writer = writer;
             this.tab = tab;
             prefix = string.Empty;
             current = null;
         }
 
         public IEnumerable<string> Lines => lines;
+
+        public TextWriter? Writer { get; }
 
         public void WriteLine(string line)
         {
@@ -39,8 +51,6 @@ namespace Joke.Outside
 
         public void Indent(Action body)
         {
-            if (body == null) throw new ArgumentNullException(nameof(body));
-
             using (Indent())
             {
                 body();
@@ -49,8 +59,6 @@ namespace Joke.Outside
 
         public void Indent(string head, Action body)
         {
-            if (body == null) throw new ArgumentNullException(nameof(body));
-
             AddLine(head);
             using (Indent())
             {
@@ -62,20 +70,17 @@ namespace Joke.Outside
         {
             Begin();
             lines.Add(current + line);
+            WL(line);
             current = null;
         }
 
-        private void Add(string line)
+        public void Dump(IWriter writer)
         {
-            Begin();
-            current += line;
-        }
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
 
-        private void Begin()
-        {
-            if (current == null)
+            foreach (var line in lines)
             {
-                current = prefix;
+                writer.WriteLine(line);
             }
         }
 
@@ -110,13 +115,35 @@ namespace Joke.Outside
             }
         }
 
-        public void Dump(IWriter writer)
+        private void Add(string line)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            Begin();
+            current += line;
+            W(line);
+        }
 
-            foreach (var line in lines)
+        private void Begin()
+        {
+            if (current == null)
             {
-                writer.WriteLine(line);
+                current = prefix;
+                W(prefix);
+            }
+        }
+
+        private void W(string text)
+        {
+            if (Writer != null)
+            {
+                Writer.Write(text);
+            }
+        }
+
+        private void WL(string text)
+        {
+            if (Writer != null)
+            {
+                Writer.WriteLine(text);
             }
         }
     }
