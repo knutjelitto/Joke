@@ -1,4 +1,6 @@
-﻿using Joke.Front.Pony.Lexing;
+﻿using System.Diagnostics;
+
+using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.ParseTree
 {
@@ -7,6 +9,8 @@ namespace Joke.Front.Pony.ParseTree
         public PtUseFfi(PonyTokenSpan span, PtIdentifier? name, PtFfiName ffiName, PtTypeArguments typeArguments, PtParameters parameters, bool partial, PtGuard? guard)
             : base(span, name, guard)
         {
+            Debug.Assert(name == null);
+
             FfiName = ffiName;
             TypeArguments = typeArguments;
             Parameters = parameters;

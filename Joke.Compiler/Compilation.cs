@@ -6,11 +6,11 @@ namespace Joke.Compiler
 {
     public class Compilation
     {
-        private Dictionary<string, Package> packageIndex = new Dictionary<string, Package>();
-        public List<Package> Packages { get; } = new List<Package>();
+        private Dictionary<string, CompilePackage> packageIndex = new Dictionary<string, CompilePackage>();
+        public List<CompilePackage> Packages { get; } = new List<CompilePackage>();
 
 
-        public Compilation(Context context, DirRef packageDir, string name, bool isBuiltin = false)
+        public Compilation(CompileContext context, DirRef packageDir, string name, bool isBuiltin = false)
         {
             Context = context;
             PackageDir = packageDir;
@@ -18,7 +18,7 @@ namespace Joke.Compiler
             IsBuiltin = isBuiltin;
         }
 
-        public Context Context { get; }
+        public CompileContext Context { get; }
         public ErrorAccu Errors => Context.Errors;
         public IndentWriter Logger => Context.Logger;
         public DirRef PackageDir { get; }
@@ -32,7 +32,7 @@ namespace Joke.Compiler
                 var builtin = UsePackage("builtin");
             }
 
-            var package = new Package(this, PackageDir, Name);
+            var package = new CompilePackage(this, PackageDir, Name);
             package.Load();
 
             var i = 0;
@@ -44,13 +44,13 @@ namespace Joke.Compiler
         }
 
 
-        public Package UsePackage(string packageName)
+        public CompilePackage UsePackage(string packageName)
         {
             var packageDir = Context.FindPackageDir(packageName);
 
             if (!packageIndex.TryGetValue(packageDir, out var package))
             {
-                package = new Package(this, packageDir, packageName);
+                package = new CompilePackage(this, packageDir, packageName);
                 packageIndex.Add(packageDir, package);
                 Packages.Add(package);
             }
