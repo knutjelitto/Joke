@@ -1,52 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using Joke.Front.Err;
 using Joke.Outside;
+
 
 namespace Joke.Compiler
 {
     public class CompilerContext
     {
-        private Dictionary<string, PonyPackage> loadedPackages = new Dictionary<string, PonyPackage>();
-
-        public CompilerContext(ErrorAccu errors, DirRef packages)
+        public CompilerContext(ErrorAccu errors, DirRef packagesDir)
         {
             Errors = errors;
-            Packages = packages;
+            PackagesDir = packagesDir;
             Logger = new IndentWriter(Console.Out, " .. ");
         }
 
         public ErrorAccu Errors { get; }
-        public DirRef Packages { get; }
+        public DirRef PackagesDir { get; }
         public IndentWriter Logger { get; }
 
-        public DirRef FindPackage(string packageName)
+        public DirRef FindPackageDir(string packageName)
         {
-            var packageDir = Packages.Dir(packageName);
-#if false
-            if (!packageDir.Exists)
-            {
-                return null;
-            }
-#endif
+            var packageDir = PackagesDir.Dir(packageName);
             return packageDir;
-        }
-
-        public PonyPackage LoadPackage(string packageName)
-        {
-            var packageDir = FindPackage(packageName);
-
-            if (!loadedPackages.TryGetValue(packageDir, out var package))
-            {
-                using (Logger.Indent())
-                {
-                    package = new PonyPackage(this, packageDir, packageName == "builtin");
-                    loadedPackages.Add(packageDir, package);
-                }
-            }
-
-            return package;
         }
     }
 }

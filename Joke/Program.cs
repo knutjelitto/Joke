@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using Joke.Compiler;
 using Joke.Front;
@@ -20,23 +19,10 @@ namespace Joke
             //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
             //PonyParse(0, EnumerateAllPonies());
-            //PonyTest();
             PonyExample("mandelbrot");
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
-        }
-
-        private static void PonyTest()
-        {
-            var fix = DirRef.ProjectDir().Dir("..").Dir("Joke.Front.Pony").Dir("Fixtures").Dir("Expressions");
-
-            Debug.Assert(fix.File("Ops.pony").Exists());
-
-            var errors = new ErrorAccu();
-            var context = new CompilerContext(errors, Packages);
-
-            var module = new PonyPackage(context, Packages.Dir("builtin"));
         }
 
         private static void PonyExample(string packageName)
@@ -45,7 +31,8 @@ namespace Joke
 
             var errors = new ErrorAccu();
             var context = new CompilerContext(errors, Packages);
-            var module = new PonyPackage(context, packageDir);
+            var compilation = new Compilation(context, packageDir, packageName, false);
+            compilation.Load();
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)

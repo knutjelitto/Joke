@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Joke.Front
 {
@@ -9,12 +10,24 @@ namespace Joke.Front
             Tokens = tokens;
             Start = start;
             Next = next;
+            Length = next - start;
         }
 
         public readonly int Start;
         public readonly int Next;
 
+        public int Length { get; }
+
         public IReadOnlyList<T> Tokens { get; }
+
+        public T this[int index]
+        {
+            get
+            {
+                Debug.Assert(index >= 0 && Start + index < Next);
+                return Tokens[Start + index];
+            }
+        }
 
         public IEnumerable<T> GetTokens()
         {
@@ -32,7 +45,7 @@ namespace Joke.Front
             }
         }
 
-        public override string? ToString()
+        public override string ToString()
         {
             return string.Join("-", GetPayloads());
         }
