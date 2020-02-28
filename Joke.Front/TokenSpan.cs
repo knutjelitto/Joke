@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Joke.Front
 {
-    public class TokenSpan<T> where T: IToken
+    public class TokenSpan<T> : ITokenSpan where T: IToken
     {
         public TokenSpan(IReadOnlyList<T> tokens, int start, int next)
         {
@@ -19,6 +19,8 @@ namespace Joke.Front
         public int Length { get; }
 
         public IReadOnlyList<T> Tokens { get; }
+
+        public ISourceSpan PayloadSpan => new SourceSpan(Tokens[0].Source, Tokens[Start].Payload, Tokens[Next].Clutter);
 
         public T this[int index]
         {

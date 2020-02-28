@@ -3,18 +3,18 @@
 using Joke.Front.Err;
 using Joke.Outside;
 
-namespace Joke.Compiler
+namespace Joke.Compiler.Compile
 {
-    public class Context
+    public class CompileContext
     {
-        public Context(ErrorAccu errors, DirRef packagesDir)
+        public CompileContext(Errors errors, DirRef packagesDir)
         {
             Errors = errors;
             PackagesDir = packagesDir;
             Logger = new IndentWriter(Console.Out, " .. ");
         }
 
-        public ErrorAccu Errors { get; }
+        public Errors Errors { get; }
         public DirRef PackagesDir { get; }
         public IndentWriter Logger { get; }
 

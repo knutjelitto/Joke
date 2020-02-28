@@ -17,13 +17,13 @@ namespace Joke.Front.Pony.Lexing
         }
 
         public readonly TK Kind;
-        public readonly int Clutter;
-        public readonly int Payload;
-        public readonly int Next;
 
         public ISourceSpan PayloadSpan => new SourceSpan(Source, Payload, Next - Payload);
 
         public ISource Source { get; }
+        public int Clutter { get; }
+        public int Payload { get; }
+        public int Next { get; }
 
         public string GetClutter()
         {

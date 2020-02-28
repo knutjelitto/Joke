@@ -4,33 +4,40 @@ using System.Linq;
 
 namespace Joke.Front.Err
 {
-    public class ErrorAccu : IDescription
+    public class Errors : IDescription
     {
-        public List<Error> Errors = new List<Error>();
+        public List<Error> Items = new List<Error>();
+
+        public Errors()
+        {
+            Help = new ErrorsHelper(this);
+        }
+
+        public ErrorsHelper Help { get; }
 
         public void Add(Error error)
         {
-            Errors.Add(error);
+            Items.Add(error);
         }
 
         public void Clear()
         {
-            Errors.Clear();
+            Items.Clear();
         }
 
         public bool NoFatal()
         {
-            return !Errors.Any(e => e.Severity == Severity.Fatal);
+            return !Items.Any(e => e.Severity == Severity.Fatal);
         }
 
         public bool NoError()
         {
-            return NoFatal() && !Errors.Any(e => e.Severity == Severity.Error);
+            return NoFatal() && !Items.Any(e => e.Severity == Severity.Error);
         }
 
         public void Describe(TextWriter writer)
         {
-            foreach (var error in Errors)
+            foreach (var error in Items)
             {
                 error.Description.Describe(writer);
             }

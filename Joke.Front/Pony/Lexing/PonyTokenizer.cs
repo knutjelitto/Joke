@@ -29,7 +29,7 @@ namespace Joke.Front.Pony.Lexing
 
         public PonyTokens Tokens { get; private set; }
 
-        public PonyTokenizer(ErrorAccu errors, ISource source)
+        public PonyTokenizer(Errors errors, ISource source)
         {
             Errors = errors;
             Source = source;
@@ -42,7 +42,7 @@ namespace Joke.Front.Pony.Lexing
             payload = 0;
         }
 
-        public ErrorAccu Errors { get; }
+        public Errors Errors { get; }
         public ISource Source { get; }
 
         public void Tokenize()
