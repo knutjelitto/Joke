@@ -20,11 +20,11 @@ namespace Joke.Front.Pony.Parsing
         private int next;
         private readonly int limit;
 
-        public ErrorAccu Errors { get; }
+        public Errors Errors { get; }
         public ISource Source { get; }
         public PonyTokens Tokens { get; }
 
-        public PonyParser(ErrorAccu errors, ISource source, PonyTokens tokens)
+        public PonyParser(Errors errors, ISource source, PonyTokens tokens)
         {
             Errors = errors;
             Source = source;

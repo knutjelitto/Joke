@@ -1,5 +1,5 @@
-﻿using System.Diagnostics;
-using Joke.Front.Pony.Lexing;
+﻿using Joke.Front.Pony.Lexing;
+using System.Diagnostics;
 
 namespace Joke.Front.Pony.ParseTree
 {
@@ -12,25 +12,21 @@ namespace Joke.Front.Pony.ParseTree
 
         private static string CreateValue(PonyTokenSpan span)
         {
-#if true
-            return string.Empty;
-#else
             Debug.Assert(span.Length == 1);
 
             var value = span[0].GetPayload();
+            //Debug.Assert(!value.Contains("\\"));
             if (value.StartsWith("\"\"\""))
             {
-                value = value.Substring(3, value.Length - 6);
+                value = value[3..^3];
             }
             else
             {
-                value = value.Substring(1, value.Length - 2);
-
+                value = value[1..^1];
                 //TODO: decode string
             }
 
             return value;
-#endif
         }
 
     }
