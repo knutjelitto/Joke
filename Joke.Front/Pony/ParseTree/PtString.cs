@@ -12,6 +12,9 @@ namespace Joke.Front.Pony.ParseTree
 
         private static string CreateValue(PonyTokenSpan span)
         {
+#if true
+            return string.Empty;
+#else
             Debug.Assert(span.Length == 1);
 
             var value = span[0].GetPayload();
@@ -27,6 +30,7 @@ namespace Joke.Front.Pony.ParseTree
             }
 
             return value;
+#endif
         }
 
     }
