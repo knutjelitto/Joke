@@ -24,7 +24,7 @@ namespace Joke.Front
                 scanner.Current += 1;
                 return match;
             }
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         public bool IsHexDigit()

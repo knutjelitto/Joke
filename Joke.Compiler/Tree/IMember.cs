@@ -1,7 +1,6 @@
 ﻿namespace Joke.Compiler.Tree
 {
-    public interface IMember
+    public interface IMember : INamed
     {
-        string Name { get; }
     }
 }

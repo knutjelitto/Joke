@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using Joke.Compiler.Compile;
-using Joke.Compiler.Tree;
 using Joke.Front;
 using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
@@ -35,8 +33,9 @@ namespace Joke
             var errors = new Errors();
             var context = new CompileContext(errors, Packages);
             var compilation = new Compilation(context);
-            var package = compilation.CreatePackage(packageDir, packageName);
+            var package = compilation.PreparePackage(packageDir, packageName);
 
+#if false
             foreach (var unit in package.Units)
             {
                 Console.WriteLine($"{unit.UnitFile}");
@@ -45,6 +44,20 @@ namespace Joke
                     Console.WriteLine($" .. {usePackage.Package.Name}");
                 }
             }
+#if false
+            foreach (var pack in compilation.Packages)
+            {
+                foreach (var unit in pack.Units)
+                {
+                    Console.WriteLine($"{unit.UnitFile}");
+                    foreach (var usePackage in unit.Uses.OfType<UsePackage>())
+                    {
+                        Console.WriteLine($" .. {usePackage.Package.Name}");
+                    }
+                }
+            }
+#endif
+#endif
         }
 
         private static void PonyParse(int skip, IEnumerable<FileRef> ponies)

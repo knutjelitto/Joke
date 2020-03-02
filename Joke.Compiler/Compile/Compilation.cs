@@ -14,7 +14,7 @@ namespace Joke.Compiler.Compile
 {
     public class Compilation
     {
-        private LookupList<string, Package> Packages = new LookupList<string, Package>();
+        public readonly LookupList<string, Package> Packages = new LookupList<string, Package>();
         private const string Builtin = "builtin";
         private const string Ponies = "*.pony";
 
@@ -27,7 +27,7 @@ namespace Joke.Compiler.Compile
         public Errors Errors => Context.Errors;
         public IndentWriter Logger => Context.Logger;
 
-        public Package CreatePackage(DirRef packageDir, string name, bool isBuiltin = false)
+        public Package PreparePackage(DirRef packageDir, string name, bool isBuiltin = false)
         {
             var builtin = isBuiltin ? null : UsePackage(Builtin);
 
@@ -35,23 +35,29 @@ namespace Joke.Compiler.Compile
 
             Load(package);
 
-            LoadUsed();
+            LoadClosure();
 
             return package;
         }
 
         private void Load(Package package)
         {
-            Logger.WriteLine($"loading {package.Name}");
+            Logger.WriteLine($"load package {package.Name}");
 
             foreach (var unitFile in package.PackageDir.Files(Ponies))
             {
-                var unit = LoadUnit(unitFile);
+                var unit = LoadUnit(package, unitFile);
                 package.Units.Add(unitFile, unit);
+            }
+
+            foreach (var unit in package.Units)
+            {
+                Logger.WriteLine($" .. discover unit members {unit.UnitFile.FileName}");
+                unit.DiscoverMembers();
             }
         }
 
-        private void LoadUsed()
+        private void LoadClosure()
         {
             var i = 0;
             while (i < Packages.Count)
@@ -75,14 +81,14 @@ namespace Joke.Compiler.Compile
         }
 
 
-        private Unit LoadUnit(FileRef unitFile)
+        private Unit LoadUnit(Package package, FileRef unitFile)
         {
             var source = Source.FromFile(unitFile);
             var tokenizer = new PonyTokenizer(Errors, source);
             tokenizer.Tokenize();
             var parser = new PonyParser(Errors, source, tokenizer.Tokens);
             var ptUnit = parser.Unit();
-            var unit = new Unit(ptUnit, unitFile);
+            var unit = new Unit(ptUnit, unitFile, package);
             foreach (var use in unit.Source.Uses)
             {
                 switch (use)
@@ -94,7 +100,7 @@ namespace Joke.Compiler.Compile
                         unit.Uses.Add(DecodeUseFfi(useFfi));
                         break;
                     default:
-                        throw new System.NotImplementedException();
+                        throw new System.InvalidOperationException();
                 }
             }
             return unit;
@@ -123,12 +129,15 @@ namespace Joke.Compiler.Compile
                 case "lib":
                     if (alias != null)
                     {
-                        Errors.Help.Add(use.Span, "nonsense alias in ``use \"lib:...\"´´");
+                        Errors.Help.Add(
+                            use.Span,
+                            ErrNo.Err003,
+                            $"nonsense alias in ``use \"lib:{value}\"´´");
                     }
                     return new UseLib(use, value);
             }
 
-            throw new System.NotImplementedException();
+            throw new System.InvalidOperationException();
         }
 
         private IUse DecodeUseFfi(PtUseFfi use)
@@ -136,7 +145,7 @@ namespace Joke.Compiler.Compile
             if (use.Name != null) throw new System.NotImplementedException();
             if (use.Partial) throw new System.NotImplementedException();
 
-            var name = string.Empty;
+            string name;
             if (use.FfiName.Name is PtString str)
             {
                 name = str.Value;
@@ -147,12 +156,15 @@ namespace Joke.Compiler.Compile
             }
             else
             {
-                throw new System.NotImplementedException();
+                throw new System.InvalidOperationException();
             }
 
             if (use.TypeArguments.Arguments.Count != 1)
             {
-                Errors.Help.Add(use.TypeArguments.Span, "return of a foreign function call must be exactly one type");
+                Errors.Help.Add(
+                    use.TypeArguments.Span,
+                    ErrNo.Err005,
+                    "return of a foreign function call must be exactly one type");
             }
 
             var result = new AnyType(use.TypeArguments.Arguments[0]);
@@ -165,7 +177,8 @@ namespace Joke.Compiler.Compile
                 {
                     Errors.Help.Add(
                         use.Parameters.Items.OfType<PtEllipsisParameter>().First().Span,
-                        "ellipis `...´ must be last in foreign function declaration");
+                        ErrNo.Err004,
+                        "ellipis ``...´´ must be last in foreign function declaration");
                 }
                 switch (prm)
                 {

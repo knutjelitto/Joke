@@ -1,5 +1,4 @@
 ﻿using Joke.Front.Err;
-using Joke.Front.Pony.Lexing;
 
 namespace Joke.Front.Pony.Parsing
 {
@@ -7,17 +6,12 @@ namespace Joke.Front.Pony.Parsing
     {
         protected JokeException NotYet(string message)
         {
-            return new JokeException(new JokeError(new AtToken(Token, "not implemented: " + message)));
+            return new JokeException(new JokeError(ErrNo.NotYetParse, new AtToken(Token, "not implemented: " + message)));
         }
 
         private JokeException NoParse(string message)
         {
-            return new JokeException(new JokeError(new AtToken(Token, message)));
-        }
-
-        private void AddError(PonyToken token, string msg)
-        {
-            Errors.Add(new JokeError(new AtToken(token, msg)));
+            return new JokeException(new JokeError(ErrNo.NoScanParse, new AtToken(Token, message)));
         }
     }
 }

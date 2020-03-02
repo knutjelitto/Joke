@@ -2,8 +2,8 @@
 {
     public class JokeError : Error
     {
-        public JokeError(IDescription err)
-            : base(Severity.Error, err)
+        public JokeError(ErrNo no, IDescription err)
+            : base(Severity.Error, no, err)
         {
         }
     }

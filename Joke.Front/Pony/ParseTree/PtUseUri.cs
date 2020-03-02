@@ -2,7 +2,7 @@
 
 namespace Joke.Front.Pony.ParseTree
 {
-    public class PtUseUri : PtUse
+    public sealed class PtUseUri : PtUse
     {
         public PtUseUri(PonyTokenSpan span, PtIdentifier? name, PtString uri, PtGuard? guard)
             : base(span, name, guard)

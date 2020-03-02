@@ -761,12 +761,12 @@ namespace Joke.Front.Pony.Lexing
 
         protected JokeException NotYet(string message)
         {
-            return new JokeException(new JokeError(new AtOffset(new SourceSpan(Source, next, 0), "not implemented: " + message)));
+            return new JokeException(new JokeError(ErrNo.NotYetToken, new AtOffset(new SourceSpan(Source, next, 0), "not implemented: " + message)));
         }
 
         protected JokeException NoScan(string message)
         {
-            return new JokeException(new JokeError(new AtOffset(new SourceSpan(Source, next, 0), message)));
+            return new JokeException(new JokeError(ErrNo.NoScanToken, new AtOffset(new SourceSpan(Source, next, 0), message)));
         }
     }
 }

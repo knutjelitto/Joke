@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Joke.Front.Pony.ParseTree
 {
-    public class PtUseFfi : PtUse
+    public sealed class PtUseFfi : PtUse
     {
         public PtUseFfi(PonyTokenSpan span, PtIdentifier? alias, PtFfiName ffiName, PtTypeArguments typeArguments, PtParameters parameters, bool partial, PtGuard? guard)
             : base(span, alias, guard)

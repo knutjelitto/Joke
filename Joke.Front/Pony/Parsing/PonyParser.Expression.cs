@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using Joke.Front.Err;
 using Joke.Front.Pony.Lexing;
 using Joke.Front.Pony.ParseTree;
 
@@ -28,7 +28,10 @@ namespace Joke.Front.Pony.Parsing
                 {
                     var part = parts.Where(p => p.Kind != operators[0]).First();
                     var token = Tokens[part.Span.Start];
-                    AddError(token, "binary operators have no precedence, use ( ) to group binary expressions");
+                    Errors.Help.Add(
+                        token,
+                        ErrNo.Err002,
+                        "binary operators have no precedence, use ( ) to group binary expressions");
                 }
                 var @operator = operators[0];
                 switch (@operator)
@@ -129,7 +132,10 @@ namespace Joke.Front.Pony.Parsing
                         kind = PtBinaryKind.RemPartial;
                         break;
                     default:
-                        AddError(token, $"{Keywords.String(token.Kind)} can't be made partial");
+                        Errors.Help.Add(
+                            token,
+                            ErrNo.Err001,
+                            $"{Keywords.String(token.Kind)} can't be made partial");
                         break;
                 }
             }

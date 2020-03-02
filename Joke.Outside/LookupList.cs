@@ -6,7 +6,7 @@ namespace Joke.Outside
 {
     public class LookupList<K, V> : IReadOnlyList<V>, IReadOnlyDictionary<K, V>
         where K : notnull
-        where V : notnull
+        where V : class        
     {
         private readonly Dictionary<K, V> lookup = new Dictionary<K, V>();
         private readonly List<V> items = new List<V>();
@@ -20,6 +20,16 @@ namespace Joke.Outside
         public IEnumerable<K> Keys => lookup.Keys;
 
         public IEnumerable<V> Values => items;
+
+        public V? TryFind(K key)
+        {
+            if (TryGetValue(key, out var value))
+            {
+                return value;
+            }
+
+            return default;
+        }
 
         public void Add(K key, V value)
         {

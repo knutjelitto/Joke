@@ -9,9 +9,14 @@
 
         public Errors Errors { get; }
 
-        public void Add(ITokenSpan span, string msg)
+        public void Add(ITokenSpan span, ErrNo no, string msg)
         {
-            Errors.Add(new JokeError(new AtTokens(span, msg)));
+            Errors.Add(new JokeError(no, new AtTokens(span, msg)));
+        }
+
+        public void Add(IToken token, ErrNo no, string msg)
+        {
+            Errors.Add(new JokeError(no, new AtToken(token, msg)));
         }
     }
 }
