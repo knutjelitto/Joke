@@ -1,0 +1,10 @@
+﻿namespace Builtin
+
+    trait Number<N>
+        fun op_add(that: N) : N
+        fun op_sub(that: N) : N
+        fun op_mul(that: N) : N
+        fun op_div(that: N) : N
+    end
+
+end

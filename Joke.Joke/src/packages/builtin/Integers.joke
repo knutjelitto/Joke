@@ -1,0 +1,135 @@
+﻿namespace Builtin
+
+    """
+    8 bit unsigned integer.
+    """
+    primitive u8
+
+        fun op_add(that: u8): u8 => intrinsic
+        fun op_sub(that: u8): u8 => intrinsic
+        fun op_mul(that: u8): u8 => intrinsic
+        fun op_div(that: u8): u8 => intrinsic
+        fun op_rem(that: u8): u8 => intrinsic
+        fun op_not(): u8 => intrinsic
+    end primitive
+
+    """
+    16 bit unsigned integer.
+    """
+    primitive u16
+
+        new op_widen(that: u8): u16 => intrinsic
+
+        fun op_add(that: u16): u16 => intrinsic
+        fun op_sub(that: u16): u16 => intrinsic
+        fun op_mul(that: u16): u16 => intrinsic
+        fun op_div(that: u16): u16 => intrinsic
+        fun op_rem(that: u16): u16 => intrinsic
+        fun op_not(): u16 => intrinsic
+    end primitive
+
+    """
+    32 bit unsigned integer.
+    """
+    primitive u32
+
+        new op_widen(that: u8): u32 => intrinsic
+        new op_widen(that: u16): u32 => intrinsic
+
+        fun op_add(that: u32): u32 => intrinsic
+        fun op_sub(that: u32): u32 => intrinsic
+        fun op_mul(that: u32): u32 => intrinsic
+        fun op_div(that: u32): u32 => intrinsic
+        fun op_rem(that: u32): u32 => intrinsic
+        fun op_not(): u32 => intrinsic
+    end primitive
+
+    """
+    64 bit unsigned integer.
+    """
+    primitive u64
+
+        new op_widen(that: u8): u64 => intrinsic
+        new op_widen(that: u16): u64 => intrinsic
+        new op_widen(that: u32): u64 => intrinsic
+
+        fun op_add(that: u64): u64 => intrinsic
+        fun op_sub(that: u64): u64 => intrinsic
+        fun op_mul(that: u64): u64 => intrinsic
+        fun op_div(that: u64): u64 => intrinsic
+        fun op_rem(that: u64): u64 => intrinsic
+        fun op_not(): u64 => intrinsic
+    end primitive
+
+    """
+    8 bit signed integer.
+    """
+    primitive i8
+
+        fun op_add(that: i8): i8 => intrinsic
+        fun op_sub(that: i8): i8 => intrinsic
+        fun op_mul(that: i8): i8 => intrinsic
+        fun op_div(that: i8): i8 => intrinsic
+        fun op_rem(that: i8): i8 => intrinsic
+        fun op_not(): i8 => intrinsic
+        fun op_neg(): i8 => intrinsic
+    end primitive
+
+    """
+    16 bit signed integer.
+    """
+    primitive i16
+
+        new op_widen(that: i8): i16 => intrinsic
+        new op_widen(that: u8): i16 => intrinsic
+
+        fun op_add(that: i16): i16 => intrinsic
+        fun op_sub(that: i16): i16 => intrinsic
+        fun op_mul(that: i16): i16 => intrinsic
+        fun op_div(that: i16): i16 => intrinsic
+        fun op_rem(that: i16): i16 => intrinsic
+        fun op_not(): i16 => intrinsic
+        fun op_neg(): i16 => intrinsic
+    end primitive
+
+    """
+    32 bit signed integer.
+    """
+    primitive i32
+
+        new op_widen(that: i8): i32 => intrinsic
+        new op_widen(that: i16): i32 => intrinsic
+        new op_widen(that: u8): i32 => intrinsic
+        new op_widen(that: u16): i32 => intrinsic
+
+        fun op_add(that: i32): i32 => intrinsic
+        fun op_sub(that: i32): i32 => intrinsic
+        fun op_mul(that: i32): i32 => intrinsic
+        fun op_div(that: i32): i32 => intrinsic
+        fun op_rem(that: i32): i32 => intrinsic
+        fun op_not(): i32 => intrinsic
+        fun op_neg(): i32 => intrinsic
+    end primitive
+
+    """
+    64 bit signed integer.
+    """
+    primitive i64
+
+        new op_widen(that: i8): i64 => intrinsic
+        new op_widen(that: i16): i64 => intrinsic
+        new op_widen(that: i32): i64 => intrinsic
+        new op_widen(that: u8): i64 => intrinsic
+        new op_widen(that: u16): i64 => intrinsic
+        new op_widen(that: u32): i64 => intrinsic
+
+        fun op_add(that: i64): i64 => intrinsic
+        fun op_sub(that: i64): i64 => intrinsic
+        fun op_mul(that: i64): i64 => intrinsic
+        fun op_div(that: i64): i64 => intrinsic
+        fun op_rem(that: i64): i64 => intrinsic
+        fun op_not(): i64 => intrinsic
+        fun op_neg(): i64 => intrinsic
+    end primitive
+
+end namespace
