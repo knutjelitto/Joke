@@ -1,6 +1,6 @@
 ﻿namespace Builtin
 
-    primitive f32
+    primitive f32 : Float<f32>
 
         new op_widen(that: i8): f32 => intrinsic
         new op_widen(that: i16): f32 => intrinsic
