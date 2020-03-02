@@ -1,9 +1,6 @@
-﻿using Joke.Outside;
-
-namespace Joke.Compiler.Tree
+﻿namespace Joke.Compiler.Tree
 {
-    public interface IClass : IPackageMember, IType
+    public interface IClass : IPackageMember, IType, IContainer, IDiscover
     {
-        LookupList<string, IClassMember> Members { get; }
     }
 }

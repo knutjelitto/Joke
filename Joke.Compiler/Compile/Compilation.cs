@@ -31,7 +31,7 @@ namespace Joke.Compiler.Compile
         {
             var builtin = isBuiltin ? null : UsePackage(Builtin);
 
-            var package = new Package(packageDir, name, builtin);
+            var package = new Package(Context, packageDir, name, builtin);
 
             Load(package);
 
@@ -46,13 +46,9 @@ namespace Joke.Compiler.Compile
 
             foreach (var unitFile in package.PackageDir.Files(Ponies))
             {
+                Logger.WriteLine($" .. load unit {unitFile.FileName}");
                 var unit = LoadUnit(package, unitFile);
                 package.Units.Add(unitFile, unit);
-            }
-
-            foreach (var unit in package.Units)
-            {
-                Logger.WriteLine($" .. discover unit members {unit.UnitFile.FileName}");
                 unit.DiscoverMembers();
             }
         }
@@ -73,13 +69,12 @@ namespace Joke.Compiler.Compile
 
             if (!Packages.TryGetValue(packageDir, out var package))
             {
-                package = new Package(packageDir, packageName);
+                package = new Package(Context, packageDir, packageName);
                 Packages.Add(packageDir, package);
             }
 
             return package;
         }
-
 
         private Unit LoadUnit(Package package, FileRef unitFile)
         {
@@ -164,7 +159,7 @@ namespace Joke.Compiler.Compile
                 Errors.Help.Add(
                     use.TypeArguments.Span,
                     ErrNo.Err005,
-                    "return of a foreign function call must be exactly one type");
+                    "return of a foreign function call must have exactly one type");
             }
 
             var result = new AnyType(use.TypeArguments.Arguments[0]);

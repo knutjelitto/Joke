@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
 using Joke.Front.Pony.ParseTree;
 using Joke.Outside;
 
 namespace Joke.Compiler.Tree
 {
-    public class Unit : IDeclare
+    public class Unit : IDiscover
     {
         public readonly List<IUse> Uses = new List<IUse>();
 
@@ -47,33 +46,37 @@ namespace Joke.Compiler.Tree
             foreach (var cls in Source.Classes)
             {
                 var name = cls.Name.Value;
+                IClass member;
 
                 switch (cls.Kind)
                 {
                     case PtClassKind.Actor:
-                        AddMember(new Actor(cls, this, name));
+                        member = ClassType.Actor(cls, this, name);
                         break;
                     case PtClassKind.Class:
-                        AddMember(new Class(cls, this, name));
+                        member = ClassType.Class(cls, this, name);
                         break;
                     case PtClassKind.Interface:
-                        AddMember(new Interface(cls, this, name));
+                        member = ClassType.Interface(cls, this, name);
                         break;
                     case PtClassKind.Primitive:
-                        AddMember(new Primitive(cls, this, name));
+                        member = ClassType.Primitive(cls, this, name);
                         break;
                     case PtClassKind.Trait:
-                        AddMember(new Trait(cls, this, name));
+                        member = ClassType.Trait(cls, this, name);
                         break;
                     case PtClassKind.Struct:
-                        AddMember(new Struct(cls, this, name));
+                        member = ClassType.Struct(cls, this, name);
                         break;
                     case PtClassKind.Type:
-                        AddMember(new TypeAlias(cls, this, name));
+                        member = ClassType.Alias(cls, this, name);
                         break;
                     default:
                         throw new System.NotImplementedException();
                 }
+
+                AddMember(member);
+                member.DiscoverMembers();
             }
         }
     }

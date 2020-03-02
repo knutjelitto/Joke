@@ -12,6 +12,9 @@
         Err003,             // nonsense alias
         Err004,             // nonsense ellipsis in ffi declaration
         Err005,             // nonsense ffi return type
+        Err006,             // no field in ``{0}´´
+        Err007,             // no behaviour in ``{0}´´
+        Err008,             // no member in ``{0}´´
         Load001,
     }
 }

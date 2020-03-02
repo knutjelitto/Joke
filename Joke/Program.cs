@@ -20,7 +20,9 @@ namespace Joke
             //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
             //PonyParse(0, EnumerateAllPonies());
-            PonyExample("mandelbrot");
+            PonyExample("helloworld");
+            //PonyExample("mandelbrot");
+            
 
             Console.Write("(almost) any key ... ");
             Console.ReadKey(true);
@@ -245,6 +247,7 @@ namespace Joke
                 "https://github.com/Theodus/pony-stats.git",
                 "https://github.com/jtfmumm/microkanren-pony.git",
                 "https://github.com/ergl/sss.git",
+                "https://github.com/SeanTAllen/lori.git",
             };
 
             foreach (var url in sources)

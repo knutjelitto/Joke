@@ -8,7 +8,7 @@ namespace Joke.Front.Pony.ParseTree
             PtMethodKind kind,
             PtAnnotations? annotations,
             bool bare,
-            PtCap? cap,
+            PtCap? receiverCap,
             PtIdentifier name,
             PtTypeParameters? typeParameters,
             PtParameters parameters,
@@ -21,7 +21,7 @@ namespace Joke.Front.Pony.ParseTree
             Kind = kind;
             Annotations = annotations;
             Bare = bare;
-            Cap = cap;
+            ReceiverCap = receiverCap;
             Name = name;
             TypeParameters = typeParameters;
             Parameters = parameters;
@@ -34,7 +34,7 @@ namespace Joke.Front.Pony.ParseTree
         public PtMethodKind Kind { get; }
         public PtAnnotations? Annotations { get; }
         public bool Bare { get; }
-        public PtCap? Cap { get; }
+        public PtCap? ReceiverCap { get; }
         public PtIdentifier Name { get; }
         public PtTypeParameters? TypeParameters { get; }
         public PtParameters Parameters { get; }

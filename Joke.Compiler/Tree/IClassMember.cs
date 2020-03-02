@@ -1,6 +1,6 @@
 ﻿namespace Joke.Compiler.Tree
 {
-    public interface IClassMember : IMember
+    public interface IClassMember : IMember, ISourced
     {
     }
 }

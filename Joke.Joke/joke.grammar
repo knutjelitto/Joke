@@ -1,0 +1,23 @@
+﻿file: namespace
+    
+namespace: 'namespace' qualified-identifier namespace-members 'end'
+
+namespace-members:
+    namespace | struct | class | interface | trait | mixin | actor
+
+struct:
+    'struct' identifier provides struct-members 'end'
+
+class:
+    'struct' identifier provides class-members 'end'
+
+qualified-identifier:
+    identifier ('.' identifier)*
+
+identifier = letter-or-underscore (letter-or-digit-or-underscore)*
+
+letter = 'a' .. 'z' | 'A' .. 'Z'
+underscore = '_'
+digit = '0' .. '9'
+letter-or-underscore = letter | underscore
+letter-or-digit-or-underscore = letter | digit | underscore

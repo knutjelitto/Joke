@@ -1,6 +1,6 @@
 ﻿namespace Joke.Compiler.Tree
 {
-    public interface IDeclare
+    public interface IDiscover
     {
         void DiscoverMembers();
     }
