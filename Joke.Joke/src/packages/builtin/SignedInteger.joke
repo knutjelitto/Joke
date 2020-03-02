@@ -1,6 +1,7 @@
 ﻿namespace Builtin
 
     trait SignedInteger: Integer
+
     end
 
 end
