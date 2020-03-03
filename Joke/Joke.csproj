@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Joke.Compiler\Joke.Compiler.csproj" />
+    <ProjectReference Include="..\Joke.Joke\Joke.Joke.csproj" />
     <ProjectReference Include="..\Joke.Outside\Joke.Outside.csproj" />
   </ItemGroup>
 

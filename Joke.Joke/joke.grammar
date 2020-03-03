@@ -3,13 +3,25 @@
 namespace: 'namespace' qualified-identifier namespace-members 'end'
 
 namespace-members:
-    namespace | struct | class | interface | trait | mixin | actor
+    namespace | struct | class | interface | trait | actor | primitive
 
 struct:
     'struct' identifier provides struct-members 'end'
 
 class:
-    'struct' identifier provides class-members 'end'
+    'class' identifier provides class-members 'end'
+
+interface:
+    'interface' identifier provides interface-members 'end'
+
+trait:
+    'trait' identifier provides trait-members 'end'
+
+actor:
+    'actor' identifier provides actor-members 'end'
+
+primitive:
+    'primitive' identifier provides primitive-members 'end'
 
 qualified-identifier:
     identifier ('.' identifier)*

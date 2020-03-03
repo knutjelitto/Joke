@@ -11,6 +11,7 @@
         fun op_div(that: u8): u8 => intrinsic
         fun op_rem(that: u8): u8 => intrinsic
         fun op_not(): u8 => intrinsic
+
     end primitive
 
     """
@@ -26,6 +27,7 @@
         fun op_div(that: u16): u16 => intrinsic
         fun op_rem(that: u16): u16 => intrinsic
         fun op_not(): u16 => intrinsic
+
     end primitive
 
     """
@@ -42,6 +44,7 @@
         fun op_div(that: u32): u32 => intrinsic
         fun op_rem(that: u32): u32 => intrinsic
         fun op_not(): u32 => intrinsic
+
     end primitive
 
     """
@@ -59,6 +62,7 @@
         fun op_div(that: u64): u64 => intrinsic
         fun op_rem(that: u64): u64 => intrinsic
         fun op_not(): u64 => intrinsic
+
     end primitive
 
     """
@@ -73,6 +77,7 @@
         fun op_rem(that: i8): i8 => intrinsic
         fun op_not(): i8 => intrinsic
         fun op_neg(): i8 => intrinsic
+
     end primitive
 
     """
@@ -90,6 +95,7 @@
         fun op_rem(that: i16): i16 => intrinsic
         fun op_not(): i16 => intrinsic
         fun op_neg(): i16 => intrinsic
+
     end primitive
 
     """
@@ -109,6 +115,7 @@
         fun op_rem(that: i32): i32 => intrinsic
         fun op_not(): i32 => intrinsic
         fun op_neg(): i32 => intrinsic
+
     end primitive
 
     """
@@ -130,6 +137,7 @@
         fun op_rem(that: i64): i64 => intrinsic
         fun op_not(): i64 => intrinsic
         fun op_neg(): i64 => intrinsic
+
     end primitive
 
 end namespace

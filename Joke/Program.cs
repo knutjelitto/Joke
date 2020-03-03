@@ -20,8 +20,10 @@ namespace Joke
             //PonyParse(0, EnumerateBuiltinPonies());
             //PonyParse(0, EnumeratePackagePonies());
             //PonyParse(0, EnumerateAllPonies());
-            PonyExample("helloworld");
+            //PonyExample("helloworld");
             //PonyExample("mandelbrot");
+
+            new Joke.Tester().Run();
             
 
             Console.Write("(almost) any key ... ");

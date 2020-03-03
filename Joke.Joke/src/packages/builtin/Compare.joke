@@ -1,10 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Builtin
 
-namespace Joke.Joke.src.packages.builtin
-{
-    class Compare
-    {
-    }
-}
+    primitive Less is Equatable<Compare>
+        fun string(): string => "Less"
+
+    primitive Equal is Equatable<Compare>
+        fun string(): string => "Equal"
+
+    primitive Greater is Equatable<Compare>
+        fun string(): string => "Greater"
+
+    type Compare is (Less | Equal | Greater)
+
+    interface HasEq<A>
+        fun op_eq(that: A): bool
+
+    interface Equatable<A: Equatable<A>>
+        fun op_eq(that: A): bool => this is that
+        fun op_ne(that: A): bool => not eq(that)
+
+    interface Comparable<A: Comparable<A> is Equatable<A>
+        fun lt(that: A): bool
+        fun le(that: A): bool => lt(that) or eq(that)
+        fun ge(that: A): bool => not lt(that)
+        fun gt(that: A): bool => not le(that)
+
+        fun compare(that: A): Compare =>
+            if eq(that) then
+                Equal
+            elseif lt(that) then
+                Less
+            else
+                Greater
+            end
+
+end
