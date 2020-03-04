@@ -292,7 +292,7 @@ namespace Joke.Joke.Decoding
                         break;
                 }
 
-                Errors.AtOffset(ErrNo.LEX001, Source, next, $"unknown character ``{CharRep.InText(content[next])}´´ in source stream");
+                Errors.AtOffset(ErrNo.Lex001, Source, next, $"unknown character ``{CharRep.InText(content[next])}´´ in source stream");
                 next += 1;
 
                 nl = Skip() || nl;

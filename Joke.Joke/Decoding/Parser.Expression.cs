@@ -220,7 +220,7 @@ namespace Joke.Joke.Decoding
         {
             Begin(TK.Error);
             var sequence = TrySequence();
-            return new Error(End(), sequence);
+            return new Tree.Error(End(), sequence);
         }
 
         private IExpression CompileIntrinsic()
