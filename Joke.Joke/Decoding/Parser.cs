@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
 using Joke.Joke.Err;
 using Joke.Joke.Tree;
 using String = Joke.Joke.Tree.String;
@@ -14,14 +15,15 @@ namespace Joke.Joke.Decoding
             Errors = errors;
             Tokens = tokens;
 
+            Debug.Assert(Tokens.Count > 0 && Tokens[Tokens.Count - 1].Kind == TK.Eof);
+
             next = 0;
             limit = Tokens.Count;
         }
 
         public Errors Errors { get; }
         public Tokens Tokens { get; }
-
-        public TK CurrentToken => next < limit ? Tokens[next].Kind : TK.Missing;
+        public Token Current => next < limit ? Tokens[next] : Tokens[limit-1];
 
         private Stack<int> markers = new Stack<int>();
 
@@ -48,7 +50,7 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryNamespaceMember()
         {
-            switch (CurrentToken)
+            switch (Current.Kind)
             {
                 case TK.Primitive:
                     return Primitive();
@@ -76,7 +78,7 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryPrimitiveMember()
         {
-            switch (CurrentToken)
+            switch (Current.Kind)
             {
                 case TK.Fun:
                     return Fun();
@@ -196,7 +198,7 @@ namespace Joke.Joke.Decoding
 
         private IType Type()
         {
-            switch (CurrentToken)
+            switch (Current.Kind)
             {
                 case TK.This:
                     return ThisType();

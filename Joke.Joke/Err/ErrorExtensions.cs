@@ -8,5 +8,10 @@ namespace Joke.Joke.Err
         {
             errors.Help.Add(new SourceSpan(source, offset, 0), no, message);
         }
+
+        public static void AtToken(this Errors errors, ErrNo no, IToken token, string message)
+        {
+            errors.Help.Add(token, no, message);
+        }
     }
 }

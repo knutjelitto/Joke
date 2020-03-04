@@ -1,6 +1,6 @@
 ﻿namespace Joke.Joke.Tree
 {
-    public interface IExpression
+    public interface IExpression : IAny
     {
     }
 }

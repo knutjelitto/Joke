@@ -108,6 +108,7 @@
         Until,              // 'until'
         Use,                // 'use'
         Var,                // 'var'
+        When,               // 'when'
         Where,              // 'where'
         While,              // 'while'
         With,               // 'with'

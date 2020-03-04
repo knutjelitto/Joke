@@ -78,6 +78,7 @@ namespace Joke.Joke.Decoding
             { "until", TK.Until },
             { "use", TK.Use },
             { "var", TK.Var },
+            { "when", TK.When },
             { "where", TK.Where },
             { "while", TK.While },
             { "with", TK.With },
