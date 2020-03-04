@@ -1,8 +1,7 @@
-﻿using Joke.Joke.Decoding;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+
+using Joke.Joke.Decoding;
 
 namespace Joke.Joke.Tree
 {

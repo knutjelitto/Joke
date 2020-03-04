@@ -4,7 +4,7 @@ namespace Joke.Joke.Decoding
 {
     public struct Token : IToken
     {
-        public Token(TK kind, ISource source, int clutter, int payload, int next)
+        public Token(TK kind, ISource source, int clutter, int payload, int next, bool nl)
         {
             Debug.Assert(clutter <= payload);
             Debug.Assert(payload <= next);
@@ -14,6 +14,7 @@ namespace Joke.Joke.Decoding
             Clutter = clutter;
             Payload = payload;
             Next = next;
+            Nl = nl;
         }
 
         public readonly TK Kind;
@@ -24,6 +25,7 @@ namespace Joke.Joke.Decoding
         public int Clutter { get; }
         public int Payload { get; }
         public int Next { get; }
+        public bool Nl { get; }
 
         public string GetClutter()
         {

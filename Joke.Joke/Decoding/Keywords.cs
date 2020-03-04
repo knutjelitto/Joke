@@ -23,10 +23,6 @@ namespace Joke.Joke.Decoding
                 {
                     invers.Add(pair.Value, pair.Key);
                 }
-
-                invers.Add(TK.LParenNew, invers[TK.LParen]);
-                invers.Add(TK.LSquareNew, invers[TK.LSquare]);
-                invers.Add(TK.MinusNew, invers[TK.Minus]);
             }
 
             return invers[kind];

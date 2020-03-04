@@ -14,10 +14,8 @@
         LBrace,             // '{'
         RBrace,             // '}'
         LParen,             // '('
-        LParenNew,          // <nl>'('
         RParen,             // ')'
         LSquare,            // '['
-        LSquareNew,         // <nl>'['
         RSquare,            // ']'
         Comma,              // ','
         Colon,              // ':'
@@ -55,7 +53,6 @@
         Plus,               // '+'
 
         Minus,              // '-'
-        MinusNew,           // <nl>'-'
         Arrow,              // '->'
 
         Divide,             // '/'

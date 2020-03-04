@@ -27,6 +27,11 @@ namespace Joke.Joke.Decoding
         /// </summary>
         public int next;
 
+        /// <summary>
+        /// Last skip() surrounds a newline
+        /// </summary>
+        public bool nl;
+
         public Tokens Tokens { get; private set; }
 
         public Tokenizer(Errors errors, ISource source)
@@ -84,7 +89,7 @@ namespace Joke.Joke.Decoding
         {
             clutter = next;
 
-            var nl = Skip();
+            nl = Skip();
 
             while (true)
             {
@@ -104,13 +109,13 @@ namespace Joke.Joke.Decoding
                         return Char();
                     case '(':
                         next += 1;
-                        return Token(nl ? TK.LParenNew : TK.LParen);
+                        return Token(TK.LParen);
                     case ')':
                         next += 1;
                         return Token(TK.RParen);
                     case '[':
                         next += 1;
-                        return Token(nl ? TK.LSquareNew : TK.LSquare);
+                        return Token(TK.LSquare);
                     case ']':
                         next += 1;
                         return Token(TK.RSquare);
@@ -185,7 +190,7 @@ namespace Joke.Joke.Decoding
                                 return Token(TK.Arrow);
                             }
                         }
-                        return Token(nl ? TK.MinusNew : TK.Minus);
+                        return Token(TK.Minus);
 
                     case '/':
                         next += 1;
@@ -586,7 +591,7 @@ namespace Joke.Joke.Decoding
 
         private Token Token(TK kind)
         {
-            return new Token(kind, Source, clutter, payload, next);
+            return new Token(kind, Source, clutter, payload, next, nl);
         }
 
         private bool StartsWith(string start)

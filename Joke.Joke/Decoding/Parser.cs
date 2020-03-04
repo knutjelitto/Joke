@@ -7,7 +7,7 @@ using String = Joke.Joke.Tree.String;
 
 namespace Joke.Joke.Decoding
 {
-    public sealed class Parser
+    public sealed partial class Parser
     {
         public Parser(Errors errors, Tokens tokens)
         {
@@ -28,7 +28,7 @@ namespace Joke.Joke.Decoding
         private int next;
         private readonly int limit;
 
-        public Unit ParseUnit()
+        public CompilationUnit ParseUnit()
         {
             next = 0;
 
@@ -42,11 +42,11 @@ namespace Joke.Joke.Decoding
         private Members NamespaceMembers()
         {
             Begin();
-            var items = Collect(NamespaceMember);
+            var items = Collect(TryNamespaceMember);
             return new Members(End(), items);
         }
 
-        private IMember? NamespaceMember()
+        private IMember? TryNamespaceMember()
         {
             switch (CurrentToken)
             {
@@ -62,8 +62,127 @@ namespace Joke.Joke.Decoding
             Begin(TK.Primitive);
             var name = Identifier();
             var provides = TryProvides();
+            var members = PrimitiveMembers();
+
+            return new Primitive(End(), name, provides, members);
+        }
+
+        private Members PrimitiveMembers()
+        {
+            Begin();
+            var members = Collect(TryPrimitiveMember);
+            return new Members(End(), members);
+        }
+
+        private IMember? TryPrimitiveMember()
+        {
+            switch (CurrentToken)
+            {
+                case TK.Fun:
+                    return Fun();
+            }
+            throw new NotImplementedException();
+        }
+
+        private IMember Fun()
+        {
+            Begin(TK.Fun);
+            var name = Identifier();
+            var typeParameters = TryTypeParameters();
+            var parameters = ValueParameters();
+            var @return = TryTypeAnnotation();
+            var body = TryBody();
+
 
             throw new NotImplementedException();
+        }
+
+        private IExpression? TryBody()
+        {
+            if (MayMatch(TK.DblArrow))
+            {
+                return Expression();
+            }
+            return null;
+        }
+
+        private ValueParameters ValueParameters()
+        {
+            Begin(TK.LParen);
+            var items = CollectOptional(TryParameter, TK.Comma);
+            Match(TK.RParen);
+            return new ValueParameters(End(), items);
+        }
+
+        private ValueParameter? TryParameter()
+        {
+            if (Is(TK.Identifier))
+            {
+                Begin();
+                var name = Identifier();
+                var type = TypeAnnotation();
+                var @default = TryValueDefault();
+                return new ValueParameter(End(), name, type, @default);
+            }
+            return null;
+        }
+
+        private IExpression? TryValueDefault()
+        {
+            if (Is(TK.Assign))
+            {
+                Match(TK.Assign);
+                return Expression();
+            }
+            return null;
+        }
+
+        private TypeParameters? TryTypeParameters()
+        {
+            if (Is(TK.Lt))
+            {
+                Begin(TK.Lt);
+                var items = Collect(TypeParameter, TK.Comma);
+                Match(TK.Gt);
+
+                return new TypeParameters(End(), items);
+            }
+            return null;
+        }
+
+        private TypeParameter TypeParameter()
+        {
+            Begin();
+            var name = Identifier();
+            var type = TryTypeAnnotation();
+            var @default = TryTypeDefault();
+            return new TypeParameter(End(), name, type, @default);
+        }
+
+        private IType? TryTypeAnnotation()
+        {
+            if (Is(TK.Colon))
+            {
+                Match(TK.Colon);
+                return Type();
+            }
+            return null;
+        }
+
+        private IType TypeAnnotation()
+        {
+            Match(TK.Colon);
+            return Type();
+        }
+
+        private IType? TryTypeDefault()
+        {
+            if (Is(TK.Assign))
+            {
+                Match(TK.Assign);
+                return Type();
+            }
+            return null;
         }
 
         private IType? TryProvides()
@@ -261,6 +380,27 @@ namespace Joke.Joke.Decoding
                     break;
                 }
             }
+
+            return list;
+        }
+
+        private IReadOnlyList<T> CollectOptional<T>(Func<T?> collect, TK token) where T : class
+        {
+            var list = new List<T>();
+
+            do
+            {
+                var item = collect();
+                if (item != null)
+                {
+                    list.Add(item);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            while (MayMatch(token));
 
             return list;
         }
