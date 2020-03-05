@@ -16,13 +16,13 @@
 
     interface Equatable<A: Equatable<A>>
         fun op_eq(that: A): bool => this is that
-        fun op_ne(that: A): bool => not eq(that)
+        fun op_ne(that: A): bool => not op_eq(that)
 
     interface Comparable<A: Comparable<A> is Equatable<A>
-        fun lt(that: A): bool
-        fun le(that: A): bool => lt(that) or eq(that)
-        fun ge(that: A): bool => not lt(that)
-        fun gt(that: A): bool => not le(that)
+        fun op_lt(that: A): bool
+        fun op_le(that: A): bool => op_lt(that) or op_eq(that)
+        fun op_ge(that: A): bool => not op_lt(that)
+        fun op_gt(that: A): bool => not op_le(that)
 
         fun compare(that: A): Compare =>
             if eq(that) then
@@ -32,5 +32,4 @@
             else
                 Greater
             end
-
 end

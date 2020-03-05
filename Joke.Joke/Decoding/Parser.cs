@@ -15,7 +15,7 @@ namespace Joke.Joke.Decoding
             Errors = errors;
             Tokens = tokens;
 
-            Debug.Assert(Tokens.Count > 0 && Tokens[Tokens.Count - 1].Kind == TK.Eof);
+            Debug.Assert(Tokens.Count > 0 && Tokens[^1].Kind == TK.Eof);
 
             next = 0;
             limit = Tokens.Count;
@@ -25,7 +25,7 @@ namespace Joke.Joke.Decoding
         public Tokens Tokens { get; }
         public Token Current => next < limit ? Tokens[next] : Tokens[limit-1];
 
-        private Stack<int> markers = new Stack<int>();
+        private readonly Stack<int> markers = new Stack<int>();
 
         private int next;
         private readonly int limit;
@@ -41,22 +41,39 @@ namespace Joke.Joke.Decoding
             throw new NotImplementedException();
         }
 
-        private Members NamespaceMembers()
+        private MemberList NamespaceMembers()
         {
             Begin();
             var items = Collect(TryNamespaceMember);
-            return new Members(End(), items);
+            return new MemberList(End(), items);
         }
 
         private IMember? TryNamespaceMember()
         {
             switch (Current.Kind)
             {
+                case TK.Type:
+                    return Alias();
                 case TK.Primitive:
                     return Primitive();
+                case TK.Class:
+                case TK.Interface:
+                    return Interface();
+                case TK.Trait:
+                case TK.Actor:
+                case TK.Struct:
+                    throw new NotImplementedException();
                 default:
                     return null;
             }
+        }
+
+        private AliasType Alias()
+        {
+            Begin(TK.Type);
+            var name = Identifier();
+            var provides = Provides();
+            return new AliasType(End(), name, provides);
         }
 
         private Primitive Primitive()
@@ -64,25 +81,40 @@ namespace Joke.Joke.Decoding
             Begin(TK.Primitive);
             var name = Identifier();
             var provides = TryProvides();
-            var members = PrimitiveMembers();
+            var members = ClassMembers();
 
             return new Primitive(End(), name, provides, members);
         }
 
-        private Members PrimitiveMembers()
+        private Interface Interface()
         {
-            Begin();
-            var members = Collect(TryPrimitiveMember);
-            return new Members(End(), members);
+            Begin(TK.Interface);
+            var name = Identifier();
+            var provides = TryProvides();
+            var members = ClassMembers();
+
+            return new Interface(End(), name, provides, members);
         }
 
-        private IMember? TryPrimitiveMember()
+        private MemberList ClassMembers()
+        {
+            Begin();
+            var members = Collect(TryClassMember);
+            return new MemberList(End(), members);
+        }
+
+        private IMember? TryClassMember()
         {
             switch (Current.Kind)
             {
                 case TK.Fun:
                     return Fun();
+                case TK.New:
+                    break;
+                default:
+                    return null;
             }
+
             throw new NotImplementedException();
         }
 
@@ -95,8 +127,7 @@ namespace Joke.Joke.Decoding
             var @return = TryTypeAnnotation();
             var body = TryBody();
 
-
-            throw new NotImplementedException();
+            return new Fun(End(), name, typeParameters, parameters, @return, body);
         }
 
         private IExpression? TryBody()
@@ -108,12 +139,12 @@ namespace Joke.Joke.Decoding
             return null;
         }
 
-        private ValueParameters ValueParameters()
+        private ValueParameterList ValueParameters()
         {
             Begin(TK.LParen);
             var items = CollectOptional(TryParameter, TK.Comma);
             Match(TK.RParen);
-            return new ValueParameters(End(), items);
+            return new ValueParameterList(End(), items);
         }
 
         private ValueParameter? TryParameter()
@@ -139,7 +170,7 @@ namespace Joke.Joke.Decoding
             return null;
         }
 
-        private TypeParameters? TryTypeParameters()
+        private TypeParameterList? TryTypeParameters()
         {
             if (Is(TK.Lt))
             {
@@ -147,7 +178,7 @@ namespace Joke.Joke.Decoding
                 var items = Collect(TypeParameter, TK.Comma);
                 Match(TK.Gt);
 
-                return new TypeParameters(End(), items);
+                return new TypeParameterList(End(), items);
             }
             return null;
         }
@@ -187,6 +218,11 @@ namespace Joke.Joke.Decoding
             return null;
         }
 
+        private IType Provides()
+        {
+            return TryProvides() ?? throw new NotImplementedException();
+        }
+
         private IType? TryProvides()
         {
             if (MayMatch(TK.Is))
@@ -219,7 +255,7 @@ namespace Joke.Joke.Decoding
             return new NominalType(End(), name, arguments);
         }
 
-        private Types? TryTypeArguments()
+        private TypeList? TryTypeArguments()
         {
             if (Is(TK.Lt))
             {
@@ -227,7 +263,7 @@ namespace Joke.Joke.Decoding
                 var types = Collect(Type, TK.Comma);
                 Match(TK.Gt);
 
-                return new Types(End(), types);
+                return new TypeList(End(), types);
             }
             return null;
         }
@@ -241,7 +277,9 @@ namespace Joke.Joke.Decoding
         private IType TupleType()
         {
             Begin();
+            Match(TK.LParen);
             var types = Collect(InfixType, TK.Comma);
+            Match(TK.RParen);
             if (types.Count == 1)
             {
                 End();
@@ -270,7 +308,7 @@ namespace Joke.Joke.Decoding
         private IType IntersectionType()
         {
             Begin();
-            var types = Collect(Type, TK.Pipe);
+            var types = Collect(Type, TK.Amper);
             if (types.Count == 1)
             {
                 End();

@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using Joke.Joke.Err;
 using Joke.Joke.Tree;
+using String = Joke.Joke.Tree.String;
 
 namespace Joke.Joke.Decoding
 {
     partial class Parser
     {
-        private IExpression Expression() // rawseq
+        private IExpression Expression(bool next = false) // rawseq
         {
-            return TrySequence() ?? TryJump() ?? throw new NotImplementedException();
+            return TryExpression() ?? throw new NotImplementedException();
+        }
+
+        private IExpression? TryExpression(bool next = false) // rawseq?
+        {
+            return TrySequence(next) ?? TryJump();
         }
 
         private IExpression Sequence(bool next = false) // exprseq
@@ -19,10 +24,32 @@ namespace Joke.Joke.Decoding
             throw new NotImplementedException();
         }
 
-        private IExpression? TrySequence(bool next = false) // exprseq
+        private IExpression? TrySequence(bool next = false) // exprseq?
         {
+            Begin();
+
             var assignment = TryAssignment(next);
-            throw new NotImplementedException();
+
+            if (assignment != null)
+            {
+                if (Is(TK.Semi))
+                {
+                    Match(TK.Semi);
+                    var nextSemi = Expression();
+                    return new Sequence(End(), assignment, nextSemi);
+                }
+
+                var nextNoSemi = TryExpression(true);
+
+                if (nextNoSemi != null)
+                {
+                    return new Sequence(End(), assignment, nextNoSemi);
+                }
+            }
+
+            End();
+
+            return assignment;
         }
 
         private IExpression Assignment(bool next = false)
@@ -171,7 +198,122 @@ namespace Joke.Joke.Decoding
         }
         private IExpression? TryTerm(bool next = false)
         {
+            switch (Current.Kind)
+            {
+                case TK.If:
+                    break;
+                case TK.Match:
+                    break;
+                case TK.While:
+                    break;
+                case TK.Repeat:
+                    break;
+                case TK.For:
+                    break;
+                case TK.With:
+                    break;
+                case TK.Try:
+                    break;
+                default:
+                    return TryPattern(next);
+
+            }
+
             throw new NotImplementedException();
+        }
+
+        private IExpression? TryPattern(bool next = false)
+        {
+            switch (Current.Kind)
+            {
+                case TK.Var:
+                    break;
+                case TK.Let:
+                    break;
+                case TK.Embed:
+                    break;
+                default:
+                    return TryParamPattern(next);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private IExpression? TryParamPattern(bool next = false)
+        {
+            switch (Current.Kind)
+            {
+                case TK.Not:
+                    break;
+                case TK.Addressof:
+                    break;
+                case TK.Digestof:
+                    break;
+                case TK.Minus when !next || Current.Nl:
+                    break;
+                default:
+                    return TryPostfix(next);
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private IExpression? TryPostfix(bool next = false)
+        {
+            var atom = TryAtom(next);
+            if (atom != null)
+            {
+                switch (Current.Kind)
+                {
+                    case TK.Dot:
+                    case TK.Tilde:
+                    case TK.Chain:
+                    case TK.LParen:
+                    case TK.Lt:
+                        throw new NotImplementedException();
+                }
+            }
+
+            return atom;
+        }
+
+        private IExpression? TryAtom(bool next = false)
+        {
+            switch (Current.Kind)
+            {
+                case TK.Identifier:
+                case TK.This:
+                case TK.String:
+                    return String();
+                case TK.DocString:
+                    return DocString();
+                case TK.Integer:
+                case TK.Float:
+                case TK.True:
+                case TK.False:
+                case TK.LParen when !next || Current.Nl:
+                case TK.LSquare when !next || Current.Nl:
+                case TK.Object:
+                case TK.Loc:
+                case TK.If:
+                case TK.While:
+                case TK.For:
+                    throw new NotImplementedException();
+            }
+
+            return null;
+        }
+
+        private String String()
+        {
+            Begin(TK.String);
+            return new String(End());
+        }
+
+        private String DocString()
+        {
+            Begin(TK.DocString);
+            return new String(End());
         }
 
         private IExpression? TryJump()

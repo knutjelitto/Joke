@@ -4,7 +4,7 @@ namespace Joke.Joke.Tree
 {
     public class Namespace
     {
-        public Namespace(TokenSpan span, QualifiedIdentifier name, Members members)
+        public Namespace(TokenSpan span, QualifiedIdentifier name, MemberList members)
         {
             Span = span;
             Name = name;
@@ -13,6 +13,6 @@ namespace Joke.Joke.Tree
 
         public TokenSpan Span { get; }
         public QualifiedIdentifier Name { get; }
-        public Members Members { get; }
+        public MemberList Members { get; }
     }
 }

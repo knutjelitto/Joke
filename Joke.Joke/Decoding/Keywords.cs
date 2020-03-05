@@ -74,6 +74,7 @@ namespace Joke.Joke.Decoding
             { "this", TK.This },
             { "trait", TK.Trait },
             { "true", TK.True },
+            { "try", TK.Try },
             { "type", TK.Type },
             { "until", TK.Until },
             { "use", TK.Use },

@@ -104,6 +104,7 @@
         This,               // 'this'
         Trait,              // 'trait'
         True,               // 'true'
+        Try,                // 'try'
         Type,               // 'type'
         Until,              // 'until'
         Use,                // 'use'
