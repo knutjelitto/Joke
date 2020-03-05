@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Joke.Joke.Decoding;
 using Joke.Joke.Err;
@@ -17,14 +18,18 @@ namespace Joke.Joke
 
         private void MakeBuiltin()
         {
-            foreach (var unitFile in EnumerateJokes(BuiltinDir))
+            foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(0))
             {
                 Console.WriteLine($"{unitFile}");
-                Compile(unitFile);
+                var ok = Compile(unitFile);
+                if (!ok)
+                {
+                    break;
+                }
             }
         }
 
-        private void Compile(FileRef file)
+        private bool Compile(FileRef file)
         {
             var source = Source.FromFile(file);
             var errors = new Errors();
@@ -39,7 +44,7 @@ namespace Joke.Joke
                 builder.Append(token.GetClutter());
                 builder.Append(token.GetPayload());
 
-                Console.WriteLine($"{token}");
+                //Console.WriteLine($"{token}");
             }
 
             Debug.Assert(builder.ToString() == source.Content);
@@ -47,6 +52,10 @@ namespace Joke.Joke
             var parser = new Parser(errors, tokens);
 
             var unit = parser.ParseUnit();
+
+            errors.Describe(Console.Out);
+
+            return errors.NoError();
         }
 
         private DirRef ProjectDir => DirRef.ProjectDir().Up.Dir("Joke.Joke");

@@ -2,11 +2,13 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Interface : IType, IMember
+    public class ClassType : IType, IMember
     {
-        public Interface(TokenSpan span, Identifier name, TypeParameterList? typeParameters, IType? provides, MemberList members)
+        public ClassType(TokenSpan span, ClassKind kind, String? doc, Identifier name, TypeParameterList? typeParameters, IType? provides, MemberList members)
         {
             Span = span;
+            Kind = kind;
+            Doc = doc;
             Name = name;
             TypeParameters = typeParameters;
             Provides = provides;
@@ -14,6 +16,8 @@ namespace Joke.Joke.Tree
         }
 
         public TokenSpan Span { get; }
+        public ClassKind Kind { get; }
+        public String? Doc { get; }
         public Identifier Name { get; }
         public TypeParameterList? TypeParameters { get; }
         public IType? Provides { get; }

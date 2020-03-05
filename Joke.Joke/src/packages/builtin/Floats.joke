@@ -1,36 +1,38 @@
 ﻿namespace Builtin
 
-    primitive f32 : Float<f32>
+    primitive f32 is Float<f32>
 
-        new op_widen(that: i8): f32 => intrinsic
-        new op_widen(that: i16): f32 => intrinsic
-        new op_widen(that: u8): f32 => intrinsic
-        new op_widen(that: u16): f32 => intrinsic
+        new op_widen(that: i8): f32 => compile_intrinsic
+        new op_widen(that: i16): f32 => compile_intrinsic
+        new op_widen(that: u8): f32 => compile_intrinsic
+        new op_widen(that: u16): f32 => compile_intrinsic
 
-        fun op_add(that: f32): f32 => intrinsic
-        fun op_sub(that: f32): f32 => intrinsic
-        fun op_mul(that: f32): f32 => intrinsic
-        fun op_div(that: f32): f32 => intrinsic
-        fun op_rem(that: f32): f32 => intrinsic
-        fun op_neg(): f32 => intrinsic
+        fun op_add(that: f32): f32 => compile_intrinsic
+        fun op_sub(that: f32): f32 => compile_intrinsic
+        fun op_mul(that: f32): f32 => compile_intrinsic
+        fun op_div(that: f32): f32 => compile_intrinsic
+        fun op_rem(that: f32): f32 => compile_intrinsic
+        fun op_neg(): f32 => compile_intrinsic
+
     end
 
-    primitive f64
+    primitive f64 is Float<f64>
 
-        new op_widen(that: i8): f64 => intrinsic
-        new op_widen(that: i16): f64 => intrinsic
-        new op_widen(that: i32): f64 => intrinsic
-        new op_widen(that: u8): f64 => intrinsic
-        new op_widen(that: u16): f64 => intrinsic
-        new op_widen(that: u32): f64 => intrinsic
-        new op_widen(that: f32): f64 => intrinsic
+        new op_widen(that: i8): f64 => compile_intrinsic
+        new op_widen(that: i16): f64 => compile_intrinsic
+        new op_widen(that: i32): f64 => compile_intrinsic
+        new op_widen(that: u8): f64 => compile_intrinsic
+        new op_widen(that: u16): f64 => compile_intrinsic
+        new op_widen(that: u32): f64 => compile_intrinsic
+        new op_widen(that: f32): f64 => compile_intrinsic
 
-        fun op_add(that: f64): f64 => intrinsic
-        fun op_sub(that: f64): f64 => intrinsic
-        fun op_mul(that: f64): f64 => intrinsic
-        fun op_div(that: f64): f64 => intrinsic
-        fun op_rem(that: f64): f64 => intrinsic
-        fun op_neg(): f64 => intrinsic
+        fun op_add(that: f64): f64 => compile_intrinsic
+        fun op_sub(that: f64): f64 => compile_intrinsic
+        fun op_mul(that: f64): f64 => compile_intrinsic
+        fun op_div(that: f64): f64 => compile_intrinsic
+        fun op_rem(that: f64): f64 => compile_intrinsic
+        fun op_neg(): f64 => compile_intrinsic
+
     end
 
 end

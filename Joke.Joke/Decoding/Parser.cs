@@ -23,22 +23,28 @@ namespace Joke.Joke.Decoding
 
         public Errors Errors { get; }
         public Tokens Tokens { get; }
-        public Token Current => next < limit ? Tokens[next] : Tokens[limit-1];
+        public Token Current => next < limit ? Tokens[next] : Tokens[limit - 1];
+        public Token Next => next + 1 < limit ? Tokens[next + 1] : Tokens[limit - 1];
+        public bool CurrentIsDoc => Current.Kind == TK.String || Current.Kind == TK.DocString;
 
         private readonly Stack<int> markers = new Stack<int>();
 
         private int next;
         private readonly int limit;
 
-        public CompilationUnit ParseUnit()
+        public Namespace ParseUnit()
         {
             next = 0;
 
+            Begin();
             Match(TK.Namespace);
             var name = QualifiedIdentifier();
             var members = NamespaceMembers();
+            Match(TK.End);
 
-            throw new NotImplementedException();
+            var @namespace = new Namespace(End(), name, members);
+
+            return @namespace;
         }
 
         private MemberList NamespaceMembers()
@@ -50,50 +56,58 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryNamespaceMember()
         {
-            switch (Current.Kind)
+            return TryClassType() ?? TryExtern();
+        }
+
+        private IMember? TryExtern()
+        {
+            if (Is(TK.Extern))
+            {
+                Begin();
+                Match(TK.Extern);
+                var name = Identifier();
+                var funs = Collect(TryMethod);
+                Match(TK.End);
+                return new Extern(End(), funs);
+            }
+
+            return null;
+        }
+
+        private IMember? TryClassType()
+        {
+            switch (CurrentIsDoc ? Next.Kind : Current.Kind)
             {
                 case TK.Type:
-                    return Alias();
+                    return ClassType(ClassKind.Alias);
                 case TK.Primitive:
-                    return Primitive();
-                case TK.Class:
+                    return ClassType(ClassKind.Primitive);
                 case TK.Interface:
-                    return Interface();
-                case TK.Trait:
-                case TK.Actor:
+                    return ClassType(ClassKind.Interface);
                 case TK.Struct:
-                    throw new NotImplementedException();
+                    return ClassType(ClassKind.Struct);
+                case TK.Class:
+                    return ClassType(ClassKind.Class);
+                case TK.Trait:
+                    return ClassType(ClassKind.Trait);
+                case TK.Actor:
+                    return ClassType(ClassKind.Actor);
                 default:
                     return null;
             }
         }
 
-        private AliasType Alias()
+        private ClassType ClassType(ClassKind kind)
         {
-            Begin(TK.Type);
+            Begin();
+            var doc = TryAnyString();
+            Match(Current.Kind);
             var name = Identifier();
-            var provides = Provides();
-            return new AliasType(End(), name, provides);
-        }
-
-        private Primitive Primitive()
-        {
-            Begin(TK.Primitive);
-            var name = Identifier();
+            var typeparameters = TryTypeParameters();
             var provides = TryProvides();
             var members = ClassMembers();
 
-            return new Primitive(End(), name, provides, members);
-        }
-
-        private Interface Interface()
-        {
-            Begin(TK.Interface);
-            var name = Identifier();
-            var provides = TryProvides();
-            var members = ClassMembers();
-
-            return new Interface(End(), name, provides, members);
+            return new ClassType(End(), kind, doc, name, typeparameters, provides, members);
         }
 
         private MemberList ClassMembers()
@@ -105,29 +119,74 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryClassMember()
         {
-            switch (Current.Kind)
+            return TryField() ?? TryMethod();
+        }
+
+        private IMember? TryField()
+        {
+            switch (CurrentIsDoc ? Next.Kind : Current.Kind)
             {
-                case TK.Fun:
-                    return Fun();
-                case TK.New:
-                    break;
+                case TK.Let:
+                    return Field(FieldKind.Let);
+                case TK.Var:
+                    return Field(FieldKind.Var);
+                case TK.Embed:
+                    return Field(FieldKind.Embed);
                 default:
                     return null;
             }
+        }
+        private IMember Field(FieldKind kind)
+        {
+            Begin();
+            var doc = TryAnyString();
+            Match(Current.Kind);
+            var name = Identifier();
+            var type = TypeAnnotation();
+            var init = TryInitInfix();
 
-            throw new NotImplementedException();
+            return new Field(End(), kind, doc, name, type, init);
         }
 
-        private IMember Fun()
+        private IMember? TryMethod()
         {
-            Begin(TK.Fun);
+            switch (CurrentIsDoc ? Next.Kind : Current.Kind)
+            {
+                case TK.Fun:
+                    return Method(MethodKind.Fun);
+                case TK.New:
+                    return Method(MethodKind.New);
+                case TK.Be:
+                    return Method(MethodKind.Be);
+                default:
+                    return null;
+            }
+        }
+
+        private IMember Method(MethodKind kind)
+        {
+            Begin();
+            var doc = TryAnyString();
+            Match(Current.Kind);
             var name = Identifier();
+            Console.WriteLine($"{kind} - {name}");
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
             var @return = TryTypeAnnotation();
             var body = TryBody();
 
-            return new Fun(End(), name, typeParameters, parameters, @return, body);
+            return new Method(End(), kind, doc, name, typeParameters, parameters, @return, body);
+        }
+
+        private IExpression? TryInitInfix()
+        {
+            if (Is(TK.Assign))
+            {
+                Match(TK.Assign);
+                return Infix();
+            }
+
+            return null;
         }
 
         private IExpression? TryBody()
@@ -244,7 +303,6 @@ namespace Joke.Joke.Decoding
                     return NominalType();
 
             }
-            throw new NotImplementedException();
         }
 
         private IType NominalType()
@@ -255,6 +313,10 @@ namespace Joke.Joke.Decoding
             return new NominalType(End(), name, arguments);
         }
 
+        private TypeList TypeArguments()
+        {
+            return TryTypeArguments() ?? throw new NotImplementedException();
+        }
         private TypeList? TryTypeArguments()
         {
             if (Is(TK.Lt))
@@ -364,6 +426,13 @@ namespace Joke.Joke.Decoding
             return End();
         }
 
+        private TokenSpan Mark(IAny node)
+        {
+            Debug.Assert(next <= limit);
+            Debug.Assert(markers.Count > 0);
+            return new TokenSpan(Tokens, node.Span.Start, next);
+        }
+
         private bool Is(TK token)
         {
             return next < limit && Tokens[next].Kind == token;
@@ -377,7 +446,17 @@ namespace Joke.Joke.Decoding
                 return;
             }
 
-            throw new NotImplementedException();
+            Errors.AtToken(ErrNo.Scan001, Current, $"unknown token in token stream, expected ``{Keywords.String(kind)}´´ but got ``{Keywords.String(Current.Kind)}´´");
+
+            // simply try to skip
+            while (next < limit && Tokens[next].Kind != kind)
+            {
+                next += 1;
+            }
+            if (next < limit)
+            {
+                next += 1;
+            }
         }
 
         private bool MayMatch(TK kind)
@@ -400,6 +479,26 @@ namespace Joke.Joke.Decoding
                 list.Add(collect());
             }
             while (MayMatch(token));
+
+            return list;
+        }
+
+        private IReadOnlyList<T> Collect<T>(T first, Func<T?> collect) where T : class
+        {
+            var list = new List<T>() { first };
+
+            while (true)
+            {
+                var item = collect();
+                if (item != null)
+                {
+                    list.Add(item);
+                }
+                else
+                {
+                    break;
+                }
+            }
 
             return list;
         }

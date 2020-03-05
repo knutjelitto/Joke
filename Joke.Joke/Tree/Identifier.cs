@@ -10,5 +10,10 @@ namespace Joke.Joke.Tree
         }
 
         public TokenSpan Span { get; }
+
+        public override string ToString()
+        {
+            return Span[0].GetPayload();
+        }
     }
 }

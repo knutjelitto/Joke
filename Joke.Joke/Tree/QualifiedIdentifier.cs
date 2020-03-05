@@ -14,5 +14,10 @@ namespace Joke.Joke.Tree
 
         public TokenSpan Span { get; }
         public IReadOnlyList<Identifier> Names { get; }
+
+        public override string ToString()
+        {
+            return string.Join('.', Names);
+        }
     }
 }

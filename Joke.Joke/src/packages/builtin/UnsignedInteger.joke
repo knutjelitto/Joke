@@ -1,6 +1,6 @@
 ﻿namespace Builtin
 
-    trait InsignedInteger: Integer
+    trait InsignedInteger is Integer
     end
 
 end

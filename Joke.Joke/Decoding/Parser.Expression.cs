@@ -4,6 +4,7 @@ using System.Linq;
 using Joke.Joke.Err;
 using Joke.Joke.Tree;
 using String = Joke.Joke.Tree.String;
+using Tuple = Joke.Joke.Tree.Tuple;
 
 namespace Joke.Joke.Decoding
 {
@@ -11,7 +12,7 @@ namespace Joke.Joke.Decoding
     {
         private IExpression Expression(bool next = false) // rawseq
         {
-            return TryExpression() ?? throw new NotImplementedException();
+            return TryExpression(next) ?? throw new NotImplementedException();
         }
 
         private IExpression? TryExpression(bool next = false) // rawseq?
@@ -21,7 +22,7 @@ namespace Joke.Joke.Decoding
 
         private IExpression Sequence(bool next = false) // exprseq
         {
-            throw new NotImplementedException();
+            return TrySequence(next) ?? throw new NotImplementedException();
         }
 
         private IExpression? TrySequence(bool next = false) // exprseq?
@@ -72,8 +73,12 @@ namespace Joke.Joke.Decoding
             }
 
             End();
-
             return infix;
+        }
+
+        private IExpression Infix(bool next = false)
+        {
+            return TryInfix(next) ?? throw new NotImplementedException();
         }
 
         private IExpression? TryInfix(bool next = false)
@@ -104,10 +109,13 @@ namespace Joke.Joke.Decoding
                         var part = types.Where(p => p.op != operators[0]).Select(p => p.ty).First();
                         var token = Tokens[part.Span.Start];
                         Errors.AtToken(
-                            ErrNo.Scan001,
+                            ErrNo.Scan002,
                             token,
                             "binary operators have no precedence, use ( ) to group binary expressions");
                     }
+
+                    var operands = types.Select(t => t.ty).ToList();
+                    return new As(End(), term, operands);
                 }
                 if (op != Tree.BinaryOp.Missing)
                 {
@@ -128,7 +136,7 @@ namespace Joke.Joke.Decoding
                         var part = terms.Where(p => p.op != operators[0]).Select(p => p.ex).First();
                         var token = Tokens[part.Span.Start];
                         Errors.AtToken(
-                            ErrNo.Scan001,
+                            ErrNo.Scan002,
                             token,
                             "binary operators have no precedence, use ( ) to group binary expressions");
                     }
@@ -177,6 +185,11 @@ namespace Joke.Joke.Decoding
                 case TK.Le:
                     return Tree.BinaryOp.Le;
                 case TK.Gt:
+                    if (Next.Kind == TK.Gt && Current.Next == Next.Clutter)
+                    {
+                        Match(Current.Kind);
+                        return Tree.BinaryOp.RShift;
+                    }
                     return Tree.BinaryOp.Gt;
                 case TK.Ge:
                     return Tree.BinaryOp.Ge;
@@ -193,19 +206,19 @@ namespace Joke.Joke.Decoding
 
         private IExpression Term(bool next = false)
         {
-            var term = TryTerm(next);
-            throw new NotImplementedException();
+            return TryTerm(next) ?? throw new NotImplementedException();
         }
+
         private IExpression? TryTerm(bool next = false)
         {
             switch (Current.Kind)
             {
                 case TK.If:
-                    break;
+                    return If();
                 case TK.Match:
                     break;
                 case TK.While:
-                    break;
+                    return While();
                 case TK.Repeat:
                     break;
                 case TK.For:
@@ -222,77 +235,206 @@ namespace Joke.Joke.Decoding
             throw new NotImplementedException();
         }
 
+        private IExpression While()
+        {
+            Begin();
+            Match(TK.While);
+            var condition = Expression();
+            Match(TK.Do);
+            var body = Expression();
+            var @else = TryElse();
+            Match(TK.End);
+
+            return new While(End(), condition, body, @else);
+        }
+
+        private IExpression If()
+        {
+            Begin();
+            var conditional = Conditional(TK.If);
+            var conditionals = Collect(conditional, TryElseIf);
+            var @else = TryElse();
+            Match(TK.End);
+
+            return new If(End(), conditionals, @else);
+        }
+
+        private Conditional Conditional(TK token)
+        {
+            Begin(token);
+            var condition = Expression();
+            Match(TK.Then);
+            var thenPart = Expression();
+            return new Conditional(End(), condition, thenPart);
+        }
+
+        private Conditional? TryElseIf()
+        {
+            if (Is(TK.Elseif))
+            {
+                return Conditional(TK.Elseif);
+            }
+
+            return null;
+        }
+
+        private Else? TryElse()
+        {
+            if (Is(TK.Else))
+            {
+                Begin(TK.Else);
+                var body = Expression();
+                return new Else(End(), body);
+            }
+
+            return null;
+        }
+
         private IExpression? TryPattern(bool next = false)
+        {
+            return TryLocal() ?? TryParamPattern();
+        }
+
+        private IExpression? TryLocal()
         {
             switch (Current.Kind)
             {
                 case TK.Var:
-                    break;
+                    return Local(LocalKind.Var);
                 case TK.Let:
-                    break;
+                    return Local(LocalKind.Let);
                 case TK.Embed:
-                    break;
+                    return Local(LocalKind.Embed);
                 default:
-                    return TryParamPattern(next);
+                    return null;
             }
+        }
 
-            throw new NotImplementedException();
+        private IExpression Local(LocalKind kind)
+        {
+            Begin(Current.Kind);
+            var name = Identifier();
+            var type = TryTypeAnnotation();
+            return new Local(End(), kind, name, type);
+        }
+
+        private IExpression ParamPattern(bool next = false)
+        {
+            return TryParamPattern(next) ?? throw new NotImplementedException();
         }
 
         private IExpression? TryParamPattern(bool next = false)
         {
+            var op = UnaryOp(next);
+            switch (op)
+            {
+                case Tree.UnaryOp.Missing:
+                    return TryPostfix(next);
+                default:
+                    Begin(Current.Kind);
+                    var operand = ParamPattern();
+                    return new Unary(End(), op, operand);
+            }
+        }
+
+        private UnaryOp UnaryOp(bool next)
+        {
             switch (Current.Kind)
             {
                 case TK.Not:
-                    break;
+                    return Tree.UnaryOp.Not;
                 case TK.Addressof:
-                    break;
+                    return Tree.UnaryOp.Addressof;
                 case TK.Digestof:
-                    break;
+                    return Tree.UnaryOp.Digestof;
                 case TK.Minus when !next || Current.Nl:
-                    break;
+                    return Tree.UnaryOp.Minus;
                 default:
-                    return TryPostfix(next);
+                    return Tree.UnaryOp.Missing;
             }
-
-            throw new NotImplementedException();
         }
 
         private IExpression? TryPostfix(bool next = false)
         {
+            Begin();
             var atom = TryAtom(next);
-            if (atom != null)
+
+            var post = atom;
+            while (post != null)
             {
-                switch (Current.Kind)
-                {
-                    case TK.Dot:
-                    case TK.Tilde:
-                    case TK.Chain:
-                    case TK.LParen:
-                    case TK.Lt:
-                        throw new NotImplementedException();
-                }
+                atom = post;
+                post = TryPostfixMore(atom);
             }
 
+            End();
             return atom;
+        }
+
+        private IExpression? TryPostfixMore(IExpression expression)
+        {
+            switch (Current.Kind)
+            {
+                case TK.LParen:
+                    {
+                        var arguments = Arguments();
+                        return new Call(Mark(expression), expression, arguments);
+                    }
+                case TK.Lt:
+                    {
+                        var arguments = TypeArguments();
+                        return new Generic(Mark(expression), expression, arguments);
+                    }
+                case TK.Dot:
+                    {
+                        Match(TK.Dot);
+                        var member = Identifier();
+                        return new Dot(Mark(expression), expression, member);
+                    }
+                case TK.Tilde:
+                    {
+                        Match(TK.Tilde);
+                        var member = Identifier();
+                        return new Tilde(Mark(expression), expression, member);
+                    }
+                case TK.Chain:
+                    {
+                        Match(TK.Chain);
+                        var member = Identifier();
+                        return new Chain(Mark(expression), expression, member);
+                    }
+                default:
+                    return null;
+            }
+        }
+
+        private ArgumentList Arguments()
+        {
+            Begin(TK.LParen);
+            var arguments = CollectOptional(() => TryExpression(), TK.Comma);
+            Match(TK.RParen);
+            return new ArgumentList(End(), arguments);
         }
 
         private IExpression? TryAtom(bool next = false)
         {
             switch (Current.Kind)
             {
-                case TK.Identifier:
-                case TK.This:
                 case TK.String:
                     return String();
                 case TK.DocString:
                     return DocString();
+                case TK.This:
+                    return ThisValue();
+                case TK.Identifier:
+                    return Reference();
                 case TK.Integer:
+                    return Integer();
+                case TK.LParen when !next || Current.Nl:
+                    return MaybeTuple();
+                case TK.LSquare when !next || Current.Nl:
                 case TK.Float:
                 case TK.True:
                 case TK.False:
-                case TK.LParen when !next || Current.Nl:
-                case TK.LSquare when !next || Current.Nl:
                 case TK.Object:
                 case TK.Loc:
                 case TK.If:
@@ -302,6 +444,21 @@ namespace Joke.Joke.Decoding
             }
 
             return null;
+        }
+
+        private IExpression MaybeTuple()
+        {
+            Begin(TK.LParen);
+            var expressions = Collect(() => Expression(), TK.Comma);
+            Match(TK.RParen);
+
+            if (expressions.Count == 1)
+            {
+                End();
+                return expressions[0];
+            }
+
+            return new Tuple(End(), expressions);
         }
 
         private String String()
@@ -314,6 +471,38 @@ namespace Joke.Joke.Decoding
         {
             Begin(TK.DocString);
             return new String(End());
+        }
+
+        private String? TryAnyString()
+        {
+            switch (Current.Kind)
+            {
+                case TK.String:
+                    return String();
+                case TK.DocString:
+                    return DocString();
+            }
+
+            return null;
+        }
+
+        private ThisValue ThisValue()
+        {
+            Begin(TK.This);
+            return new ThisValue(End());
+        }
+
+        private Reference Reference()
+        {
+            Begin();
+            var name = Identifier();
+            return new Reference(End(), name);
+        }
+
+        private Integer Integer()
+        {
+            Begin(TK.Integer);
+            return new Integer(End());
         }
 
         private IExpression? TryJump()

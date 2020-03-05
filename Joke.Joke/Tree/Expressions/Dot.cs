@@ -1,0 +1,18 @@
+﻿using Joke.Joke.Decoding;
+
+namespace Joke.Joke.Tree
+{
+    public class Dot : IExpression
+    {
+        public Dot(TokenSpan span, IExpression expression, Identifier member)
+        {
+            Span = span;
+            Expression = expression;
+            Member = member;
+        }
+
+        public TokenSpan Span { get; }
+        public IExpression Expression { get; }
+        public Identifier Member { get; }
+    }
+}

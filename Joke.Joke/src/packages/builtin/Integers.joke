@@ -1,6 +1,6 @@
 ﻿namespace Builtin
 
-    """
+    """    
     8 bit unsigned integer.
     """
     primitive u8

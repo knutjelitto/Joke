@@ -79,6 +79,7 @@
         Embed,              // 'embed'
         End,                // 'end'
         Error,              // 'error'
+        Extern,             // 'extern'
         False,              // 'false'
         For,                // 'for'
         Fun,                // 'fun'
