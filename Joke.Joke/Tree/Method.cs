@@ -4,7 +4,7 @@ namespace Joke.Joke.Tree
 {
     public class Method : IMember
     {
-        public Method(TokenSpan span, MethodKind kind, String? doc, Identifier name, TypeParameterList? typeParameters, ValueParameterList valueParameters, IType? @return, IExpression? body)
+        public Method(TokenSpan span, MethodKind kind, String? doc, Identifier name, TypeParameterList? typeParameters, ValueParameterList valueParameters, IType? @return, Throws? throws, IExpression? body)
         {
             Span = span;
             Kind = kind;
@@ -13,6 +13,7 @@ namespace Joke.Joke.Tree
             TypeParameters = typeParameters;
             ValueParameters = valueParameters;
             Return = @return;
+            Throws = throws;
             Body = body;
         }
 
@@ -23,6 +24,7 @@ namespace Joke.Joke.Tree
         public TypeParameterList? TypeParameters { get; }
         public ValueParameterList ValueParameters { get; }
         public IType? Return { get; }
+        public Throws? Throws { get; }
         public IExpression? Body { get; }
     }
 }

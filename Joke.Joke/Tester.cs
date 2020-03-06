@@ -51,7 +51,14 @@ namespace Joke.Joke
 
             var parser = new Parser(errors, tokens);
 
-            var unit = parser.ParseUnit();
+            try
+            {
+                var unit = parser.ParseUnit();
+            }
+            catch (NotImplementedException)
+            {
+
+            }
 
             errors.Describe(Console.Out);
 

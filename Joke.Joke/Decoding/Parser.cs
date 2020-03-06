@@ -106,7 +106,7 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var doc = TryAnyString();
-            Match(Current.Kind);
+            Match();
             var name = Identifier();
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
@@ -145,7 +145,7 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var doc = TryAnyString();
-            Match(Current.Kind);
+            Match();
             var name = Identifier();
             var type = TypeAnnotation();
             var init = TryInitInfix();
@@ -172,15 +172,27 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var doc = TryAnyString();
-            Match(Current.Kind);
+            Match();
             var name = Identifier();
             Console.WriteLine($"{kind} - {name}");
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
             var @return = TryTypeAnnotation();
+            var throws = TryThrows();
             var body = TryBody();
 
-            return new Method(End(), kind, doc, name, typeParameters, parameters, @return, body);
+            return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
+        }
+
+        private Throws? TryThrows()
+        {
+            if (Is(TK.Exclamation))
+            {
+                Begin();
+                Match();
+                return new Throws(End());
+            }
+            return null;
         }
 
         private IExpression? TryInitInfix()
@@ -194,11 +206,14 @@ namespace Joke.Joke.Decoding
             return null;
         }
 
-        private IExpression? TryBody()
+        private Body? TryBody()
         {
-            if (MayMatch(TK.DblArrow))
+            if (Is(TK.DblArrow))
             {
-                return Expression();
+                Begin();
+                Match(TK.DblArrow);
+                var expression = Expression();
+                return new Body(End(), expression);
             }
             return null;
         }
@@ -284,7 +299,7 @@ namespace Joke.Joke.Decoding
 
         private IType Provides()
         {
-            return TryProvides() ?? throw new NotImplementedException();
+            return TryProvides() ?? throw Expected("provides");
         }
 
         private IType? TryProvides()
@@ -298,16 +313,22 @@ namespace Joke.Joke.Decoding
 
         private IType Type()
         {
+            return TryType() ?? throw Expected("type");
+        }
+
+        private IType? TryType()
+        {
             switch (Current.Kind)
             {
                 case TK.This:
                     return ThisType();
                 case TK.LParen:
                     return TupleType();
-                default:
+                case TK.Identifier:
                     return NominalType();
-
             }
+
+            return null;
         }
 
         private IType NominalType()
@@ -320,21 +341,22 @@ namespace Joke.Joke.Decoding
 
         private TypeList TypeArguments()
         {
-            return TryTypeArguments() ?? throw new NotImplementedException();
+            return TryTypeArguments() ?? throw Expected("type-arguments");
         }
         private TypeList? TryTypeArguments()
         {
             if (Is(TK.Lt))
             {
                 Begin(TK.Lt);
-                var types = Collect(Type, TK.Comma);
-                if (Is(TK.Gt))
+                var types = CollectOptional(TryType, TK.Comma);
+                if (types.Count > 0 && Is(TK.Gt))
                 {
                     Match(TK.Gt);
 
                     return new TypeList(End(), types);
                 }
-                End();
+                // recover to starting '<'
+                Recover();
             }
             return null;
         }
@@ -429,6 +451,13 @@ namespace Joke.Joke.Decoding
             return new TokenSpan(Tokens, markers.Pop(), next);
         }
 
+        private void Recover()
+        {
+            Debug.Assert(next <= limit);
+            Debug.Assert(markers.Count > 0);
+            next = markers.Pop();
+        }
+
         private TokenSpan End(TK token)
         {
             Match(token);
@@ -447,12 +476,17 @@ namespace Joke.Joke.Decoding
             return next < limit && Tokens[next].Kind == token;
         }
 
+        private void Match()
+        {
+            if (next < limit)
+            {
+                next += 1;
+            }
+            return;
+        }
+
         private void Match(TK kind)
         {
-            if (next < limit && kind == TK.Gt && Current.Kind == TK.Do)
-            {
-                Debug.Assert(true);
-            }
             if (next < limit && Tokens[next].Kind == kind)
             {
                 next += 1;
@@ -460,16 +494,7 @@ namespace Joke.Joke.Decoding
             }
 
             Errors.AtToken(ErrNo.Scan001, Current, $"unknown token in token stream, expected ``{Keywords.String(kind)}´´ but got ``{Keywords.String(Current.Kind)}´´");
-
-            // simply try to skip
-            while (next < limit && Tokens[next].Kind != kind)
-            {
-                next += 1;
-            }
-            if (next < limit)
-            {
-                next += 1;
-            }
+            throw new NotImplementedException();
         }
 
         private bool MayMatch(TK kind)
