@@ -25,11 +25,10 @@
             Complex(
                 ((this.re * that.re) + (this.im * that.im)) / sqr,
                 ((this.im * that.re) - (this.re * that.im)) / sqr)
-    end
 
-    type Complex32: Complex<f32>
-    type Complex64: Complex<f64>
+    type Complex32 is Complex<f32>
+    type Complex64 is Complex<f64>
 
-    type Complex: Complex64
+    type Complex is Complex64
 
 end

@@ -1,6 +1,5 @@
 ﻿namespace Builtin
 
     trait Float<F: (Float<F> & Number<F>)> 
-    end
 
 end

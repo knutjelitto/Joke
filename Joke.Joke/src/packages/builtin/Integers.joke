@@ -12,7 +12,6 @@
         fun op_rem(that: u8): u8 => intrinsic
         fun op_not(): u8 => intrinsic
 
-    end primitive
 
     """
     16 bit unsigned integer.
@@ -28,7 +27,6 @@
         fun op_rem(that: u16): u16 => intrinsic
         fun op_not(): u16 => intrinsic
 
-    end primitive
 
     """
     32 bit unsigned integer.
@@ -45,7 +43,6 @@
         fun op_rem(that: u32): u32 => intrinsic
         fun op_not(): u32 => intrinsic
 
-    end primitive
 
     """
     64 bit unsigned integer.
@@ -63,7 +60,6 @@
         fun op_rem(that: u64): u64 => intrinsic
         fun op_not(): u64 => intrinsic
 
-    end primitive
 
     """
     8 bit signed integer.
@@ -78,7 +74,6 @@
         fun op_not(): i8 => intrinsic
         fun op_neg(): i8 => intrinsic
 
-    end primitive
 
     """
     16 bit signed integer.
@@ -96,7 +91,6 @@
         fun op_not(): i16 => intrinsic
         fun op_neg(): i16 => intrinsic
 
-    end primitive
 
     """
     32 bit signed integer.
@@ -116,7 +110,6 @@
         fun op_not(): i32 => intrinsic
         fun op_neg(): i32 => intrinsic
 
-    end primitive
 
     """
     64 bit signed integer.
@@ -138,6 +131,4 @@
         fun op_not(): i64 => intrinsic
         fun op_neg(): i64 => intrinsic
 
-    end primitive
-
-end namespace
+end

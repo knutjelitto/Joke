@@ -42,6 +42,11 @@ namespace Joke.Joke.Decoding
             var members = NamespaceMembers();
             Match(TK.End);
 
+            if (!Is(TK.Eof))
+            {
+                Errors.AtToken(ErrNo.Scan002, Current, "inconclusive parse, not at ``EOF´´");
+            }
+
             var @namespace = new Namespace(End(), name, members);
 
             return @namespace;
@@ -323,9 +328,13 @@ namespace Joke.Joke.Decoding
             {
                 Begin(TK.Lt);
                 var types = Collect(Type, TK.Comma);
-                Match(TK.Gt);
+                if (Is(TK.Gt))
+                {
+                    Match(TK.Gt);
 
-                return new TypeList(End(), types);
+                    return new TypeList(End(), types);
+                }
+                End();
             }
             return null;
         }
@@ -440,6 +449,10 @@ namespace Joke.Joke.Decoding
 
         private void Match(TK kind)
         {
+            if (next < limit && kind == TK.Gt && Current.Kind == TK.Do)
+            {
+                Debug.Assert(true);
+            }
             if (next < limit && Tokens[next].Kind == kind)
             {
                 next += 1;

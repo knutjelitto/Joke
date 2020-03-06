@@ -14,8 +14,6 @@
         fun op_rem(that: f32): f32 => compile_intrinsic
         fun op_neg(): f32 => compile_intrinsic
 
-    end
-
     primitive f64 is Float<f64>
 
         new op_widen(that: i8): f64 => compile_intrinsic
@@ -32,7 +30,5 @@
         fun op_div(that: f64): f64 => compile_intrinsic
         fun op_rem(that: f64): f64 => compile_intrinsic
         fun op_neg(): f64 => compile_intrinsic
-
-    end
 
 end

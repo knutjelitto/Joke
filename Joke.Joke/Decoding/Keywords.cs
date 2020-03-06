@@ -30,6 +30,7 @@ namespace Joke.Joke.Decoding
                 invers.Add(TK.Integer, "integer");
                 invers.Add(TK.Char, "character");
                 invers.Add(TK.Float, "float");
+                invers.Add(TK.Eof, "EOF");
             }
 
             return invers[kind];

@@ -2,7 +2,7 @@
 
     extern C
         fun memcmp(dst: Pointer<u8>, src: Pointer<u8>, len: usize) : i32
-        fun memset(dst: Pointer<None>, set: U32, len: usize) : Pointer<None>
+        fun memset(dst: Pointer<None>, set: u32, len: usize) : Pointer<None>
         fun memmove(dst: Pointer<None>, src: Pointer<None>, len: usize) : Pointer<None>
         fun strtof(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f32
         fun strtod(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f64
@@ -46,7 +46,7 @@
             let substr_clone = substr.clone()
 
             // print our substr
-            env.out.print(consume substr)
+            env.out.print(substr)
         end
     ```
     """
@@ -79,7 +79,7 @@
         new from_iso_array(data: Array<u8>) =>
             _size = data.size()
             _alloc = data.space()
-            _ptr = (consume data).cpointer()._unsafe()
+            _ptr = (data).cpointer()._unsafe()
             if _alloc > _size then
                 _set(_size, 0)
             end
@@ -174,7 +174,7 @@
         """
         Create a UTF-8 string from a single UTF-32 code point.
         """
-        new from_utf32(value: U32) =>
+        new from_utf32(value: u32) =>
             let encoded = _UTF32Encoder.encode(value)
             _size = encoded._1
             _alloc = _size + 1
@@ -194,7 +194,7 @@
         """
         Push a UTF-32 code point.
         """
-        fun push_utf32(value: U32) =>
+        fun push_utf32(value: u32) =>
             let encoded = _UTF32Encoder.encode(value)
             let i = _size
             _size = _size + encoded._1
@@ -245,18 +245,13 @@
         Returns an Array<u8> that reuses the underlying data pointer.
         """
         fun array(): Array<u8> =>
-            recover
-              Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
-            end
-
+            Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
 
         """
         Returns an Array<u8> iso that reuses the underlying data pointer.
         """
         fun iso_array(): Array<u8> =>
-            recover
-              Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
-            end
+            Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
 
 
         """
@@ -289,135 +284,135 @@
 
             n
 
-/*
 
-
-      fun space(): usize =>
         """
         Returns the space available for data, not including the null terminator.
         """
-        if is_null_terminated() then _alloc - 1 else _alloc end
+        fun space(): usize =>
+            if is_null_terminated() then _alloc - 1 else _alloc end
 
-      fun ref reserve(len: usize) =>
+      
         """
         Reserve space for len bytes. An additional byte will be reserved for the
         null terminator.
         """
-        if _alloc <= len then
-          let max = len.max_value() - 1
-          let min_alloc = len.min(max) + 1
-          if min_alloc <= (max / 2) then
-            _alloc = min_alloc.next_pow2()
-          else
-            _alloc = min_alloc.min(max)
-          end
-          _ptr = _ptr._realloc(_alloc)
-        end
+        fun reserve(len: usize) =>
+            if _alloc <= len then
+                let max = len.max_value() - 1
+                let min_alloc = len.min(max) + 1
+                if min_alloc <= (max / 2) then
+                    _alloc = min_alloc.next_pow2()
+                else
+                    _alloc = min_alloc.min(max)
+                end
+                _ptr = _ptr._realloc(_alloc)
+            end
 
-      fun ref compact() =>
         """
         Try to remove unused space, making it available for garbage collection. The
         request may be ignored. The string is returned to allow call chaining.
         """
-        if (_size + 1) <= 512 then
-          if (_size + 1).next_pow2() != _alloc.next_pow2() then
-            _alloc = (_size + 1).next_pow2()
-            let old_ptr = _ptr = Pointer<u8>._alloc(_alloc)
-            old_ptr._copy_to(_ptr, _size)
-            _set(_size, 0)
-          end
-        elseif (_size + 1) < _alloc then
-          _alloc = (_size + 1)
-          let old_ptr = _ptr = Pointer<u8>._alloc(_alloc)
-          old_ptr._copy_to(_ptr, _size)
-          _set(_size, 0)
-        end
+        fun compact() =>
+            if (_size + 1) <= 512 then
+              if (_size + 1).next_pow2() != _alloc.next_pow2() then
+                _alloc = (_size + 1).next_pow2()
+                let old_ptr = _ptr = Pointer<u8>._alloc(_alloc)
+                old_ptr._copy_to(_ptr, _size)
+                _set(_size, 0)
+              end
+            elseif (_size + 1) < _alloc then
+              _alloc = (_size + 1)
+              let old_ptr = _ptr = Pointer<u8>._alloc(_alloc)
+              old_ptr._copy_to(_ptr, _size)
+              _set(_size, 0)
+            end
 
-      fun ref recalc() =>
         """
         Recalculates the string length. This is only needed if the string is
         changed via an FFI call. If a null terminator byte is not found within the
         allocated length, the size will not be changed.
         """
-        var s: usize = 0
+        fun recalc() =>
+            var s: usize = 0
 
-        while (s < _alloc) and (_ptr._apply(s) > 0) do
-          s = s + 1
-        end
+            while (s < _alloc) and (_ptr._apply(s) > 0) do
+              s = s + 1
+            end
 
-        if s != _alloc then
-          _size = s
-        end
+            if s != _alloc then
+              _size = s
+            end
 
-      fun ref truncate(len: usize) =>
+
         """
         Truncates the string at the minimum of len and space. Ensures there is a
         null terminator. Does not check for null terminators inside the string.
 
         Note that memory is not freed by this operation.
         """
-        if len >= _alloc then
-          _size = len.min(_alloc)
-          reserve(_alloc + 1)
-        else
-          _size = len.min(_alloc - 1)
-        end
+        fun truncate(len: usize) =>
+            if len >= _alloc then
+              _size = len.min(_alloc)
+              reserve(_alloc + 1)
+            else
+              _size = len.min(_alloc - 1)
+            end
 
-        _set(_size, 0)
+            _set(_size, 0)
 
-      fun ref trim_in_place(from: usize = 0, to: usize = -1) =>
+
         """
         Trim the string to a portion of itself, covering `from` until `to`.
         Unlike slice, the operation does not allocate a new string nor copy
         elements.
         """
-        let last = _size.min(to)
-        let offset = last.min(from)
-        let size' = last - offset
+        fun trim_in_place(from: usize = 0, to: usize = -1) =>
+            let last = _size.min(to)
+            let offset = last.min(from)
+            let size' = last - offset
 
-        // use the new size' for alloc if we're not including the last used byte
-        // from the original data and only include the extra allocated bytes if
-        // we're including the last byte.
-        _alloc = if last == _size then _alloc - offset else size' end
+            // use the new size' for alloc if we're not including the last used byte
+            // from the original data and only include the extra allocated bytes if
+            // we're including the last byte.
+            _alloc = if last == _size then _alloc - offset else size' end
 
-        _size = size'
+            _size = size'
 
-        // if _alloc == 0 then we've trimmed all the memory originally allocated.
-        // if we do _ptr._offset, we will spill into memory not allocated/owned
-        // by this string and could potentially cause a segfault if we cross
-        // a pagemap boundary into a pagemap address that hasn't been allocated
-        // yet when `reserve` is called next.
-        if _alloc == 0 then
-          _ptr = Pointer<u8>
-        else
-          _ptr = _ptr._offset(offset)
-        end
+            // if _alloc == 0 then we've trimmed all the memory originally allocated.
+            // if we do _ptr._offset, we will spill into memory not allocated/owned
+            // by this string and could potentially cause a segfault if we cross
+            // a pagemap boundary into a pagemap address that hasn't been allocated
+            // yet when `reserve` is called next.
+            if _alloc == 0 then
+              _ptr = Pointer<u8>
+            else
+              _ptr = _ptr._offset(offset)
+            end
 
-      fun val trim(from: usize = 0, to: usize = -1): String val =>
+        
         """
         Return a shared portion of this string, covering `from` until `to`.
         Both the original and the new string are immutable, as they share memory.
         The operation does not allocate a new string pointer nor copy elements.
         """
-        let last = _size.min(to)
-        let offset = last.min(from)
+        fun trim(from: usize = 0, to: usize = -1): String =>
+            let last = _size.min(to)
+            let offset = last.min(from)
 
-        recover
-          let size' = last - offset
+            let size' = last - offset
 
-          // use the new size' for alloc if we're not including the last used byte
-          // from the original data and only include the extra allocated bytes if
-          // we're including the last byte.
-          let alloc = if last == _size then _alloc - offset else size' end
+            // use the new size' for alloc if we're not including the last used byte
+            // from the original data and only include the extra allocated bytes if
+            // we're including the last byte.
+            let alloc = if last == _size then _alloc - offset else size' end
 
-          if size' > 0 then
-            from_cpointer(_ptr._offset(offset)._unsafe(), size', alloc)
-          else
-            create()
-          end
-        end
+            if size' > 0 then
+                from_cpointer(_ptr._offset(offset)._unsafe(), size', alloc)
+            else
+                create()
+            end
 
-      fun iso chop(split_point: usize): (String iso^, String iso^) =>
+
         """
         Chops the string in half at the split point requested and returns both
         the left and right portions. The original string is trimmed in place and
@@ -427,23 +422,23 @@
         Both strings are isolated and mutable, as they do not share memory.
         The operation does not allocate a new string pointer nor copy elements.
         """
-        let start_ptr = cpointer(split_point)
-        let size' = _size - _size.min(split_point)
-        let alloc = _alloc - _size.min(split_point)
+        fun chop(split_point: usize): (String, String) =>
+            let start_ptr = cpointer(split_point)
+            let size' = _size - _size.min(split_point)
+            let alloc = _alloc - _size.min(split_point)
 
-        trim_in_place(0, split_point)
+            trim_in_place(0, split_point)
 
-        let right = recover
-          if size' > 0 then
-            from_cpointer(start_ptr._unsafe(), size', alloc)
-          else
-            create()
-          end
-        end
+            let right =
+              if size' > 0 then
+                from_cpointer(start_ptr._unsafe(), size', alloc)
+              else
+                create()
+              end
 
-        (consume this, consume right)
+            (this, right)
 
-      fun iso unchop(b: String iso): ((String iso^, String iso^) | String iso^) =>
+        
         """
         Unchops two iso strings to return the original string they were chopped
         from. Both input strings are isolated and mutable and were originally
@@ -453,39 +448,40 @@
         cannot be unchopped it returns both strings without modifying them.
         The operation does not allocate a new string pointer nor copy elements.
         """
-        if _size == 0 then
-          return consume b
-        end
+        fun unchop(b: String): ((String, String) | String) =>
+            if _size == 0 then
+              return b
+            end
 
-        if b.size() == 0 then
-          return consume this
-        end
+            if b.size() == 0 then
+              return this
+            end
 
-        (let unchoppable, let a_left) =
-          if (_size == _alloc) and (cpointer(_size) == b.cpointer()) then
-            (true, true)
-          elseif (b.size() == b.space()) and (b.cpointer(b.size()) == cpointer())
-            then
-            (true, false)
-          else
-            (false, false)
-          end
+            (let unchoppable, let a_left) =
+              if (_size == _alloc) and (cpointer(_size) == b.cpointer()) then
+                (true, true)
+              elseif (b.size() == b.space()) and (b.cpointer(b.size()) == cpointer())
+                then
+                (true, false)
+              else
+                (false, false)
+              end
 
-        if not unchoppable then
-          return (consume this, consume b)
-        end
+            if not unchoppable then
+              return (this, b)
+            end
 
-        if a_left then
-          _alloc = _alloc + b._alloc
-          _size = _size + b._size
-          consume this
-        else
-          b._alloc = b._alloc + _alloc
-          b._size = b._size + _size
-          consume b
-        end
+            if a_left then
+              _alloc = _alloc + b._alloc
+              _size = _size + b._size
+              this
+            else
+              b._alloc = b._alloc + _alloc
+              b._size = b._size + _size
+              b
+            end
 
-      fun is_null_terminated(): Bool =>
+      
         """
         Return true if the string is null-terminated and safe to pass to an FFI
         function that doesn't accept a size argument, expecting a null-terminator.
@@ -494,9 +490,10 @@
         which may be present earlier in the content of the string.
         If you need a null-terminated copy of this string, use the clone method.
         """
-        (_alloc > 0) and (_alloc != _size) and (_ptr._apply(_size) == 0)
+        fun is_null_terminated(): bool =>
+            (_alloc > 0) and (_alloc != _size) and (_ptr._apply(_size) == 0)
 
-      fun utf32(offset: ISize): (U32, u8) ? =>
+        
         """
         Return a UTF32 representation of the character at the given offset and the
         number of bytes needed to encode that character. If the offset does not
@@ -504,89 +501,92 @@
         replacement character) and a length of one. Raise an error if the offset is
         out of bounds.
         """
-        let i = offset_to_index(offset)
-        let err: (U32, u8) = (0xFFFD, 1)
+        fun utf32(offset: ISize): (u32, u8) ? =>
+            let i = offset_to_index(offset)
+            let err: (u32, u8) = (0xFFFD, 1)
 
-        if i >= _size then error end
-        let c = _ptr._apply(i)
+            if i >= _size then error end
+            let c = _ptr._apply(i)
 
-        if c < 0x80 then
-          // 1-byte
-          (c.u32(), 1)
-        elseif c < 0xC2 then
-          // Stray continuation.
-          err
-        elseif c < 0xE0 then
-          // 2-byte
-          if (i + 1) >= _size then
-            // Not enough bytes.
-            err
-          else
-            let c2 = _ptr._apply(i + 1)
-            if (c2 and 0xC0) != 0x80 then
-              // Not a continuation byte.
+            if c < 0x80 then
+              // 1-byte
+              (c.u32(), 1)
+            elseif c < 0xC2 then
+              // Stray continuation.
               err
+            elseif c < 0xE0 then
+              // 2-byte
+              if (i + 1) >= _size then
+                // Not enough bytes.
+                err
+              else
+                let c2 = _ptr._apply(i + 1)
+                if (c2 and 0xC0) != 0x80 then
+                  // Not a continuation byte.
+                  err
+                else
+                  (((c.u32() << 6) + c2.u32()) - 0x3080, 2)
+                end
+              end
+            elseif c < 0xF0 then
+              // 3-byte.
+              if (i + 2) >= _size then
+                // Not enough bytes.
+                err
+              else
+                let c2 = _ptr._apply(i + 1)
+                let c3 = _ptr._apply(i + 2)
+                if
+                  // Not continuation bytes.
+                  ((c2 and 0xC0) != 0x80) or
+                  ((c3 and 0xC0) != 0x80) or
+                  // Overlong encoding.
+                  ((c == 0xE0) and (c2 < 0xA0))
+                then
+                  err
+                else
+                  (((c.u32() << 12) + (c2.u32() << 6) + c3.u32()) - 0xE2080, 3)
+                end
+              end
+            elseif c < 0xF5 then
+              // 4-byte.
+              if (i + 3) >= _size then
+                // Not enough bytes.
+                err
+              else
+                let c2 = _ptr._apply(i + 1)
+                let c3 = _ptr._apply(i + 2)
+                let c4 = _ptr._apply(i + 3)
+                if
+                  // Not continuation bytes.
+                  ((c2 and 0xC0) != 0x80) or
+                  ((c3 and 0xC0) != 0x80) or
+                  ((c4 and 0xC0) != 0x80) or
+                  // Overlong encoding.
+                  ((c == 0xF0) and (c2 < 0x90)) or
+                  // UTF32 would be > 0x10FFFF.
+                  ((c == 0xF4) and (c2 >= 0x90))
+                then
+                  err
+                else
+                  (((c.u32() << 18) +
+                    (c2.u32() << 12) +
+                    (c3.u32() << 6) +
+                    c4.u32()) - 0x3C82080, 4)
+                end
+              end
             else
-              (((c.u32() << 6) + c2.u32()) - 0x3080, 2)
-            end
-          end
-        elseif c < 0xF0 then
-          // 3-byte.
-          if (i + 2) >= _size then
-            // Not enough bytes.
-            err
-          else
-            let c2 = _ptr._apply(i + 1)
-            let c3 = _ptr._apply(i + 2)
-            if
-              // Not continuation bytes.
-              ((c2 and 0xC0) != 0x80) or
-              ((c3 and 0xC0) != 0x80) or
-              // Overlong encoding.
-              ((c == 0xE0) and (c2 < 0xA0))
-            then
-              err
-            else
-              (((c.u32() << 12) + (c2.u32() << 6) + c3.u32()) - 0xE2080, 3)
-            end
-          end
-        elseif c < 0xF5 then
-          // 4-byte.
-          if (i + 3) >= _size then
-            // Not enough bytes.
-            err
-          else
-            let c2 = _ptr._apply(i + 1)
-            let c3 = _ptr._apply(i + 2)
-            let c4 = _ptr._apply(i + 3)
-            if
-              // Not continuation bytes.
-              ((c2 and 0xC0) != 0x80) or
-              ((c3 and 0xC0) != 0x80) or
-              ((c4 and 0xC0) != 0x80) or
-              // Overlong encoding.
-              ((c == 0xF0) and (c2 < 0x90)) or
               // UTF32 would be > 0x10FFFF.
-              ((c == 0xF4) and (c2 >= 0x90))
-            then
               err
-            else
-              (((c.u32() << 18) +
-                (c2.u32() << 12) +
-                (c3.u32() << 6) +
-                c4.u32()) - 0x3C82080, 4)
             end
-          end
-        else
-          // UTF32 would be > 0x10FFFF.
-          err
-        end
 
-      fun apply(i: usize): u8 ? =>
+        
         """
         Returns the i-th byte. Raise an error if the index is out of bounds.
         """
-        if i < _size then _ptr._apply(i) else error end
+        fun apply(i: usize): u8 ? =>
+            if i < _size then _ptr._apply(i) else error end
+
 
       fun ref update(i: usize, value: u8): u8 ? =>
         """
@@ -634,13 +634,13 @@
 
         while c > 0 do
           c = c - 1
-          str = (consume str)._append(this)
+          str = (str)._append(this)
           if (sep.size() > 0) and (c != 0) then
-            str = (consume str)._append(sep)
+            str = (str)._append(sep)
           end
         end
 
-        consume str
+        str
 
       fun mul(num: usize): String iso^ =>
         """
@@ -708,7 +708,7 @@
         end
         error
 
-      fun contains(s: String box, offset: ISize = 0, nth: usize = 0): Bool =>
+      fun contains(s: String box, offset: ISize = 0, nth: usize = 0): bool =>
         """
         Returns true if contains s as a substring, false otherwise.
         """
@@ -759,7 +759,7 @@
 
         i
 
-      fun at(s: String box, offset: ISize = 0): Bool =>
+      fun at(s: String box, offset: ISize = 0): bool =>
         """
         Returns true if the substring s is present at the given offset.
         """
@@ -1151,7 +1151,7 @@
           else break end
         end
         result.push(substring(current))
-        consume result
+        result
 
       fun split(delim: String = " \t\v\f\r\n", n: usize = 0): Array[String] iso^ =>
         """
@@ -1185,7 +1185,7 @@
         let result = recover Array[String] end
 
         if _size > 0 then
-          let chars = Array[U32](delim.size())
+          let chars = Array[u32](delim.size())
 
           for rune in delim.runes() do
             chars.push(rune)
@@ -1228,10 +1228,10 @@
             i = i + 1
           end
 
-          result.push(consume cur)
+          result.push(cur)
         end
 
-        consume result
+        result
 
       fun ref strip(s: String box = " \t\v\f\r\n") =>
         """
@@ -1245,7 +1245,7 @@
         trailing whitespace is removed.
         """
         if _size > 0 then
-          let chars = Array[U32](s.size())
+          let chars = Array[u32](s.size())
           var i = _size - 1
           var truncate_at = _size
 
@@ -1257,7 +1257,7 @@
             try
               match utf32(i.isize())?
               | (0xFFFD, 1) => None
-              | (let c: U32, _) =>
+              | (let c: u32, _) =>
                 if not chars.contains(c) then
                   break
                 end
@@ -1277,7 +1277,7 @@
         leading whitespace is removed.
         """
         if _size > 0 then
-          let chars = Array[U32](s.size())
+          let chars = Array[u32](s.size())
           var i = usize(0)
 
           for rune in s.runes() do
@@ -1310,7 +1310,7 @@
           s._copy_to(_ptr._unsafe(), s._size, 0, _size)
         end
         _size = len
-        consume this
+        this
 
       fun add(that: String box): String =>
         """
@@ -1318,7 +1318,7 @@
         """
         let len = _size + that._size
         let s = recover String(len) end
-        (consume s)._append(this)._append(that)
+        (s)._append(this)._append(that)
 
       fun join(data: Iterator[Stringable]): String iso^ =>
         """
@@ -1331,7 +1331,7 @@
           if first then
             first = false
           else
-            buf = (consume buf)._append(this)
+            buf = (buf)._append(this)
           end
           buf.append(v.string())
         end
@@ -1348,7 +1348,7 @@
         n: usize,
         offset: ISize = 0,
         that_offset: ISize = 0,
-        ignore_case: Bool = false)
+        ignore_case: bool = false)
         : Compare
       =>
         """
@@ -1400,7 +1400,7 @@
         end
         Equal
 
-      fun eq(that: String box): Bool =>
+      fun eq(that: String box): bool =>
         """
         Returns true if the two strings have the same contents.
         """
@@ -1410,7 +1410,7 @@
           false
         end
 
-      fun lt(that: String box): Bool =>
+      fun lt(that: String box): bool =>
         """
         Returns true if this is lexically less than that. Needs to be made UTF-8
         safe.
@@ -1428,7 +1428,7 @@
         end
         _size < that._size
 
-      fun le(that: String box): Bool =>
+      fun le(that: String box): bool =>
         """
         Returns true if this is lexically less than or equal to that. Needs to be
         made UTF-8 safe.
@@ -1449,7 +1449,7 @@
       fun offset_to_index(i: ISize): usize =>
         if i < 0 then i.usize() + _size else i.usize() end
 
-      fun bool(): Bool ? =>
+      fun bool(): bool ? =>
         match lower()
         | "true" => true
         | "false" => false
@@ -1466,8 +1466,8 @@
       fun isize(base: u8 = 0): ISize ? => _to_int[ISize](base)?
       fun u8(base: u8 = 0): u8 ? => _to_int<u8>(base)?
       fun u16(base: u8 = 0): U16 ? => _to_int[U16](base)?
-      fun u32(base: u8 = 0): U32 ? => _to_int[U32](base)?
-      fun u64(base: u8 = 0): U64 ? => _to_int[U64](base)?
+      fun u32(base: u8 = 0): u32 ? => _to_int[u32](base)?
+      fun u64(base: u8 = 0): u64 ? => _to_int[u64](base)?
       fun u128(base: u8 = 0): U128 ? => _to_int[U128](base)?
       fun ulong(base: u8 = 0): ULong ? => _to_int[ULong](base)?
       fun usize(base: u8 = 0): usize ? => _to_int[usize](base)?
@@ -1666,8 +1666,8 @@
       fun hash(): usize =>
         @ponyint_hash_block[usize](_ptr, _size)
 
-      fun hash64(): U64 =>
-        @ponyint_hash_block64[U64](_ptr, _size)
+      fun hash64(): u64 =>
+        @ponyint_hash_block64[u64](_ptr, _size)
 
       fun string(): String iso^ =>
         clone()
@@ -1698,13 +1698,13 @@
         _string = string
         _i = 0
 
-      fun has_next(): Bool =>
+      fun has_next(): bool =>
         _i < _string.size()
 
       fun ref next(): u8 ? =>
         _string(_i = _i + 1)?
 
-    class StringRunes is Iterator[U32]
+    class StringRunes is Iterator[u32]
       let _string: String box
       var _i: usize
 
@@ -1712,16 +1712,16 @@
         _string = string
         _i = 0
 
-      fun has_next(): Bool =>
+      fun has_next(): bool =>
         _i < _string.size()
 
-      fun ref next(): U32 ? =>
+      fun ref next(): u32 ? =>
         (let rune, let len) = _string.utf32(_i.isize())?
         _i = _i + len.usize()
         rune
 
     primitive _UTF32Encoder
-      fun encode(value: U32): (usize, u8, u8, u8, u8) =>
+      fun encode(value: u32): (usize, u8, u8, u8, u8) =>
         """
         Encode the code point into UTF-8. It returns a tuple with the size of the
         encoded data and then the data.

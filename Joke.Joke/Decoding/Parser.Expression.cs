@@ -381,8 +381,12 @@ namespace Joke.Joke.Decoding
                     }
                 case TK.Lt:
                     {
-                        var arguments = TypeArguments();
-                        return new Generic(Mark(expression), expression, arguments);
+                        var arguments = TryTypeArguments(); // maybe a binary operator
+                        if (arguments != null)
+                        {
+                            return new Generic(Mark(expression), expression, arguments);
+                        }
+                        return null;
                     }
                 case TK.Dot:
                     {
@@ -429,12 +433,13 @@ namespace Joke.Joke.Decoding
                     return Reference();
                 case TK.Integer:
                     return Integer();
+                case TK.True:
+                case TK.False:
+                    return Bool();
                 case TK.LParen when !next || Current.Nl:
                     return MaybeTuple();
                 case TK.LSquare when !next || Current.Nl:
                 case TK.Float:
-                case TK.True:
-                case TK.False:
                 case TK.Object:
                 case TK.Loc:
                 case TK.If:
@@ -444,6 +449,12 @@ namespace Joke.Joke.Decoding
             }
 
             return null;
+        }
+
+        private Bool Bool()
+        {
+            Begin(Current.Kind);
+            return new Bool(End());
         }
 
         private IExpression MaybeTuple()
