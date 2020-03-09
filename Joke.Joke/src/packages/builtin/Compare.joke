@@ -1,28 +1,33 @@
 ﻿namespace Builtin
 
     primitive Less is Equatable<Compare>
-        fun string(): string => "Less"
+        fun string(): string => "Less" end
+    end
 
     primitive Equal is Equatable<Compare>
-        fun string(): string => "Equal"
+        fun string(): string => "Equal" end
+    end
 
     primitive Greater is Equatable<Compare>
-        fun string(): string => "Greater"
+        fun string(): string => "Greater" end
+    end
 
-    type Compare is (Less | Equal | Greater)
+    type Compare is (Less | Equal | Greater) end
 
     interface HasEq<A>
-        fun op_eq(that: A): bool
+        fun op_eq(that: A): bool end
+    end
 
     interface Equatable<A: Equatable<A>>
-        fun op_eq(that: A): bool => this is that
-        fun op_ne(that: A): bool => not op_eq(that)
+        fun op_eq(that: A): bool => this is that end
+        fun op_ne(that: A): bool => not op_eq(that) end
+    end
 
     interface Comparable<A: Comparable<A>> is Equatable<A>
-        fun op_lt(that: A): bool
-        fun op_le(that: A): bool => op_lt(that) or op_eq(that)
-        fun op_ge(that: A): bool => not op_lt(that)
-        fun op_gt(that: A): bool => not op_le(that)
+        fun op_lt(that: A): bool end
+        fun op_le(that: A): bool => op_lt(that) or op_eq(that) end
+        fun op_ge(that: A): bool => not op_lt(that) end
+        fun op_gt(that: A): bool => not op_le(that) end
 
         fun compare(that: A): Compare =>
             if op_eq(that) then
@@ -32,4 +37,6 @@
             else
                 Greater
             end
+        end
+    end
 end

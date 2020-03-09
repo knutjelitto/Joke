@@ -111,6 +111,7 @@ namespace Joke.Joke.Decoding
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
             var members = ClassMembers();
+            Match(TK.End);
 
             return new ClassType(End(), kind, doc, name, typeparameters, provides, members);
         }
@@ -174,12 +175,12 @@ namespace Joke.Joke.Decoding
             var doc = TryAnyString();
             Match();
             var name = Identifier();
-            Console.WriteLine($"{kind} - {name}");
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
             var @return = TryTypeAnnotation();
             var throws = TryThrows();
             var body = TryBody();
+            Match(TK.End);
 
             return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
         }

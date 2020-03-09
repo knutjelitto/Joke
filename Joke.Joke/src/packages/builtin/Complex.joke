@@ -1,34 +1,42 @@
 ﻿namespace Builtin
 
     struct Complex<F: Float<F>> is Number<Complex>
+
         let re: F
         let im: F
 
         new create(re': F, im': F) =>
             re = re'
             im = im'
+        end
 
         new op_widen(that: F) =>
             create(that, 0)
+        end
 
         fun op_add(that: Complex<F>): Complex<F> =>
             Complex(this.re + that.re, this.im + that.im)
+        end
 
         fun op_sub(that: Complex<F>): Complex<F> =>
             Complex(this.re + that.re, this.im + that.im)
+        end
 
         fun op_mul(that: Complex<F>): Complex<F> =>
             Complex((this.re * that.re) - (this.im * that.im), (this.re * that.im) + (this.im * that.re))
+        end
 
         fun op_div(that: Complex<F>): Complex<F> =>
             let sqr = (that.re * that.re) + (that.im * that.im)
             Complex(
                 ((this.re * that.re) + (this.im * that.im)) / sqr,
                 ((this.im * that.re) - (this.re * that.im)) / sqr)
+        end
+    end
 
-    type Complex32 is Complex<f32>
-    type Complex64 is Complex<f64>
+    type Complex32 is Complex<f32> end
+    type Complex64 is Complex<f64> end
 
-    type Complex is Complex64
+    type Complex is Complex64 end
 
 end

@@ -1,3 +1,7 @@
 ﻿namespace Builtin
 
+    interface Hashable
+        fun hash(): int32 end
+    end
+
 end

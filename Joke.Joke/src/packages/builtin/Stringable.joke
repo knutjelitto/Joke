@@ -1,6 +1,7 @@
 ﻿namespace Builtin
 
     interface Stringable
-        fun string() : string
+        fun string() : string end
+    end
 
 end

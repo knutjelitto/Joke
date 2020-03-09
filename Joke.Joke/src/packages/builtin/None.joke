@@ -1,0 +1,7 @@
+﻿namespace Builtin
+
+    primitive none is Stringable
+        fun string(): string =>  "None" end
+    end
+
+end

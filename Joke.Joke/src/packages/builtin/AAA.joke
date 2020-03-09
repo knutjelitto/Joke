@@ -7,5 +7,7 @@
             elseif _ptr._apply(i) > that._ptr._apply(i) then
                 return false
             end
+        end
+    end
 
 end
