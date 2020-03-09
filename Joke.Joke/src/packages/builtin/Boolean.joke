@@ -1,0 +1,21 @@
+﻿namespace Builtin
+
+    primitive bool is (Stringable & Equatable<bool>)
+
+        new create(from: bool) => from
+
+        fun op_eq(that: bool) => compile_intrinsic
+        fun op_ne(that: bool) => compile_intrinsic
+
+        fun op_and(that: bool): bool => compile_intrinsic
+        fun op_or(that: bool): bool => compile_intrinsic
+        fun op_xor(that: bool): bool => compile_intrinsic
+        fun op_not(): bool => compile_intrinsic
+
+        fun string(): string => if this then "true" else "false" end
+
+
+    namespace Extra
+    end
+
+end

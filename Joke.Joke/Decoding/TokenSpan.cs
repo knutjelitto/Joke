@@ -20,7 +20,7 @@ namespace Joke.Joke.Decoding
 
         public Tokens Tokens { get; }
 
-        public ISourceSpan PayloadSpan => new SourceSpan(Tokens[0].Source, Tokens[Start].Payload, Tokens[Next].Clutter);
+        public ISourceSpan PayloadSpan => new SourceSpan(Tokens[0].Source, Tokens[Start].PayloadOffset, Tokens[Next].ClutterOffset);
 
         public Token this[int index]
         {
@@ -43,7 +43,7 @@ namespace Joke.Joke.Decoding
         {
             foreach (var token in GetTokens())
             {
-                yield return token.GetPayload();
+                yield return token.Payload;
             }
         }
 

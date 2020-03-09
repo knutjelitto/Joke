@@ -1,0 +1,8 @@
+﻿namespace Builtin
+
+    interface Equatable<A: Equatable<A>>
+
+        fun eq(that: A): bool => this is that
+        fun ne(that: A): bool => not op_eq(that)
+
+end

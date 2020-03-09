@@ -1,10 +1,13 @@
 ﻿namespace Builtin
 
-    trait Number<N>
-        fun op_add(that: N) : N end
-        fun op_sub(that: N) : N end
-        fun op_mul(that: N) : N end
-        fun op_div(that: N) : N end
-    end
+    trait Number<N: Number<N>> is Equateable<N>
+
+        fun add(that: N): N
+        fun sub(that: N): N
+        fun mul(that: N): N
+
+        fun neg(): N
+        fun abs(): N
+        fun signum(): N
 
 end

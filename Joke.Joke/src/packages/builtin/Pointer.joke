@@ -5,66 +5,66 @@
     included in a union or intersection, or be a subtype of any interface. Most
     functions on a Pointer<A> are private to maintain memory safety.
     """
-    struct Pointer<A>
+    struct Pointer<A> is Ordered<Pointer<A>>
       
         """
         A null pointer.
         """
-        new create() => compile_intrinsic end
+        new create() => compile_intrinsic
 
       
         """
         Space for len instances of A.
         """
-        new _alloc(len: usize) => compile_intrinsic end
+        new _alloc(len: usize) => compile_intrinsic
 
 
         """
         Keep the contents, but reserve space for len instances of A.
         """
-        fun _realloc(len: usize): Pointer<A> => compile_intrinsic end
+        fun _realloc(len: usize): Pointer<A> => compile_intrinsic
 
       
         """
         Unsafe change in reference capability.
         """
-        fun _unsafe(): Pointer<A> => compile_intrinsic end
+        fun _unsafe(): Pointer<A> => compile_intrinsic
 
       
         """
         Convert from Pointer<A> to Pointer<B>.
         """
-        fun _convert<B>(): Pointer<B> => compile_intrinsic end
+        fun _convert<B>(): Pointer<B> => compile_intrinsic
 
         
         """
         Retrieve index i.
         """
-        fun _apply(i: usize): A => compile_intrinsic end
+        fun _apply(i: usize): A => compile_intrinsic
 
       
         """
         Set index i and return the previous value.
         """
-        fun _update(i: usize, value: A): A => compile_intrinsic end
+        fun _update(i: usize, value: A): A => compile_intrinsic
 
       
         """
         Return a pointer to the n-th element.
         """
-        fun _offset(n: usize): Pointer<A> => compile_intrinsic end
+        fun _offset(n: usize): Pointer<A> => compile_intrinsic
 
       
         """
         Return a tag pointer to the n-th element.
         """
-        fun offset(n: usize): Pointer<A> => _unsafe()._offset(n) end
+        fun offset(n: usize): Pointer<A> => _unsafe()._offset(n)
 
       
         """
         Return the size of a single element in an array of type A.
         """
-        fun _element_size(): usize => compile_intrinsic  end
+        fun _element_size(): usize => compile_intrinsic
 
       
         """
@@ -72,7 +72,7 @@
         The array length before this should be len, and the available space should
         be at least n + len.
         """
-        fun _insert(n: usize, len: usize): Pointer<A> => compile_intrinsic end
+        fun _insert(n: usize, len: usize): Pointer<A> => compile_intrinsic
 
       
         """
@@ -80,73 +80,73 @@
         the underlying array. The array length before this should be n + len.
         Returns the first deleted element.
         """
-        fun _delete(n: usize, len: usize): A => compile_intrinsic end
+        fun _delete(n: usize, len: usize): A => compile_intrinsic
 
       
         """
         Copy n elements from this to that.
         """
-        fun _copy_to(that: Pointer<A>, n: usize): Pointer<A> => compile_intrinsic end
+        fun _copy_to(that: Pointer<A>, n: usize): Pointer<A> => compile_intrinsic
 
       
         """
         Convert the pointer into an integer.
         """
-        fun usize(): usize => compile_intrinsic end
+        fun usize(): usize => compile_intrinsic
 
       
         """
         Return true for a null pointer, false for anything else.
         """
-        fun is_null(): Bool => compile_intrinsic end
+        fun is_null(): Bool => compile_intrinsic
 
         
         """
         Return true if this address is that address.
         """
-        fun op_eq(that: Pointer<A>): Bool => compile_intrinsic end
+        fun eq(that: Pointer<A>): Bool => compile_intrinsic
 
         
         """
         Return true if this address isn't that address.
         """
-        fun op_ne(that: Pointer<A>): Bool => compile_intrinsic end
+        fun ne(that: Pointer<A>): Bool => compile_intrinsic
 
       
         """
         Return true if this address is less than that address.
         """
-        fun op_lt(that: Pointer<A>): Bool => compile_intrinsic end
+        fun lt(that: Pointer<A>): Bool => compile_intrinsic
 
       
         """
         Return true if this address is less than or equal to that address.
         """
-        fun op_le(that: Pointer<A>): Bool => lt(that) or eq(that) end
+        fun le(that: Pointer<A>): Bool => lt(that) or eq(that)
 
 
         """
         Return true if this address is greater than or equal to that address.
         """
-        fun op_ge(that: Pointer<A>): Bool => not lt(that) end
+        fun ge(that: Pointer<A>): Bool => not lt(that)
 
 
         """
         Return true if this address is grater than that address.
         """
-        fun op_gt(that: Pointer<A>): Bool => not le(that) end
+        fun gt(that: Pointer<A>): Bool => not le(that)
 
       
         """
         Returns a hash of the address.
         """
-        fun hash(): usize => usize().hash() end
+        fun hash(): usize => usize().hash()
 
       
         """
         Returns a 64-bit hash of the address.
         """
-        fun hash64(): U64 => usize().hash64() end
-    end
+        fun hash64(): U64 => usize().hash64()
+
 
 end

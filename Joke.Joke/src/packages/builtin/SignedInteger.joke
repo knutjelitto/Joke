@@ -1,6 +1,5 @@
 ﻿namespace Builtin
 
-    trait SignedInteger<A:  is Integer
-    end
+    trait SignedInteger<A: SignedInterger<A, B>, B: UnsignedInteger<B>>  is Integer
 
 end

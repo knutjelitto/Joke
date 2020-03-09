@@ -1,13 +1,10 @@
 ﻿namespace Builtin
 
-    primitive Less is Equatable<Compare>
-        fun lt(that: String): bool =>
-            if _ptr._apply(i) < that._ptr._apply(i) then
-                return true
-            elseif _ptr._apply(i) > that._ptr._apply(i) then
-                return false
-            end
+    primitive AAA
+
+    fun chop(): (Array<A>, Array<A>) =>
+        if a < (b + c) then
+            d
         end
-    end
 
 end

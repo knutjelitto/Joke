@@ -1,6 +1,5 @@
 ﻿namespace Builtin
 
     trait UnsignedInteger<A: Integer> is Integer
-    end
 
 end

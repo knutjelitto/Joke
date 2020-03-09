@@ -41,10 +41,8 @@ namespace Joke.Joke
             var builder = new StringBuilder(source.Content.Length);
             foreach (var token in tokens)
             {
-                builder.Append(token.GetClutter());
-                builder.Append(token.GetPayload());
-
-                //Console.WriteLine($"{token}");
+                builder.Append(token.Clutter);
+                builder.Append(token.Payload);
             }
 
             Debug.Assert(builder.ToString() == source.Content);

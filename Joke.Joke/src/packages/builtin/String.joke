@@ -1,13 +1,13 @@
 ﻿namespace Builtin
 
     extern C
-        fun memcmp(dst: Pointer<u8>, src: Pointer<u8>, len: usize) : i32 end
-        fun memset(dst: Pointer<None>, set: u32, len: usize) : Pointer<None> end
-        fun memmove(dst: Pointer<None>, src: Pointer<None>, len: usize) : Pointer<None> end
-        fun strtof(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f32 end
-        fun strtod(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f64 end
-        fun pony_os_clear_errno() : None end
-        fun pony_os_errno() : i32 end
+        fun memcmp(dst: Pointer<u8>, src: Pointer<u8>, len: usize) : i32
+        fun memset(dst: Pointer<None>, set: u32, len: usize) : Pointer<None>
+        fun memmove(dst: Pointer<None>, src: Pointer<None>, len: usize) : Pointer<None>
+        fun strtof(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f32
+        fun strtod(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f64
+        fun pony_os_clear_errno() : None
+        fun pony_os_errno() : i32
     end
 
     """
@@ -51,7 +51,6 @@
         end
     ```
     """
-
     class String is (Seq<u8> & Comparable<String> & Stringable)
         var _size: usize
         var _alloc: usize
@@ -65,7 +64,7 @@
             _alloc = len.min(len.max_value() - 1) + 1
             _ptr = Pointer<u8>._alloc(_alloc)
             _set(0, 0)
-        end
+
     
         """
         Create a string from an array, reusing the underlying data pointer.
@@ -74,8 +73,8 @@
             _size = data.size()
             _alloc = data.space()
             _ptr = data.cpointer()._unsafe()
-        end
         
+
         """
         Create a string from an array, reusing the underlying data pointer
         """
@@ -86,7 +85,7 @@
             if _alloc > _size then
                 _set(_size, 0)
             end
-        end
+
 
         
         """
@@ -106,7 +105,7 @@
                 _alloc = alloc.max(_size.min(len.max_value() - 1))
                 _ptr = str
             end
-        end
+
 
 
         """
@@ -136,7 +135,6 @@
               _alloc = i + 1
               _ptr = str
             end
-        end
 
 
         """
@@ -154,7 +152,7 @@
               _ptr = Pointer<u8>._alloc(_alloc)
               str._copy_to(_ptr, _alloc)
             end
-        end
+
 
 
         """
@@ -181,7 +179,7 @@
               _ptr = Pointer<u8>._alloc(_alloc)
               str._copy_to(_ptr, _alloc)
             end
-        end
+
 
 
         """
@@ -203,7 +201,7 @@
               end
             end
             _set(_size, 0)
-        end
+
 
 
         """
@@ -225,7 +223,7 @@
               end
             end
             _set(_size, 0)
-        end
+
 
 
         """
@@ -233,7 +231,7 @@
         """
         fun _copy_to(ptr: Pointer<u8>, copy_len: usize, from_offset: usize = 0, to_offset: usize = 0) =>
             _ptr._offset(from_offset)._copy_to(ptr._offset(to_offset), copy_len)
-        end
+
 
       
         """
@@ -241,7 +239,7 @@
         """
         fun cpointer(offset: usize = 0): Pointer<u8> =>
             _ptr._offset(offset)
-        end
+
 
 
         """
@@ -259,7 +257,7 @@
             _ptr._copy_to(ptr._unsafe(), _size)
             ptr._update(_size, 0)
             ptr
-        end
+
 
 
         """
@@ -267,7 +265,7 @@
         """
         fun array(): Array<u8> =>
             Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
-        end
+
 
 
         """
@@ -275,7 +273,7 @@
         """
         fun iso_array(): Array<u8> =>
             Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
-        end
+
 
 
         """
@@ -283,7 +281,7 @@
         """
         fun size(): usize =>
             _size
-        end
+
 
         
         """
@@ -307,8 +305,8 @@
               i = i + 1
             end
 
-            n
-        end
+            return n
+
 
 
         """
@@ -316,7 +314,7 @@
         """
         fun space(): usize =>
             if is_null_terminated() then _alloc - 1 else _alloc end
-        end
+
 
       
         """
@@ -334,7 +332,7 @@
                 end
                 _ptr = _ptr._realloc(_alloc)
             end
-        end
+
 
         """
         Try to remove unused space, making it available for garbage collection. The
@@ -354,7 +352,7 @@
               old_ptr._copy_to(_ptr, _size)
               _set(_size, 0)
             end
-        end
+
 
 
         """
@@ -372,7 +370,7 @@
             if s != _alloc then
               _size = s
             end
-        end
+
 
 
         """
@@ -390,7 +388,7 @@
             end
 
             _set(_size, 0)
-        end
+
 
 
         """
@@ -420,7 +418,7 @@
             else
               _ptr = _ptr._offset(offset)
             end
-        end
+
 
         
         """
@@ -444,7 +442,7 @@
             else
                 create()
             end
-        end
+
 
 
         """
@@ -471,7 +469,7 @@
               end
 
             (this, right)
-        end
+
 
         
         """
@@ -515,7 +513,7 @@
               b._size = b._size + _size
               b
             end
-        end
+
 
       
         """
@@ -528,7 +526,7 @@
         """
         fun is_null_terminated(): bool =>
             (_alloc > 0) and (_alloc != _size) and (_ptr._apply(_size) == 0)
-        end
+
 
         
         """
@@ -616,7 +614,7 @@
               // UTF32 would be > 0x10FFFF.
               err
             end
-        end
+
 
         
         """
@@ -624,7 +622,7 @@
         """
         fun apply(i: usize): u8 ! =>
             if i < _size then _ptr._apply(i) else error end
-        end
+
 
 
         """
@@ -636,7 +634,7 @@
             else
                 error
             end
-        end
+
 
 
         """
@@ -645,7 +643,7 @@
         """
         fun at_offset(offset: ISize): u8 ! =>
             this(offset_to_index(offset))!
-        end
+
 
       
         """
@@ -654,7 +652,7 @@
         """
         fun update_offset(offset: ISize, value: u8): u8 ! =>
             this(offset_to_index(offset))! = value
-        end
+
 
       
         """
@@ -668,7 +666,7 @@
             str._size = len
             str._set(len, 0)
             str
-        end
+
 
       
         """
@@ -688,7 +686,7 @@
             end
 
             str
-        end
+
 
       
         """
@@ -696,7 +694,7 @@
         """
         fun mul(num: usize): String =>
             repeat_str(num)
-        end
+
 
       
         """
@@ -727,7 +725,7 @@
               i = i + 1
             end
             error
-        end
+
 
       
         """
@@ -760,7 +758,7 @@
               i = i - 1
             end
             error
-        end
+
 
       
         """
@@ -790,7 +788,7 @@
               i = i + 1
             end
             false
-        end
+
 
       
         """
@@ -814,8 +812,8 @@
               end
             end
 
-            i
-        end
+            return i
+
 
         
         """
@@ -829,7 +827,7 @@
             else
                 false
             end
-        end
+
 
         
         """
@@ -844,7 +842,7 @@
               _ptr._offset(i)._delete(n, _size - i)
               _set(_size, 0)
             end
-        end
+
 
       
         """
@@ -869,7 +867,7 @@
             else
               String
             end
-        end
+
 
       
         """
@@ -879,7 +877,7 @@
             let s = clone()
             s.lower_in_place()
             s
-        end
+
 
       
         """
@@ -897,7 +895,7 @@
 
               i = i + 1
             end
-        end
+
 
       
         """
@@ -908,7 +906,7 @@
             let s = clone()
             s.upper_in_place()
             s
-        end
+
 
       
         """
@@ -926,7 +924,7 @@
 
               i = i + 1
             end
-        end
+
 
       
         """
@@ -936,7 +934,7 @@
             let s = clone()
             s.reverse_in_place()
             s
-        end
+
 
       
         """
@@ -956,7 +954,7 @@
                 j = j - 1
               end
             end
-        end
+
 
 
         """
@@ -967,7 +965,7 @@
             _set(_size, value)
             _size = _size + 1
             _set(_size, 0)
-        end
+
 
 
         """
@@ -980,7 +978,7 @@
             else
               error
             end
-        end
+
 
       
         """
@@ -996,7 +994,7 @@
                 _set(0, 0)
                 _size = 0
             end
-        end
+
 
       
         """
@@ -1011,7 +1009,7 @@
             else
                 error
             end
-        end
+
 
       
         """
@@ -1041,7 +1039,7 @@
                 end
               end
             end
-        end
+
 
       
         """
@@ -1074,7 +1072,7 @@
                     n = n + 1
                   end
             end
-        end
+
 
       
         """
@@ -1083,7 +1081,7 @@
         fun clear() =>
             _set(0, 0)
             _size = 0
-        end
+
 
       
         """
@@ -1094,7 +1092,7 @@
             let s = clone()
             s.insert_in_place(offset, that)
             s
-        end
+
 
       
         """
@@ -1108,7 +1106,7 @@
             that._ptr._copy_to(_ptr._offset(index), that._size)
             _size = _size + that._size
             _set(_size, 0)
-        end
+
 
       
         """
@@ -1121,7 +1119,7 @@
             _set(index, value)
             _size = _size + 1
             _set(_size, 0)
-        end
+
 
       
         """
@@ -1132,7 +1130,7 @@
             let s = clone()
             s.cut_in_place(from, to)
             s
-        end
+
 
       
         """
@@ -1156,7 +1154,7 @@
                 _size = _size - fragment_len
                 _set(_size, 0)
             end
-        end
+
 
 
         """
@@ -1175,7 +1173,7 @@
               end
             end
             n
-        end
+
 
 
         """
@@ -1202,7 +1200,7 @@
               end
             end
             occur
-        end
+
 
       
         """
@@ -1253,7 +1251,7 @@
             end
             result.push(substring(current))
             result
-        end
+
 
 
         """
@@ -1335,7 +1333,7 @@
             end
 
             result
-        end
+
 
       
         """
@@ -1343,7 +1341,7 @@
         """
         fun strip(s: String = " \t\v\f\r\n") =>
             this .> lstrip(s) .> rstrip(s)
-        end
+
       
       
         """
@@ -1377,7 +1375,7 @@
 
               truncate(truncate_at)
             end
-        end
+
 
 
         """
@@ -1409,7 +1407,7 @@
                 delete(0, i)
               end
             end
-        end
+
 
         fun _append(s: String): String =>
             let len = _size + s._size
@@ -1421,7 +1419,7 @@
             end
             _size = len
             this
-        end
+
 
 
         """
@@ -1431,7 +1429,7 @@
             let len = _size + that._size
             let s = String(len)
             (s)._append(this)._append(that)
-        end
+
 
       
         """
@@ -1450,7 +1448,7 @@
               buf.append(v.string())
             end
             buf
-        end
+
 
 
         """
@@ -1458,7 +1456,7 @@
         """
         fun compare(that: String): Compare =>
             compare_sub(that, _size.max(that._size))
-        end
+
 
       
         """
@@ -1510,26 +1508,26 @@
               i = i - 1
             end
             Equal
-        end
+
 
         
         """
         Returns true if the two strings have the same contents.
         """
-        fun op_eq(that: String): bool =>
+        fun eq(that: String): bool =>
             if _size == that._size then
               C.memcmp(_ptr, that._ptr, _size) == 0
             else
               false
             end
-        end
+
 
       
         """
         Returns true if this is lexically less than that. Needs to be made UTF-8
         safe.
         """
-        fun op_lt(that: String): bool =>
+        fun lt(that: String): bool =>
             let len = _size.min(that._size)
             var i: usize = 0
 
@@ -1542,14 +1540,13 @@
               i = i + 1
             end
             _size < that._size
-        end
 
       
         """
         Returns true if this is lexically less than or equal to that. Needs to be
         made UTF-8 safe.
         """
-        fun op_le(that: String): bool =>
+        fun le(that: String): bool =>
             let len = _size.min(that._size)
             var i: usize = 0
 
@@ -1562,12 +1559,12 @@
               i = i + 1
             end
             _size <= that._size
-        end
+
 
       
         fun offset_to_index(i: ISize): usize =>
             if i < 0 then i.usize() + _size else i.usize() end
-        end
+
 
       
         fun bool(): bool ! =>
@@ -1577,22 +1574,22 @@
             else
               error
             end
-        end
 
-        fun i8(base: u8 = 0): I8 ! => _to_int<I8>(base)! end
-        fun i16(base: u8 = 0): I16 ! => _to_int<I16>(base)! end
-        fun i32(base: u8 = 0): I32 ! => _to_int<I32>(base)! end
-        fun i64(base: u8 = 0): I64 ! => _to_int<I64>(base)! end
-        fun i128(base: u8 = 0): I128 ! => _to_int<I128>(base)! end
-        fun ilong(base: u8 = 0): ILong ! => _to_int<ILong>(base)! end
-        fun isize(base: u8 = 0): ISize ! => _to_int<ISize>(base)! end
-        fun u8(base: u8 = 0): u8 ! => _to_int<u8>(base)! end
-        fun u16(base: u8 = 0): U16 ! => _to_int<U16>(base)! end
-        fun u32(base: u8 = 0): u32 ! => _to_int<u32>(base)! end
-        fun u64(base: u8 = 0): u64 ! => _to_int<u64>(base)! end
-        fun u128(base: u8 = 0): U128 ! => _to_int<U128>(base)! end
-        fun ulong(base: u8 = 0): ULong ! => _to_int<ULong>(base)! end
-        fun usize(base: u8 = 0): usize ! => _to_int<usize>(base)! end
+
+        fun i8(base: u8 = 0): I8 ! => _to_int<I8>(base)!
+        fun i16(base: u8 = 0): I16 ! => _to_int<I16>(base)!
+        fun i32(base: u8 = 0): I32 ! => _to_int<I32>(base)!
+        fun i64(base: u8 = 0): I64 ! => _to_int<I64>(base)!
+        fun i128(base: u8 = 0): I128 ! => _to_int<I128>(base)!
+        fun ilong(base: u8 = 0): ILong ! => _to_int<ILong>(base)!
+        fun isize(base: u8 = 0): ISize ! => _to_int<ISize>(base)!
+        fun u8(base: u8 = 0): u8 ! => _to_int<u8>(base)!
+        fun u16(base: u8 = 0): U16 ! => _to_int<U16>(base)!
+        fun u32(base: u8 = 0): u32 ! => _to_int<u32>(base)!
+        fun u64(base: u8 = 0): u64 ! => _to_int<u64>(base)!
+        fun u128(base: u8 = 0): U128 ! => _to_int<U128>(base)!
+        fun ulong(base: u8 = 0): ULong ! => _to_int<ULong>(base)!
+        fun usize(base: u8 = 0): usize ! => _to_int<usize>(base)!
 
 
         """
@@ -1605,7 +1602,7 @@
             // Check the whole string is used
             if (d == 0) or (d.usize() != _size) then error end
             v
-        end
+
 
 
         """
@@ -1680,7 +1677,7 @@
 
             // Success
             (value, index - start_index)
-        end
+
 
       
         """
@@ -1715,7 +1712,7 @@
 
             // No base specified, default to decimal
             (10, 0)
-        end
+
 
       
         """
@@ -1750,7 +1747,7 @@
             else
               error
             end
-        end
+
 
       
         """
@@ -1785,21 +1782,21 @@
             else
                 error
             end
-        end
+
 
         fun hash(): usize =>
             C.ponyint_hash_block(_ptr, _size)
-        end
+
 
         
         fun hash64(): u64 =>
             C.ponyint_hash_block64(_ptr, _size)
-        end
+
 
       
         fun string(): String =>
             clone()
-        end
+
 
       
         """
@@ -1807,14 +1804,14 @@
         """
         fun values(): StringBytes =>
             StringBytes(this)
-        end
+
 
         """
         Return an iterator over the codepoints in the string.
         """
         fun runes(): StringRunes =>
             StringRunes(this)
-        end
+
 
 
         """
@@ -1822,8 +1819,8 @@
         """
         fun _set(i: usize, value: u8): u8 =>
             _ptr._update(i, value)
-        end    
-    end
+
+
     
     class StringBytes is Iterator<u8>
         let _string: String
@@ -1832,16 +1829,16 @@
         new create(string: String) =>
             _string = string
             _i = 0
-        end
+
 
         fun has_next(): bool =>
             _i < _string.size()
-        end
+
 
         fun next(): u8 ! =>
             _string(_i = _i + 1)!
-        end
-    end
+
+
 
     class StringRunes is Iterator<u32>
         let _string: String
@@ -1850,21 +1847,21 @@
         new create(string: String) =>
             _string = string
             _i = 0
-        end
+
 
         fun has_next(): bool =>
             _i < _string.size()
-        end
+
 
         fun next(): u32 ! =>
             (let rune, let len) = _string.utf32(_i.isize())!
             _i = _i + len.usize()
             rune
-        end
-    end
+
 
     
     primitive _UTF32Encoder
+
         """
         Encode the code point into UTF-8. It returns a tuple with the size of the
         encoded data and then the data.
@@ -1907,6 +1904,6 @@
                 // Code points beyond 0x10FFFF are not allowed.
                 (3, 0xEF, 0xBF, 0xBD, 0)
             end
-        end
-    end
+
+
 end

@@ -9,7 +9,6 @@ namespace Joke.Joke.Tools
         private FileRef(string path)
         {
             Path = path;
-            EnsureDirectory();
         }
 
         public string Path { get; }

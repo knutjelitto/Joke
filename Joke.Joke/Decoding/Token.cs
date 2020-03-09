@@ -11,35 +11,30 @@ namespace Joke.Joke.Decoding
 
             Kind = kind;
             Source = source;
-            Clutter = clutter;
-            Payload = payload;
-            Next = next;
+            ClutterOffset = clutter;
+            PayloadOffset = payload;
+            NextOffset = next;
             Nl = nl;
         }
 
         public readonly TK Kind;
 
-        public ISourceSpan PayloadSpan => new SourceSpan(Source, Payload, Next - Payload);
+        public ISourceSpan PayloadSpan => new SourceSpan(Source, PayloadOffset, PayloadLength);
 
         public ISource Source { get; }
-        public int Clutter { get; }
-        public int Payload { get; }
-        public int Next { get; }
+        public int ClutterOffset { get; }
+        public int PayloadOffset { get; }
+        public int NextOffset { get; }
         public bool Nl { get; }
+        public int ClutterLength => PayloadOffset - ClutterOffset;
+        public int PayloadLength => NextOffset - PayloadOffset;
 
-        public string GetClutter()
-        {
-            return Source.GetText(Clutter, Payload - Clutter);
-        }
-
-        public string GetPayload()
-        {
-            return Source.GetText(Payload, Next - Payload);
-        }
+        public string Clutter => Source.Content.Substring(ClutterOffset, ClutterLength);
+        public string Payload => Source.Content.Substring(PayloadOffset, PayloadLength);
 
         public override string ToString()
         {
-            return $"[{Kind}/{GetPayload()}]";
+            return $"[{Kind}/{Payload}]";
         }
     }
 }

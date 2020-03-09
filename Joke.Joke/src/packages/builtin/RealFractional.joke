@@ -1,0 +1,11 @@
+﻿namespace Builtin
+
+    trait RealFraction<N: RealFraction<N>> is (Real<N> &  Fractional<N>)
+
+        fun fraction<B: Integral<B>>(): (B, N)
+        fun truncate<B: Integral<B>>(): B
+        fun round<B: Integral<B>>(): B
+        fun ceiling<B: Integral<B>>(): B
+        fun floor<B: Integral<B>>(): B
+
+end

@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Namespace
+    public class Namespace : IMember
     {
         public Namespace(TokenSpan span, QualifiedIdentifier name, MemberList members)
         {

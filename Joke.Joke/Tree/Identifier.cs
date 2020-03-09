@@ -13,7 +13,7 @@ namespace Joke.Joke.Tree
 
         public override string ToString()
         {
-            return Span[0].GetPayload();
+            return Span[0].Payload;
         }
     }
 }

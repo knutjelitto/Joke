@@ -272,13 +272,6 @@ namespace Joke.Joke.Decoding
                                 next += 1;
                                 return Token(TK.Ge);
                             }
-#if false
-                            if (content[next] == '>')
-                            {
-                                next += 1;
-                                return Token(TK.RShift);
-                            }
-#endif
                         }
                         return Token(TK.Gt);
 

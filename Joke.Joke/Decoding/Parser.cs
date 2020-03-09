@@ -36,20 +36,44 @@ namespace Joke.Joke.Decoding
         {
             next = 0;
 
-            Begin();
-            Match(TK.Namespace);
-            var name = QualifiedIdentifier();
-            var members = NamespaceMembers();
-            Match(TK.End);
+            var @namespace = Namespace();
 
             if (!Is(TK.Eof))
             {
                 Errors.AtToken(ErrNo.Scan002, Current, "inconclusive parse, not at ``EOF´´");
             }
 
-            var @namespace = new Namespace(End(), name, members);
 
             return @namespace;
+        }
+
+        private Namespace Namespace()
+        {
+            Begin();
+            Match(TK.Namespace);
+            var name = QualifiedIdentifier();
+            var members = NamespaceMembers();
+            Match(TK.End);
+
+            var @namespace = new Namespace(End(), name, members);
+            return @namespace;
+        }
+
+        private Namespace? TryNamespace()
+        {
+            if (Is(TK.Namespace))
+            {
+                Begin();
+                Match(TK.Namespace);
+                var name = QualifiedIdentifier();
+                var members = NamespaceMembers();
+                Match(TK.End);
+
+                return new Namespace(End(), name, members);
+            }
+
+            return null;
+
         }
 
         private MemberList NamespaceMembers()
@@ -61,7 +85,7 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryNamespaceMember()
         {
-            return TryClassType() ?? TryExtern();
+            return TryClassType() ?? TryNamespace() ?? TryExtern();
         }
 
         private IMember? TryExtern()
@@ -106,12 +130,12 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var doc = TryAnyString();
-            Match();
+            MatchAny();
             var name = Identifier();
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
             var members = ClassMembers();
-            Match(TK.End);
+
 
             return new ClassType(End(), kind, doc, name, typeparameters, provides, members);
         }
@@ -146,7 +170,7 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var doc = TryAnyString();
-            Match();
+            MatchAny();
             var name = Identifier();
             var type = TypeAnnotation();
             var init = TryInitInfix();
@@ -173,14 +197,14 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var doc = TryAnyString();
-            Match();
+            MatchAny();
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
             var @return = TryTypeAnnotation();
             var throws = TryThrows();
             var body = TryBody();
-            Match(TK.End);
+            //Match(TK.End);
 
             return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
         }
@@ -190,7 +214,7 @@ namespace Joke.Joke.Decoding
             if (Is(TK.Exclamation))
             {
                 Begin();
-                Match();
+                MatchAny();
                 return new Throws(End());
             }
             return null;
@@ -221,7 +245,8 @@ namespace Joke.Joke.Decoding
 
         private ValueParameterList ValueParameters()
         {
-            Begin(TK.LParen);
+            Begin();
+            Match(TK.LParen);
             var items = CollectOptional(TryParameter, TK.Comma);
             Match(TK.RParen);
             return new ValueParameterList(End(), items);
@@ -254,7 +279,8 @@ namespace Joke.Joke.Decoding
         {
             if (Is(TK.Lt))
             {
-                Begin(TK.Lt);
+                Begin();
+                Match(TK.Lt);
                 var items = Collect(TypeParameter, TK.Comma);
                 Match(TK.Gt);
 
@@ -305,8 +331,9 @@ namespace Joke.Joke.Decoding
 
         private IType? TryProvides()
         {
-            if (MayMatch(TK.Is))
+            if (Is(TK.Is))
             {
+                Match(TK.Is);
                 return Type();
             }
             return null;
@@ -324,7 +351,7 @@ namespace Joke.Joke.Decoding
                 case TK.This:
                     return ThisType();
                 case TK.LParen:
-                    return TupleType();
+                    return TryTupleType();
                 case TK.Identifier:
                     return NominalType();
             }
@@ -348,7 +375,8 @@ namespace Joke.Joke.Decoding
         {
             if (Is(TK.Lt))
             {
-                Begin(TK.Lt);
+                Begin();
+                Match(TK.Lt);
                 var types = CollectOptional(TryType, TK.Comma);
                 if (types.Count > 0 && Is(TK.Gt))
                 {
@@ -364,8 +392,32 @@ namespace Joke.Joke.Decoding
 
         private ThisType ThisType()
         {
-            Begin(TK.This);
+            Begin();
+            Match(TK.This);
             return new ThisType(End());
+        }
+
+        private IType? TryTupleType()
+        {
+            if (Is(TK.LParen))
+            {
+                Begin();
+                Match(TK.LParen);
+                var types = Collect(InfixType, TK.Comma);
+                if (Is(TK.RParen))
+                {
+                    Match(TK.RParen);
+                    if (types.Count == 1)
+                    {
+                        End();
+                        return types[0];
+                    }
+                    return new TupleType(End(), types);
+                }
+                Recover();
+            }
+
+            return null;
         }
 
         private IType TupleType()
@@ -415,7 +467,8 @@ namespace Joke.Joke.Decoding
         {
             if (Is(TK.DocString))
             {
-                Begin(TK.DocString);
+                Begin();
+                Match(TK.DocString);
                 return new String(End());
             }
             return null;
@@ -430,19 +483,14 @@ namespace Joke.Joke.Decoding
 
         private Identifier Identifier()
         {
-            Begin(TK.Identifier);
+            Begin();
+            Match(TK.Identifier);
             return new Identifier(End());
         }
 
         private void Begin()
         {
             markers.Push(next);
-        }
-
-        private void Begin(TK kind)
-        {
-            markers.Push(next);
-            Match(kind);
         }
 
         private TokenSpan End()
@@ -459,12 +507,6 @@ namespace Joke.Joke.Decoding
             next = markers.Pop();
         }
 
-        private TokenSpan End(TK token)
-        {
-            Match(token);
-            return End();
-        }
-
         private TokenSpan Mark(IAny node)
         {
             Debug.Assert(next <= limit);
@@ -477,7 +519,7 @@ namespace Joke.Joke.Decoding
             return next < limit && Tokens[next].Kind == token;
         }
 
-        private void Match()
+        private void MatchAny()
         {
             if (next < limit)
             {
@@ -498,26 +540,22 @@ namespace Joke.Joke.Decoding
             throw new NotImplementedException();
         }
 
-        private bool MayMatch(TK kind)
-        {
-            if (next < limit && Tokens[next].Kind == kind)
-            {
-                next += 1;
-                return true;
-            }
-
-            return false;
-        }
-
         private IReadOnlyList<T> Collect<T>(Func<T> collect, TK token)
         {
             var list = new List<T>();
 
-            do
+            while (true)
             {
                 list.Add(collect());
+                if (Is(token))
+                {
+                    Match(token);
+                }
+                else
+                {
+                    break;
+                }
             }
-            while (MayMatch(token));
 
             return list;
         }
@@ -566,7 +604,7 @@ namespace Joke.Joke.Decoding
         {
             var list = new List<T>();
 
-            do
+            while (true)
             {
                 var item = collect();
                 if (item != null)
@@ -577,8 +615,15 @@ namespace Joke.Joke.Decoding
                 {
                     break;
                 }
+                if (Is(token))
+                {
+                    Match(token);
+                }
+                else
+                {
+                    break;
+                }
             }
-            while (MayMatch(token));
 
             return list;
         }

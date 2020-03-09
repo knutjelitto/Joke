@@ -1,0 +1,18 @@
+﻿namespace Builtin
+
+    trait Floating<N: Floating<N>> is Fractional<F>
+
+        new pi()
+        new e()
+
+        fun exp(): N
+        fun sqrt(): N
+        fun log(): N
+        fun log2(): N
+        fun log10(): N
+        fun log(base: N): N
+        fun sin(): N
+        fun cos(): N
+        fun tan(): N
+
+end
