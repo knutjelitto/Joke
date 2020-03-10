@@ -32,11 +32,11 @@ namespace Joke.Joke.Decoding
         private int next;
         private readonly int limit;
 
-        public Namespace ParseUnit()
+        public CompilationUnit ParseUnit()
         {
             next = 0;
 
-            var @namespace = Namespace();
+            var unit = Unit();
 
             if (!Is(TK.Eof))
             {
@@ -44,48 +44,28 @@ namespace Joke.Joke.Decoding
             }
 
 
+            return unit;
+        }
+
+        private CompilationUnit Unit()
+        {
+            Begin();
+            var members = UnitMembers();
+
+            var @namespace = new CompilationUnit(End(), members);
             return @namespace;
         }
 
-        private Namespace Namespace()
+        private MemberList UnitMembers()
         {
             Begin();
-            Match(TK.Namespace);
-            var name = QualifiedIdentifier();
-            var members = NamespaceMembers();
-            Match(TK.End);
-
-            var @namespace = new Namespace(End(), name, members);
-            return @namespace;
-        }
-
-        private Namespace? TryNamespace()
-        {
-            if (Is(TK.Namespace))
-            {
-                Begin();
-                Match(TK.Namespace);
-                var name = QualifiedIdentifier();
-                var members = NamespaceMembers();
-                Match(TK.End);
-
-                return new Namespace(End(), name, members);
-            }
-
-            return null;
-
-        }
-
-        private MemberList NamespaceMembers()
-        {
-            Begin();
-            var items = Collect(TryNamespaceMember);
+            var items = Collect(TryUnitMember);
             return new MemberList(End(), items);
         }
 
-        private IMember? TryNamespaceMember()
+        private IMember? TryUnitMember()
         {
-            return TryClassType() ?? TryNamespace() ?? TryExtern();
+            return TryClassType() ?? TryExtern();
         }
 
         private IMember? TryExtern()

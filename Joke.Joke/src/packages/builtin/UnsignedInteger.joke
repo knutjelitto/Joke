@@ -1,5 +1,1 @@
-﻿namespace Builtin
-
-    trait UnsignedInteger<A: Integer> is Integer
-
-end
+﻿trait UnsignedInteger<A: Integer> is Integer

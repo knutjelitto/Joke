@@ -1,10 +1,6 @@
-﻿namespace Builtin
-
-    primitive AAA
+﻿primitive AAA
 
     fun chop(): (Array<A>, Array<A>) =>
         if a < (b + c) then
             d
         end
-
-end

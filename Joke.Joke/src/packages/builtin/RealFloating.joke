@@ -1,20 +1,16 @@
-﻿namespace Builtin
+﻿trait RealFloating<N: RealFloating<N>> is (RealFractional<N> & Floating<N>)
 
-    trait RealFloating<N: RealFloating<N>> is (RealFractional<N> & Floating<N>)
-
-        new min_normalised()
-        new epsilon()
+    new min_normalised()
+    new epsilon()
   
-        fun radix(): U8
-        fun precision2(): U8
-        fun precision10(): U8
-        fun min_exp2(): int
-        fun min_exp10(): int
-        fun max_exp2(): int
-        fun max_exp10(): int
+    fun radix(): U8
+    fun precision2(): U8
+    fun precision10(): U8
+    fun min_exp2(): int
+    fun min_exp10(): int
+    fun max_exp2(): int
+    fun max_exp10(): int
 
-        fun finite(): bool
-        fun infinite(): bool
-        fun nan(): bool
-
-end
+    fun finite(): bool
+    fun infinite(): bool
+    fun nan(): bool

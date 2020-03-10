@@ -1,0 +1,32 @@
+﻿interface Comparable<A: Comparable<A>> is Equatable<A>
+    fun lt(that: A): bool
+    fun le(that: A): bool => lt(that) or eq(that)
+    fun ge(that: A): bool => not lt(that)
+    fun gt(that: A): bool => not le(that)
+
+    fun min(that: A): A => if this <= that then this else that end
+    fun max(that: A): A => if this >= that then this else that end
+
+    fun compare(that: A): Compare =>
+        if this == that then
+            Equal
+        elseif this < that then
+            Less
+        else
+            Greater
+        end
+
+
+primitive Less is Equatable<Compare>
+    fun string(): string => "Less"
+
+
+primitive Equal is Equatable<Compare>
+    fun string(): string => "Equal"
+
+
+primitive Greater is Equatable<Compare>
+    fun string(): string => "Greater"
+
+
+type Compare is (Less | Equal | Greater)

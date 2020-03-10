@@ -1,7 +1,2 @@
-﻿namespace Builtin
-
-    interface Stringable
-        fun string() : string
-
-
-end
+﻿interface Stringable
+    fun to-string() : string

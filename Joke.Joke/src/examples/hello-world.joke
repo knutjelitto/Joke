@@ -1,0 +1,10 @@
+﻿namespace Hello
+
+    using Core
+
+    actor Main
+
+        new create()
+
+
+end

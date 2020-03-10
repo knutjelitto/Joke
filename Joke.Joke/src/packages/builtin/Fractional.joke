@@ -1,8 +1,4 @@
-﻿namespace Builtin
+﻿trait Fractional<N : Fractional<N>> is Number<N>
 
-    trait Fractional<N : Fractional<N>> is Number<N>
-
-        fun div (that: N): N
-        fun reciprocal (): N
-
-end
+    fun div (that: N): N
+    fun reciprocal (): N

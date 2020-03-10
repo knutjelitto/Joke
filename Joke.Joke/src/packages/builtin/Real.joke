@@ -1,5 +1,1 @@
-﻿namespace Builtin
-
-    trait Real<N: Real<N>> is (Number<N> & Ordered<N>)
-
-end
+﻿trait Real<N: Real<N>> is (Number<N> & Ordered<N>)

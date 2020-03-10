@@ -1,13 +1,9 @@
-﻿namespace Builtin
+﻿trait Number<N: Number<N>> is Equateable<N>
 
-    trait Number<N: Number<N>> is Equateable<N>
+    fun add(that: N): N
+    fun sub(that: N): N
+    fun mul(that: N): N
 
-        fun add(that: N): N
-        fun sub(that: N): N
-        fun mul(that: N): N
-
-        fun neg(): N
-        fun abs(): N
-        fun signum(): N
-
-end
+    fun neg(): N
+    fun abs(): N
+    fun signum(): N

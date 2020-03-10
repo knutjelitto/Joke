@@ -1,17 +1,13 @@
-﻿namespace Builtin
+﻿trait Integral<N : Intergal<N>> is Real<N>
 
-    trait Integral<N : Intergal<N>> is Real<N>
+    fun quot(that: N): N
+    fun rem(that: N): N
+    fun div(that: N): N
+    fun mod(that: N): N
+    fun quotRem(that: N): (N, N)
+    fun divMod(that: N): (N, N)
 
-        fun quot(that: N): N
-        fun rem(that: N): N
-        fun div(that: N): N
-        fun mod(that: N): N
-        fun quotRem(that: N): (N, N)
-        fun divMod(that: N): (N, N)
-
-        fun even(): bool
-        fun odd(): bool
-        fun gcd(): bool
-        fun lcm(): bool
-
-end
+    fun even(): bool
+    fun odd(): bool
+    fun gcd(): bool
+    fun lcm(): bool
