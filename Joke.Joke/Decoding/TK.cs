@@ -4,6 +4,7 @@
     {
         Missing,
         Eof,
+        Wildcard,
         Identifier,
         String,
         DocString,
@@ -115,8 +116,5 @@
         While,              // 'while'
         With,               // 'with'
         Xor,                // 'xor'
-
-        First_Keyword = Actor,
-        Last_Keyword = Xor,
     }
 }

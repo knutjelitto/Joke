@@ -27,6 +27,7 @@ namespace Joke.Joke.Decoding
                 invers.Add(TK.String, "string");
                 invers.Add(TK.DocString, "doc-string");
                 invers.Add(TK.Identifier, "identifier");
+                invers.Add(TK.Wildcard, "_ (wildcard)");
                 invers.Add(TK.Integer, "integer");
                 invers.Add(TK.Char, "character");
                 invers.Add(TK.Float, "float");

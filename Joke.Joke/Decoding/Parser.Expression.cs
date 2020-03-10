@@ -6,6 +6,7 @@ using Joke.Joke.Tree;
 using String = Joke.Joke.Tree.String;
 using Char = Joke.Joke.Tree.Char;
 using Tuple = Joke.Joke.Tree.Tuple;
+using System.Diagnostics;
 
 namespace Joke.Joke.Decoding
 {
@@ -572,6 +573,8 @@ namespace Joke.Joke.Decoding
                     return ThisValue();
                 case TK.Identifier:
                     return Reference();
+                case TK.Wildcard:
+                    return Wildcard();
                 case TK.Integer:
                     return Integer();
                 case TK.True:
@@ -661,6 +664,13 @@ namespace Joke.Joke.Decoding
             Begin();
             var name = Identifier();
             return new Reference(End(), name);
+        }
+
+        private Wildcard Wildcard()
+        {
+            Begin();
+            Match(TK.Wildcard);
+            return new Wildcard(End());
         }
 
         private Integer Integer()
