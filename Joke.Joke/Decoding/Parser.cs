@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 
 using Joke.Joke.Err;
@@ -51,9 +50,7 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var members = UnitMembers();
-
-            var @namespace = new CompilationUnit(End(), members);
-            return @namespace;
+            return new CompilationUnit(End(), members);
         }
 
         private MemberList UnitMembers()
@@ -70,10 +67,8 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryExtern()
         {
-            if (Is(TK.Extern))
+            if (IsBeginMatch(TK.Extern))
             {
-                Begin();
-                Match(TK.Extern);
                 var name = Identifier();
                 var funs = Collect(TryMethod);
                 Match(TK.End);
@@ -85,32 +80,33 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryClassType()
         {
-            switch (CurrentIsDoc ? Next.Kind : Current.Kind)
+            var token = CurrentIsDoc ? Next.Kind : Current.Kind;
+            switch (token)
             {
                 case TK.Type:
-                    return ClassType(ClassKind.Alias);
+                    return ClassType(token, ClassKind.Alias);
                 case TK.Primitive:
-                    return ClassType(ClassKind.Primitive);
+                    return ClassType(token, ClassKind.Primitive);
                 case TK.Interface:
-                    return ClassType(ClassKind.Interface);
+                    return ClassType(token, ClassKind.Interface);
                 case TK.Struct:
-                    return ClassType(ClassKind.Struct);
+                    return ClassType(token, ClassKind.Struct);
                 case TK.Class:
-                    return ClassType(ClassKind.Class);
+                    return ClassType(token, ClassKind.Class);
                 case TK.Trait:
-                    return ClassType(ClassKind.Trait);
+                    return ClassType(token, ClassKind.Trait);
                 case TK.Actor:
-                    return ClassType(ClassKind.Actor);
+                    return ClassType(token, ClassKind.Actor);
                 default:
                     return null;
             }
         }
 
-        private ClassType ClassType(ClassKind kind)
+        private ClassType ClassType(TK token, ClassKind kind)
         {
             Begin();
             var doc = TryAnyString();
-            MatchAny();
+            Match(token);
             var name = Identifier();
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
@@ -134,23 +130,24 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryField()
         {
-            switch (CurrentIsDoc ? Next.Kind : Current.Kind)
+            var token = CurrentIsDoc ? Next.Kind : Current.Kind;
+            switch (token)
             {
                 case TK.Let:
-                    return Field(FieldKind.Let);
+                    return Field(token, FieldKind.Let);
                 case TK.Var:
-                    return Field(FieldKind.Var);
+                    return Field(token, FieldKind.Var);
                 case TK.Embed:
-                    return Field(FieldKind.Embed);
+                    return Field(token, FieldKind.Embed);
                 default:
                     return null;
             }
         }
-        private IMember Field(FieldKind kind)
+        private IMember Field(TK token, FieldKind kind)
         {
             Begin();
             var doc = TryAnyString();
-            MatchAny();
+            Match(token);
             var name = Identifier();
             var type = TypeAnnotation();
             var init = TryInitInfix();
@@ -160,41 +157,39 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryMethod()
         {
-            switch (CurrentIsDoc ? Next.Kind : Current.Kind)
+            var token = CurrentIsDoc ? Next.Kind : Current.Kind;
+            switch (token)
             {
                 case TK.Fun:
-                    return Method(MethodKind.Fun);
+                    return Method(token, MethodKind.Fun);
                 case TK.New:
-                    return Method(MethodKind.New);
+                    return Method(token, MethodKind.New);
                 case TK.Be:
-                    return Method(MethodKind.Be);
+                    return Method(token, MethodKind.Be);
                 default:
                     return null;
             }
         }
 
-        private IMember Method(MethodKind kind)
+        private IMember Method(TK token, MethodKind kind)
         {
             Begin();
             var doc = TryAnyString();
-            MatchAny();
+            Match(token);
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
             var @return = TryTypeAnnotation();
             var throws = TryThrows();
             var body = TryBody();
-            //Match(TK.End);
 
             return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
         }
 
         private Throws? TryThrows()
         {
-            if (Is(TK.Exclamation))
+            if (IsBeginMatch(TK.Exclamation))
             {
-                Begin();
-                MatchAny();
                 return new Throws(End());
             }
             return null;
@@ -202,9 +197,8 @@ namespace Joke.Joke.Decoding
 
         private IExpression? TryInitInfix()
         {
-            if (Is(TK.Assign))
+            if (IsMatch(TK.Assign))
             {
-                Match(TK.Assign);
                 return Infix();
             }
 
@@ -213,10 +207,8 @@ namespace Joke.Joke.Decoding
 
         private Body? TryBody()
         {
-            if (Is(TK.DblArrow))
+            if (IsBeginMatch(TK.DblArrow))
             {
-                Begin();
-                Match(TK.DblArrow);
                 var expression = Expression();
                 return new Body(End(), expression);
             }
@@ -225,8 +217,7 @@ namespace Joke.Joke.Decoding
 
         private ValueParameterList ValueParameters()
         {
-            Begin();
-            Match(TK.LParen);
+            BeginMatch(TK.LParen);
             var items = CollectOptional(TryParameter, TK.Comma);
             Match(TK.RParen);
             return new ValueParameterList(End(), items);
@@ -247,9 +238,8 @@ namespace Joke.Joke.Decoding
 
         private IExpression? TryValueDefault()
         {
-            if (Is(TK.Assign))
+            if (IsMatch(TK.Assign))
             {
-                Match(TK.Assign);
                 return Expression();
             }
             return null;
@@ -257,10 +247,8 @@ namespace Joke.Joke.Decoding
 
         private TypeParameterList? TryTypeParameters()
         {
-            if (Is(TK.Lt))
+            if (IsBeginMatch(TK.Lt))
             {
-                Begin();
-                Match(TK.Lt);
                 var items = Collect(TypeParameter, TK.Comma);
                 Match(TK.Gt);
 
@@ -280,9 +268,8 @@ namespace Joke.Joke.Decoding
 
         private IType? TryTypeAnnotation()
         {
-            if (Is(TK.Colon))
+            if (IsMatch(TK.Colon))
             {
-                Match(TK.Colon);
                 return Type();
             }
             return null;
@@ -296,9 +283,8 @@ namespace Joke.Joke.Decoding
 
         private IType? TryTypeDefault()
         {
-            if (Is(TK.Assign))
+            if (IsMatch(TK.Assign))
             {
-                Match(TK.Assign);
                 return Type();
             }
             return null;
@@ -311,9 +297,8 @@ namespace Joke.Joke.Decoding
 
         private IType? TryProvides()
         {
-            if (Is(TK.Is))
+            if (IsMatch(TK.Is))
             {
-                Match(TK.Is);
                 return Type();
             }
             return null;
@@ -353,48 +338,35 @@ namespace Joke.Joke.Decoding
         }
         private TypeList? TryTypeArguments()
         {
-            if (Is(TK.Lt))
+            if (IsBeginMatch(TK.Lt))
             {
-                Begin();
-                Match(TK.Lt);
                 var types = CollectOptional(TryType, TK.Comma);
-                if (types.Count > 0 && Is(TK.Gt))
+                if (types.Count > 0 && IsMatch(TK.Gt))
                 {
-                    Match(TK.Gt);
-
                     return new TypeList(End(), types);
                 }
                 // recover to starting '<'
-                Recover();
+                Inconclusive();
             }
             return null;
         }
 
         private ThisType ThisType()
         {
-            Begin();
-            Match(TK.This);
+            BeginMatch(TK.This);
             return new ThisType(End());
         }
 
         private IType? TryTupleType()
         {
-            if (Is(TK.LParen))
+            if (IsBeginMatch(TK.LParen))
             {
-                Begin();
-                Match(TK.LParen);
                 var types = Collect(InfixType, TK.Comma);
-                if (Is(TK.RParen))
+                if (IsMatch(TK.RParen))
                 {
-                    Match(TK.RParen);
-                    if (types.Count == 1)
-                    {
-                        End();
-                        return types[0];
-                    }
-                    return new TupleType(End(), types);
+                    return Singularize(types) ?? new TupleType(End(), types);
                 }
-                Recover();
+                Inconclusive();
             }
 
             return null;
@@ -402,16 +374,10 @@ namespace Joke.Joke.Decoding
 
         private IType TupleType()
         {
-            Begin();
-            Match(TK.LParen);
+            BeginMatch(TK.LParen);
             var types = Collect(InfixType, TK.Comma);
             Match(TK.RParen);
-            if (types.Count == 1)
-            {
-                End();
-                return types[0];
-            }
-            return new TupleType(End(), types);
+            return Singularize(types) ?? new TupleType(End(), types);
         }
 
         private IType InfixType()
@@ -423,32 +389,20 @@ namespace Joke.Joke.Decoding
         {
             Begin();
             var types = Collect(IntersectionType, TK.Pipe);
-            if (types.Count == 1)
-            {
-                End();
-                return types[0];
-            }
-            return new UnionType(End(), types);
+            return Singularize(types) ?? new UnionType(End(), types);
         }
 
         private IType IntersectionType()
         {
             Begin();
             var types = Collect(Type, TK.Amper);
-            if (types.Count == 1)
-            {
-                End();
-                return types[0];
-            }
-            return new IntersectionType(End(), types);
+            return Singularize(types) ?? new IntersectionType(End(), types);
         }
 
         private String? TryDoc()
         {
-            if (Is(TK.DocString))
+            if (IsBeginMatch(TK.DocString))
             {
-                Begin();
-                Match(TK.DocString);
                 return new String(End());
             }
             return null;
@@ -463,149 +417,8 @@ namespace Joke.Joke.Decoding
 
         private Identifier Identifier()
         {
-            Begin();
-            Match(TK.Identifier);
+            BeginMatch(TK.Identifier);
             return new Identifier(End());
-        }
-
-        private void Begin()
-        {
-            markers.Push(next);
-        }
-
-        private TokenSpan End()
-        {
-            Debug.Assert(next <= limit);
-            Debug.Assert(markers.Count > 0);
-            return new TokenSpan(Tokens, markers.Pop(), next);
-        }
-
-        private void Recover()
-        {
-            Debug.Assert(next <= limit);
-            Debug.Assert(markers.Count > 0);
-            next = markers.Pop();
-        }
-
-        private TokenSpan Mark(IAny node)
-        {
-            Debug.Assert(next <= limit);
-            Debug.Assert(markers.Count > 0);
-            return new TokenSpan(Tokens, node.Span.Start, next);
-        }
-
-        private bool Is(TK token)
-        {
-            return next < limit && Tokens[next].Kind == token;
-        }
-
-        private void MatchAny()
-        {
-            if (next < limit)
-            {
-                next += 1;
-            }
-            return;
-        }
-
-        private void Match(TK kind)
-        {
-            if (next < limit && Tokens[next].Kind == kind)
-            {
-                next += 1;
-                return;
-            }
-
-            Errors.AtToken(ErrNo.Scan001, Current, $"unknown token in token stream, expected ``{Keywords.String(kind)}´´ but got ``{Keywords.String(Current.Kind)}´´");
-            throw new NotImplementedException();
-        }
-
-        private IReadOnlyList<T> Collect<T>(Func<T> collect, TK token)
-        {
-            var list = new List<T>();
-
-            while (true)
-            {
-                list.Add(collect());
-                if (Is(token))
-                {
-                    Match(token);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return list;
-        }
-
-        private IReadOnlyList<T> Collect<T>(T first, Func<T?> collect) where T : class
-        {
-            var list = new List<T>() { first };
-
-            while (true)
-            {
-                var item = collect();
-                if (item != null)
-                {
-                    list.Add(item);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return list;
-        }
-
-        private IReadOnlyList<T> Collect<T>(Func<T?> collect) where T : class
-        {
-            var list = new List<T>();
-
-            while (true)
-            {
-                var item = collect();
-                if (item != null)
-                {
-                    list.Add(item);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return list;
-        }
-
-        private IReadOnlyList<T> CollectOptional<T>(Func<T?> collect, TK token) where T : class
-        {
-            var list = new List<T>();
-
-            while (true)
-            {
-                var item = collect();
-                if (item != null)
-                {
-                    list.Add(item);
-                }
-                else
-                {
-                    break;
-                }
-                if (Is(token))
-                {
-                    Match(token);
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            return list;
         }
     }
 }

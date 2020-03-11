@@ -1,0 +1,3 @@
+﻿interface Iterable<A>
+
+    fun get-iterator() : Iterator<A>

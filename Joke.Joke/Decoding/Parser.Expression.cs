@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using Joke.Joke.Err;
 using Joke.Joke.Tree;
+
 using String = Joke.Joke.Tree.String;
 using Char = Joke.Joke.Tree.Char;
 using Tuple = Joke.Joke.Tree.Tuple;
-using System.Diagnostics;
 
 namespace Joke.Joke.Decoding
 {
     partial class Parser
     {
-        private IExpression Expression(bool next = false) // rawseq
+        private IExpression Expression(bool next = false)
         {
             return TryExpression(next) ?? throw Expected("expression");
         }
@@ -23,12 +24,12 @@ namespace Joke.Joke.Decoding
             return new NotImplementedException();
         }
 
-        private IExpression? TryExpression(bool next = false) // rawseq?
+        private IExpression? TryExpression(bool next = false)
         {
             return TrySequence(next) ?? TryJump();
         }
 
-        private IExpression Sequence(bool next = false) // exprseq
+        private IExpression Sequence(bool next = false)
         {
             return TrySequence(next) ?? throw Expected("sequence");
         }
@@ -36,14 +37,11 @@ namespace Joke.Joke.Decoding
         private IExpression? TrySequence(bool next = false) // exprseq?
         {
             Begin();
-
             var assignment = TryAssignment(next);
-
             if (assignment != null)
             {
-                if (Is(TK.Semi))
+                if (IsMatch(TK.Semi))
                 {
-                    Match(TK.Semi);
                     var nextSemi = Expression();
                     return new Sequence(End(), assignment, nextSemi);
                 }
@@ -56,9 +54,7 @@ namespace Joke.Joke.Decoding
                 }
             }
 
-            End();
-
-            return assignment;
+            return Scrap(assignment);
         }
 
         private IExpression Assignment(bool next = false)
@@ -69,19 +65,16 @@ namespace Joke.Joke.Decoding
         private IExpression? TryAssignment(bool next = false)
         {
             Begin();
-
             var infix = TryInfix(next);
 
-            if (infix != null && Is(TK.Assign))
+            if (infix != null && IsMatch(TK.Assign))
             {
-                Match(TK.Assign);
                 var assignment = Assignment();
 
                 return new Assignment(End(), infix, assignment);
             }
 
-            End();
-            return infix;
+            return Scrap(infix);
         }
 
         private IExpression Infix(bool next = false)
@@ -92,7 +85,6 @@ namespace Joke.Joke.Decoding
         private IExpression? TryInfix(bool next = false)
         {
             Begin();
-
             var term = TryTerm(next);
 
             if (term != null)
@@ -100,7 +92,7 @@ namespace Joke.Joke.Decoding
                 var op = BinaryOp();
                 if (op == Tree.BinaryOp.As)
                 {
-                    var types = new List<(Tree.BinaryOp op, IType ty)>();
+                    var types = new List<(BinaryOp op, IType ty)>();
 
                     do
                     {
@@ -127,7 +119,7 @@ namespace Joke.Joke.Decoding
                 }
                 if (op != Tree.BinaryOp.Missing)
                 {
-                    var terms = new List<(Tree.BinaryOp op, IExpression ex)>();
+                    var terms = new List<(BinaryOp op, IExpression ex)>();
 
                     do
                     {
@@ -154,8 +146,7 @@ namespace Joke.Joke.Decoding
                 }
             }
 
-            End();
-            return term;
+            return Scrap(term);
         }
 
         private BinaryOp BinaryOp()
@@ -244,8 +235,7 @@ namespace Joke.Joke.Decoding
 
         private For For()
         {
-            Begin();
-            Match(TK.For);
+            BeginMatch(TK.For);
             var names = Names();
             Match(TK.In);
             var values = Expression();
@@ -276,8 +266,7 @@ namespace Joke.Joke.Decoding
 
         private Match DoMatch()
         {
-            Begin();
-            Match(TK.Match);
+            BeginMatch(TK.Match);
             var value = Expression();
             var cases = Collect(TryCase);
             var @else = TryElse();
@@ -288,12 +277,10 @@ namespace Joke.Joke.Decoding
 
         private Case? TryCase()
         {
-            if (Is(TK.Pipe))
+            if (IsBeginMatch(TK.Pipe))
             {
-                Begin();
-                Match(TK.Pipe);
                 var pattern = TryPattern();
-                var guard = TryCaseGuard();
+                var guard = TryWhenGuard();
                 var body = TryBody();
 
                 return new Case(End(), pattern, guard, body);
@@ -302,12 +289,10 @@ namespace Joke.Joke.Decoding
             return null;
         }
 
-        private When? TryCaseGuard()
+        private When? TryWhenGuard()
         {
-            if (Is(TK.When))
+            if (IsBeginMatch(TK.When))
             {
-                Begin();
-                Match(TK.When);
                 var condition = Expression();
                 return new When(End(), condition);
             }
@@ -317,8 +302,7 @@ namespace Joke.Joke.Decoding
 
         private Try Try()
         {
-            Begin();
-            Match(TK.Try);
+            BeginMatch(TK.Try);
             var body = Expression();
             var @else = TryElse();
             var then = TryThen();
@@ -329,8 +313,7 @@ namespace Joke.Joke.Decoding
 
         private While While()
         {
-            Begin();
-            Match(TK.While);
+            BeginMatch(TK.While);
             var condition = Expression();
             Match(TK.Do);
             var body = Expression();
@@ -342,8 +325,7 @@ namespace Joke.Joke.Decoding
 
         private Repeat Repeat()
         {
-            Begin();
-            Match(TK.Repeat);
+            BeginMatch(TK.Repeat);
             var body = Expression();
             Match(TK.Until);
             var condition = Expression();
@@ -366,8 +348,7 @@ namespace Joke.Joke.Decoding
 
         private Conditional Conditional(TK token)
         {
-            Begin();
-            Match(token);
+            BeginMatch(token);
             var condition = Expression();
             Match(TK.Then);
             var thenPart = Expression();
@@ -386,10 +367,8 @@ namespace Joke.Joke.Decoding
 
         private Else? TryElse()
         {
-            if (Is(TK.Else))
+            if (IsBeginMatch(TK.Else))
             {
-                Begin();
-                MatchAny();
                 var body = Expression();
                 return new Else(End(), body);
             }
@@ -399,10 +378,8 @@ namespace Joke.Joke.Decoding
 
         private Then? TryThen()
         {
-            if (Is(TK.Then))
+            if (IsBeginMatch(TK.Then))
             {
-                Begin();
-                MatchAny();
                 var body = Expression();
                 return new Then(End(), body);
             }
@@ -417,23 +394,18 @@ namespace Joke.Joke.Decoding
 
         private IExpression? TryLocal()
         {
-            switch (Current.Kind)
+            return Current.Kind switch
             {
-                case TK.Var:
-                    return Local(LocalKind.Var);
-                case TK.Let:
-                    return Local(LocalKind.Let);
-                case TK.Embed:
-                    return Local(LocalKind.Embed);
-                default:
-                    return null;
-            }
+                TK.Var => Local(LocalKind.Var),
+                TK.Let => Local(LocalKind.Let),
+                TK.Embed => Local(LocalKind.Embed),
+                _ => null,
+            };
         }
 
         private IExpression Local(LocalKind kind)
         {
-            Begin();
-            Match(Current.Kind);
+            BeginMatch(Current.Kind);
             var name = Identifier();
             var type = TryTypeAnnotation();
             return new Local(End(), kind, name, type);
@@ -452,8 +424,7 @@ namespace Joke.Joke.Decoding
                 case Tree.UnaryOp.Missing:
                     return TryPostfix(next);
                 default:
-                    Begin();
-                    Match(Current.Kind);
+                    BeginMatch(Current.Kind);
                     var operand = ParamPattern();
                     return new Unary(End(), op, operand);
             }
@@ -461,19 +432,14 @@ namespace Joke.Joke.Decoding
 
         private UnaryOp UnaryOp(bool next)
         {
-            switch (Current.Kind)
+            return Current.Kind switch
             {
-                case TK.Not:
-                    return Tree.UnaryOp.Not;
-                case TK.Addressof:
-                    return Tree.UnaryOp.Addressof;
-                case TK.Digestof:
-                    return Tree.UnaryOp.Digestof;
-                case TK.Minus when !next || Current.Nl:
-                    return Tree.UnaryOp.Minus;
-                default:
-                    return Tree.UnaryOp.Missing;
-            }
+                TK.Not => Tree.UnaryOp.Not,
+                TK.Addressof => Tree.UnaryOp.Addressof,
+                TK.Digestof => Tree.UnaryOp.Digestof,
+                TK.Minus when !next || Current.Nl => Tree.UnaryOp.Minus,
+                _ => Tree.UnaryOp.Missing,
+            };
         }
 
         private IExpression? TryPostfix(bool next = false)
@@ -488,8 +454,7 @@ namespace Joke.Joke.Decoding
                 post = TryPostfixMore(atom);
             }
 
-            End();
-            return atom;
+            return Scrap(atom);
         }
 
         private IExpression? TryPostfixMore(IExpression expression)
@@ -536,12 +501,10 @@ namespace Joke.Joke.Decoding
 
         private ArgumentList Arguments()
         {
-            Begin();
-            Match(TK.LParen);
+            BeginMatch(TK.LParen);
             var arguments = CollectOptional(() => TryExpression(), TK.Comma);
-            if (Is(TK.Where))
+            if (IsMatch(TK.Where))
             {
-                Match(TK.Where);
                 var named = Collect(NamedArgument, TK.Comma);
                 arguments = arguments.Concat(named).ToList();
             }
@@ -597,65 +560,49 @@ namespace Joke.Joke.Decoding
 
         private Bool Bool()
         {
-            Begin();
-            Match(Current.Kind);
+            BeginMatch(Current.Kind);
             return new Bool(End());
         }
 
         private IExpression MaybeTuple()
         {
-            Begin();
-            Match(TK.LParen);
+            BeginMatch(TK.LParen);
             var expressions = Collect(() => Expression(), TK.Comma);
             Match(TK.RParen);
-
-            if (expressions.Count == 1)
-            {
-                End();
-                return expressions[0];
-            }
-
-            return new Tuple(End(), expressions);
+            return Singularize(expressions) ?? new Tuple(End(), expressions);
         }
 
         private Char Character()
         {
-            Begin();
-            Match(TK.Char);
+            BeginMatch(TK.Char);
             return new Char(End());
         }
 
         private String String()
         {
-            Begin();
-            Match(TK.String);
+            BeginMatch(TK.String);
             return new String(End());
         }
 
         private String DocString()
         {
-            Begin();
-            Match(TK.DocString);
+            BeginMatch(TK.DocString);
             return new String(End());
         }
 
         private String? TryAnyString()
         {
-            switch (Current.Kind)
+            return Current.Kind switch
             {
-                case TK.String:
-                    return String();
-                case TK.DocString:
-                    return DocString();
-            }
-
-            return null;
+                TK.String => String(),
+                TK.DocString => DocString(),
+                _ => null,
+            };
         }
 
         private ThisValue ThisValue()
         {
-            Begin();
-            Match(TK.This);
+            BeginMatch(TK.This);
             return new ThisValue(End());
         }
 
@@ -668,83 +615,68 @@ namespace Joke.Joke.Decoding
 
         private Wildcard Wildcard()
         {
-            Begin();
-            Match(TK.Wildcard);
+            BeginMatch(TK.Wildcard);
             return new Wildcard(End());
         }
 
         private Integer Integer()
         {
-            Begin();
-            Match(TK.Integer);
+            BeginMatch(TK.Integer);
             return new Integer(End());
         }
 
         private IExpression? TryJump()
         {
-            switch (Current.Kind)
+            return Current.Kind switch
             {
-                case TK.Return:
-                    return Return();
-                case TK.Break:
-                    return Break();
-                case TK.Continue:
-                    return Continue();
-                case TK.Error:
-                    return Error();
-                case TK.CompileIntrinsic:
-                    return CompileIntrinsic();
-                case TK.CompileError:
-                    return CompileError();
-            }
-
-            return null;
+                TK.Return => Return(),
+                TK.Break => Break(),
+                TK.Continue => Continue(),
+                TK.Error => Error(),
+                TK.CompileIntrinsic => CompileIntrinsic(),
+                TK.CompileError => CompileError(),
+                _ => null,
+            };
         }
 
         private IExpression Return()
         {
-            Begin();
-            Match(TK.Return);
+            BeginMatch(TK.Return);
             var sequence = TrySequence();
             return new Return(End(), sequence);
         }
 
         private IExpression Break()
         {
-            Begin();
-            Match(TK.Break);
+            BeginMatch(TK.Break);
             var sequence = TrySequence();
             return new Break(End(), sequence);
         }
 
         private IExpression Continue()
         {
-            Begin();
-            Match(TK.Continue);
+            BeginMatch(TK.Continue);
             var sequence = TrySequence();
             return new Continue(End(), sequence);
         }
 
         private IExpression Error()
         {
-            Begin();
-            Match(TK.Error);
+            BeginMatch(TK.Error);
             var sequence = TrySequence();
             return new Tree.Error(End(), sequence);
         }
 
         private IExpression CompileIntrinsic()
         {
-            Begin();
-            Match(TK.CompileIntrinsic);
+            BeginMatch(TK.CompileIntrinsic);
             var sequence = TrySequence();
             return new CompileIntrinsic(End(), sequence);
         }
 
         private IExpression CompileError()
         {
-            Begin();
-            Match(TK.CompileError);
+            BeginMatch(TK.CompileError);
             var sequence = TrySequence();
             return new CompileError(End(), sequence);
         }
