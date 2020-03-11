@@ -4,8 +4,8 @@
     fun rem(that: N): N
     fun div(that: N): N
     fun mod(that: N): N
-    fun quotRem(that: N): (N, N)
-    fun divMod(that: N): (N, N)
+    fun quot-rem(that: N): (N, N)
+    fun div-mod(that: N): (N, N)
 
     fun even(): bool
     fun odd(): bool

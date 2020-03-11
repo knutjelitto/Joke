@@ -107,13 +107,14 @@ namespace Joke.Joke.Decoding
             Begin();
             var doc = TryAnyString();
             Match(token);
+            var cap = TryCap();
             var name = Identifier();
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
             var members = ClassMembers();
 
 
-            return new ClassType(End(), kind, doc, name, typeparameters, provides, members);
+            return new ClassType(End(), kind, doc, cap, name, typeparameters, provides, members);
         }
 
         private MemberList ClassMembers()
@@ -176,6 +177,7 @@ namespace Joke.Joke.Decoding
             Begin();
             var doc = TryAnyString();
             Match(token);
+            var cap = TryCap();
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
@@ -183,7 +185,7 @@ namespace Joke.Joke.Decoding
             var throws = TryThrows();
             var body = TryBody();
 
-            return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
+            return new Method(End(), kind, doc, cap, name, typeParameters, parameters, @return, throws, body);
         }
 
         private Throws? TryThrows()
@@ -311,17 +313,50 @@ namespace Joke.Joke.Decoding
 
         private IType? TryType()
         {
-            switch (Current.Kind)
+            var type = TryAtomType();
+
+            if (type != null)
             {
-                case TK.This:
-                    return ThisType();
-                case TK.LParen:
-                    return TryTupleType();
-                case TK.Identifier:
-                    return NominalType();
+                if (IsMatch(TK.Arrow))
+                {
+                    var to = Type();
+
+                    return new ViewType(Mark(type), type, to);
+                }
             }
 
-            return null;
+            return type;
+        }
+
+        private IType? TryAtomType()
+        {
+            return Current.Kind switch
+            {
+                TK.This => ThisType(),
+                TK.LParen => TryTupleType(),
+                TK.Identifier => NominalType(),
+                _ => TryCap(),
+            };
+        }
+
+        private Cap? TryCap()
+        {
+            return Current.Kind switch
+            {
+                TK.Tag => MakeCap(TK.Tag, CapKind.Tag),
+                TK.Box => MakeCap(TK.Box, CapKind.Box),
+                TK.Val => MakeCap(TK.Val, CapKind.Val),
+                TK.Iso => MakeCap(TK.Iso, CapKind.Iso),
+                TK.Ref => MakeCap(TK.Ref, CapKind.Ref),
+                TK.Trn => MakeCap(TK.Trn, CapKind.Trn),
+                _ => null,
+            };
+        }
+
+        private Cap MakeCap(TK token, CapKind kind)
+        {
+            BeginMatch(token);
+            return new Cap(End(), kind);
         }
 
         private IType NominalType()
@@ -329,7 +364,8 @@ namespace Joke.Joke.Decoding
             Begin();
             var name = QualifiedIdentifier();
             var arguments = TryTypeArguments();
-            return new NominalType(End(), name, arguments);
+            var cap = TryCap();
+            return new NominalType(End(), name, arguments, cap);
         }
 
         private TypeList TypeArguments()

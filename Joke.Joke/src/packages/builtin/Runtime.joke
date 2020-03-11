@@ -2,9 +2,17 @@
     fun memcmp(dst: Pointer<u8>, src: Pointer<u8>, len: usize) : i32
     fun memset(dst: Pointer<none>, set: u32, len: usize) : Pointer<None>
     fun memmove(dst: Pointer<none>, src: Pointer<none>, len: usize) : Pointer<none>
+    
     fun strtof(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f32
     fun strtod(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f64
 
+    fun pony_os_stdin_read(buffer: Pointer<u8>, size: usize, again: Pointer<bool>) : usize
+
     fun pony_os_clear_errno() : none
     fun pony_os_errno() : i32
+
+    fun pony_asio_event_create(owner: AsioEventNotify, fd: u32, flags: u32, nsec: u64, noisy: bool) : AsioEventID
+    fun pony_asio_event_unsubscribe(event: AsioEventID)
+    fun pony_asio_event_destroy(event: AsioEventID)
+
 end

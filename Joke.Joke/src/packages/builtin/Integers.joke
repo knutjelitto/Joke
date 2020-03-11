@@ -16,7 +16,7 @@ primitive u8 is Integral<u8>
 """
 primitive u16 is Integral<u16>
 
-    new op_widen(that: u8): u16 => compile_intrinsic
+    new widen(that: u8): u16 => compile_intrinsic
 
     fun op_add(that: u16): u16 => compile_intrinsic
     fun op_sub(that: u16): u16 => compile_intrinsic
@@ -31,8 +31,8 @@ primitive u16 is Integral<u16>
 """
 primitive u32 is Integral<u32>
 
-    new op_widen(that: u8): u32 => compile_intrinsic
-    new op_widen(that: u16): u32 => compile_intrinsic
+    new widen(that: u8): u32 => compile_intrinsic
+    new widen(that: u16): u32 => compile_intrinsic
 
     fun op_add(that: u32): u32 => compile_intrinsic
     fun op_sub(that: u32): u32 => compile_intrinsic
@@ -47,9 +47,9 @@ primitive u32 is Integral<u32>
 """
 primitive u64 is Integral<u64>
 
-    new op_widen(that: u8): u64 => compile_intrinsic
-    new op_widen(that: u16): u64 => compile_intrinsic
-    new op_widen(that: u32): u64 => compile_intrinsic
+    new widen(that: u8): u64 => compile_intrinsic
+    new widen(that: u16): u64 => compile_intrinsic
+    new widen(that: u32): u64 => compile_intrinsic
 
     fun op_add(that: u64): u64 => compile_intrinsic
     fun op_sub(that: u64): u64 => compile_intrinsic
@@ -78,8 +78,8 @@ primitive i8 is Integral<i8>
 """
 primitive i16 is Integral<i16>
 
-    new op_widen(that: i8): i16 => compile_intrinsic
-    new op_widen(that: u8): i16 => compile_intrinsic
+    new widen(that: i8): i16 => compile_intrinsic
+    new widen(that: u8): i16 => compile_intrinsic
 
     fun op_add(that: i16): i16 => compile_intrinsic
     fun op_sub(that: i16): i16 => compile_intrinsic
@@ -95,10 +95,10 @@ primitive i16 is Integral<i16>
 """
 primitive i32 is Integral<i32>
 
-    new op_widen(that: i8): i32 => compile_intrinsic
-    new op_widen(that: i16): i32 => compile_intrinsic
-    new op_widen(that: u8): i32 => compile_intrinsic
-    new op_widen(that: u16): i32 => compile_intrinsic
+    new widen(that: i8): i32 => compile_intrinsic
+    new widen(that: i16): i32 => compile_intrinsic
+    new widen(that: u8): i32 => compile_intrinsic
+    new widen(that: u16): i32 => compile_intrinsic
 
     fun op_add(that: i32): i32 => compile_intrinsic
     fun op_sub(that: i32): i32 => compile_intrinsic
@@ -114,12 +114,12 @@ primitive i32 is Integral<i32>
 """
 primitive i64 is Integral<i64>
 
-    new op_widen(that: i8): i64 => compile_intrinsic
-    new op_widen(that: i16): i64 => compile_intrinsic
-    new op_widen(that: i32): i64 => compile_intrinsic
-    new op_widen(that: u8): i64 => compile_intrinsic
-    new op_widen(that: u16): i64 => compile_intrinsic
-    new op_widen(that: u32): i64 => compile_intrinsic
+    new widen(that: i8): i64 => compile_intrinsic
+    new widen(that: i16): i64 => compile_intrinsic
+    new widen(that: i32): i64 => compile_intrinsic
+    new widen(that: u8): i64 => compile_intrinsic
+    new widen(that: u16): i64 => compile_intrinsic
+    new widen(that: u32): i64 => compile_intrinsic
 
     fun op_add(that: i64): i64 => compile_intrinsic
     fun op_sub(that: i64): i64 => compile_intrinsic
