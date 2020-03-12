@@ -1,4 +1,4 @@
-﻿primitive f32 is Float<f32>
+﻿primitive f32 is Floating<f32>
 
     new op_widen(that: i8): f32 => compile_intrinsic
     new op_widen(that: i16): f32 => compile_intrinsic
@@ -13,7 +13,7 @@
     fun neg(): f32 => compile_intrinsic
 
 
-primitive f64 is Float<f64>
+primitive f64 is Floating<f64>
 
     new op_widen(that: i8): f64 => compile_intrinsic
     new op_widen(that: i16): f64 => compile_intrinsic

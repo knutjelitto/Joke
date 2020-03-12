@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
+
 using Joke.Joke.Decoding;
 using Joke.Joke.Err;
 using Joke.Joke.Tools;
+using Joke.Joke.Tree;
 
 namespace Joke.Joke
 {
@@ -21,22 +21,26 @@ namespace Joke.Joke
             foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(0))
             {
                 Console.WriteLine($"{unitFile}");
-                var ok = Compile(unitFile);
-                if (!ok)
+                var (errors, unit) = Compile(unitFile);
+                if (!errors.NoError())
                 {
+                    errors.Describe(Console.Out);
                     break;
                 }
             }
         }
 
-        private bool Compile(FileRef file)
+        private (Errors, CompilationUnit?) Compile(FileRef file)
         {
             var source = Source.FromFile(file);
             var errors = new Errors();
             var tokenizer = new Tokenizer(errors, source);
             var tokens = tokenizer.Tokenize();
 
-            errors.Describe(Console.Out);
+            if (!errors.NoError())
+            {
+                return (errors, null);
+            }
 
 #if false
             var builder = new StringBuilder(source.Content.Length);
@@ -54,15 +58,15 @@ namespace Joke.Joke
             try
             {
                 var unit = parser.ParseUnit();
+
+                return (errors, unit);
             }
-            catch (NotImplementedException)
+            catch
             {
 
             }
 
-            errors.Describe(Console.Out);
-
-            return errors.NoError();
+            return (errors, null);
         }
 
         private DirRef ProjectDir => DirRef.ProjectDir().Up.Dir("Joke.Joke");

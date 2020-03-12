@@ -1,4 +1,5 @@
 ﻿interface Comparable<A: Comparable<A>> is Equatable<A>
+
     fun lt(that: A): bool
     fun le(that: A): bool => lt(that) or eq(that)
     fun ge(that: A): bool => not lt(that)

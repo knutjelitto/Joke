@@ -22,7 +22,7 @@ interface InputStream
     Set the notifier. Optionally, also sets the chunk size, dictating the
     maximum number of bytes of each chunk that will be passed to the notifier.
     """
-    be apply(notify: (InputNotify | None), chunk_size: USize = 32)
+    be apply(notify: (InputNotify | none), chunk_size: USize = 32)
 
     """
     Clear the notifier in order to shut down input.
@@ -37,23 +37,24 @@ access is provided only via an environment.
 Reading from stdin is done by registering an `InputNotify`:
 
 ```pony
-actor Main
-new create(env: Env) =>
-    // do not forget to call `env.input.dispose` at some point
-    env.input(
-    object iso is InputNotify
-        fun ref apply(data: Array[U8] iso) =>
-        env.out.write(String.from_iso_array(data))
+    actor Main
+    new create(env: Env) =>
+        // do not forget to call `env.input.dispose` at some point
+        env.input(
+        object is InputNotify
+            fun apply(data: Array[U8] iso) =>
+                env.out.write(String.from_iso_array(data))
 
-        fun ref dispose() =>
-        env.out.print("Done.")
-    end,
-    512)
+            fun ref dispose() =>
+                env.out.print("Done.")
+        end,
+        512)
 ```
 
 **Note:** For reading user input from a terminal, use the [term](term--index.md) package.
 """
 actor Stdin
+    
     var _notify: (InputNotify | none) = none
     var _chunk_size: USize = 32
     var _event: AsioEventID = AsioEvent.none()

@@ -4,11 +4,14 @@ using Joke.Joke.Decoding;
 
 namespace Joke.Joke.Tree
 {
-    public class CaptureList : Collection<ICapture>
+    public class CaptureList : Collection<ICapture>, IAny
     {
         public CaptureList(TokenSpan span, IReadOnlyList<ICapture> items)
-            : base(span, items)
+            : base(items)
         {
+            Span = span;
         }
+
+        public TokenSpan Span { get; }
     }
 }

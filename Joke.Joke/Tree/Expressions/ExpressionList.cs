@@ -7,8 +7,11 @@ namespace Joke.Joke.Tree
     public class ExpressionList : Collection<IExpression>
     {
         public ExpressionList(TokenSpan span, IReadOnlyList<IExpression> items)
-            : base(span, items)
+            : base(items)
         {
+            Span = span;
         }
+
+        public TokenSpan Span { get; }
     }
 }

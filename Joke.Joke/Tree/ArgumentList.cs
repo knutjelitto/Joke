@@ -7,8 +7,11 @@ namespace Joke.Joke.Tree
     public class ArgumentList : Collection<IExpression>
     {
         public ArgumentList(TokenSpan span, IReadOnlyList<IExpression> items)
-            : base(span, items)
+            : base(items)
         {
+            Span = span;
         }
+
+        public TokenSpan Span { get; }
     }
 }

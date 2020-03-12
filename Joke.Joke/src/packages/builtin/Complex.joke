@@ -1,4 +1,4 @@
-﻿struct Complex<F: Float<F>> is Number<Complex>
+﻿struct complex<F: Floating<F>> is Number<complex>
 
     let re: F
     let im: F
@@ -12,26 +12,26 @@
         create(that, 0)
 
 
-    fun op_add(that: Complex<F>): Complex<F> =>
-        Complex(this.re + that.re, this.im + that.im)
+    fun op_add(that: complex<F>): complex<F> =>
+        complex(this.re + that.re, this.im + that.im)
 
 
-    fun op_sub(that: Complex<F>): Complex<F> =>
-        Complex(this.re + that.re, this.im + that.im)
+    fun op_sub(that: complex<F>): complex<F> =>
+        complex(this.re + that.re, this.im + that.im)
 
 
-    fun op_mul(that: Complex<F>): Complex<F> =>
-        Complex((this.re * that.re) - (this.im * that.im), (this.re * that.im) + (this.im * that.re))
+    fun op_mul(that: complex<F>): complex<F> =>
+        complex((this.re * that.re) - (this.im * that.im), (this.re * that.im) + (this.im * that.re))
 
 
-    fun op_div(that: Complex<F>): Complex<F> =>
+    fun op_div(that: complex<F>): complex<F> =>
         let sqr = (that.re * that.re) + (that.im * that.im)
-        Complex(
+        complex(
             ((this.re * that.re) + (this.im * that.im)) / sqr,
             ((this.im * that.re) - (this.re * that.im)) / sqr)
 
 
-type Complex32 is Complex<f32>
-type Complex64 is Complex<f64>
+type complex32 is complex<f32>
+type complex64 is complex<f64>
 
-type Complex is Complex64
+type complex is complex64
