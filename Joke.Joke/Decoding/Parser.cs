@@ -107,14 +107,13 @@ namespace Joke.Joke.Decoding
             Begin();
             var doc = TryAnyString();
             Match(token);
-            var cap = TryCap();
             var name = Identifier();
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
             var members = ClassMembers();
 
 
-            return new ClassType(End(), kind, doc, cap, name, typeparameters, provides, members);
+            return new ClassType(End(), kind, doc, name, typeparameters, provides, members);
         }
 
         private MemberList ClassMembers()
@@ -177,7 +176,6 @@ namespace Joke.Joke.Decoding
             Begin();
             var doc = TryAnyString();
             Match(token);
-            var cap = TryCap();
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
@@ -185,7 +183,7 @@ namespace Joke.Joke.Decoding
             var throws = TryThrows();
             var body = TryBody();
 
-            return new Method(End(), kind, doc, cap, name, typeParameters, parameters, @return, throws, body);
+            return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
         }
 
         private Throws? TryThrows()
@@ -217,12 +215,19 @@ namespace Joke.Joke.Decoding
             return null;
         }
 
-        private ValueParameterList ValueParameters()
+        private Body Body()
+        {
+            BeginMatch(TK.DblArrow);
+            var expression = Expression();
+            return new Body(End(), expression);
+        }
+
+        private ParameterList ValueParameters()
         {
             BeginMatch(TK.LParen);
             var items = CollectOptional(TryParameter, TK.Comma);
             Match(TK.RParen);
-            return new ValueParameterList(End(), items);
+            return new ParameterList(End(), items);
         }
 
         private ValueParameter? TryParameter()
@@ -313,19 +318,7 @@ namespace Joke.Joke.Decoding
 
         private IType? TryType()
         {
-            var type = TryAtomType();
-
-            if (type != null)
-            {
-                if (IsMatch(TK.Arrow))
-                {
-                    var to = Type();
-
-                    return new ViewType(Mark(type), type, to);
-                }
-            }
-
-            return type;
+            return TryAtomType();
         }
 
         private IType? TryAtomType()
@@ -335,28 +328,22 @@ namespace Joke.Joke.Decoding
                 TK.This => ThisType(),
                 TK.LParen => TryTupleType(),
                 TK.Identifier => NominalType(),
-                _ => TryCap(),
-            };
-        }
-
-        private Cap? TryCap()
-        {
-            return Current.Kind switch
-            {
-                TK.Tag => MakeCap(TK.Tag, CapKind.Tag),
-                TK.Box => MakeCap(TK.Box, CapKind.Box),
-                TK.Val => MakeCap(TK.Val, CapKind.Val),
-                TK.Iso => MakeCap(TK.Iso, CapKind.Iso),
-                TK.Ref => MakeCap(TK.Ref, CapKind.Ref),
-                TK.Trn => MakeCap(TK.Trn, CapKind.Trn),
+                TK.LBrace => LambdaType(),
                 _ => null,
             };
         }
 
-        private Cap MakeCap(TK token, CapKind kind)
+        private LambdaType LambdaType()
         {
-            BeginMatch(token);
-            return new Cap(End(), kind);
+            BeginMatch(TK.LBrace);
+            var name = TryIdentifier();
+            var typeParameters = TryTypeParameters();
+            var parameters = LambdaTypeParameters();
+            var result = TryTypeAnnotation();
+            var throws = TryThrows();
+            Match(TK.RBrace);
+
+            return new LambdaType(End(), name, typeParameters, parameters, result, throws);
         }
 
         private IType NominalType()
@@ -364,32 +351,8 @@ namespace Joke.Joke.Decoding
             Begin();
             var name = QualifiedIdentifier();
             var arguments = TryTypeArguments();
-            var cap = TryCap();
-            var ephm = TryEphm();
-            var aliased = ephm == null ? TryAliased() : null;
-            Debug.Assert((ephm == null & aliased == null) | (ephm == null ^ aliased == null));
 
-            return new NominalType(End(), name, arguments, cap, ephm, aliased);
-        }
-
-        private Ephm? TryEphm()
-        {
-            if (IsBeginMatch(TK.Hat))
-            {
-                return new Ephm(End());
-            }
-
-            return null;
-        }
-
-        private Aliased? TryAliased()
-        {
-            if (IsBeginMatch(TK.Exclamation))
-            {
-                return new Aliased(End());
-            }
-
-            return null;
+            return new NominalType(End(), name, arguments);
         }
 
         private TypeList TypeArguments()
@@ -410,6 +373,14 @@ namespace Joke.Joke.Decoding
                 Inconclusive();
             }
             return null;
+        }
+
+        private TypeList LambdaTypeParameters()
+        {
+            BeginMatch(TK.LParen);
+            var types = CollectOptional(TryType, TK.Comma);
+            Match(TK.RParen);
+            return new TypeList(End(), types);
         }
 
         private ThisType ThisType()
@@ -480,6 +451,15 @@ namespace Joke.Joke.Decoding
         {
             BeginMatch(TK.Identifier);
             return new Identifier(End());
+        }
+
+        private Identifier? TryIdentifier()
+        {
+            if (IsBeginMatch(TK.Identifier))
+            {
+                return new Identifier(End());
+            }
+            return null;
         }
     }
 }

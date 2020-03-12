@@ -2,19 +2,19 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Local : IExpression, INamed
+    public class NameCapture : ICapture, INamed
     {
-        public Local(TokenSpan span, LocalKind kind, Identifier name, IType? type)
+        public NameCapture(TokenSpan span, Identifier name, IType? type, IExpression? value)
         {
             Span = span;
-            Kind = kind;
             Name = name;
             Type = type;
+            Value = value;
         }
 
         public TokenSpan Span { get; }
-        public LocalKind Kind { get; }
         public Identifier Name { get; }
         public IType? Type { get; }
+        public IExpression? Value { get; }
     }
 }

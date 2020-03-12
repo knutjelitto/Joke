@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Field : IMember
+    public class Field : IMember, INamed
     {
         public Field(TokenSpan span, FieldKind kind, String? doc, Identifier name, IType type, IExpression? init)
         {

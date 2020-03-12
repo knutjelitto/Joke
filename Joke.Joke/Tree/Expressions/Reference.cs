@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Reference : IExpression
+    public class Reference : IExpression, INamed
     {
         public Reference(TokenSpan span, Identifier name)
         {

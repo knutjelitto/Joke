@@ -6,23 +6,23 @@ interface InputNotify
     """
     Called when data is available on the stream.
     """
-    fun ref apply(data: Array<u8> iso) => none
+    fun apply(data: Array<u8>) => none
 
     """
     Called when no more data will arrive on the stream.
     """
-    fun ref dispose() => none
+    fun dispose() => none
 
 """
 Asynchronous access to some input stream.
 """
-interface tag InputStream
+interface InputStream
     
     """
     Set the notifier. Optionally, also sets the chunk size, dictating the
     maximum number of bytes of each chunk that will be passed to the notifier.
     """
-    be apply(notify: (InputNotify iso | None), chunk_size: USize = 32)
+    be apply(notify: (InputNotify | None), chunk_size: USize = 32)
 
     """
     Clear the notifier in order to shut down input.
@@ -43,7 +43,7 @@ new create(env: Env) =>
     env.input(
     object iso is InputNotify
         fun ref apply(data: Array[U8] iso) =>
-        env.out.write(String.from_iso_array(consume data))
+        env.out.write(String.from_iso_array(data))
 
         fun ref dispose() =>
         env.out.print("Done.")
@@ -71,8 +71,8 @@ actor Stdin
     Set the notifier. Optionally, also sets the chunk size, dictating the
     maximum number of bytes of each chunk that will be passed to the notifier.
     """
-    be apply(notify: (InputNotify iso | none), chunk_size: USize = 32) =>
-        _set_notify(consume notify)
+    be apply(notify: (InputNotify | none), chunk_size: USize = 32) =>
+        _set_notify(notify)
         _chunk_size = chunk_size
 
   
@@ -86,7 +86,7 @@ actor Stdin
     """
     Set the notifier.
     """
-    fun ref _set_notify(notify: (InputNotify iso | none)) =>
+    fun _set_notify(notify: (InputNotify | none)) =>
         if notify is None then
             if _use_event and not _event.is_null() then
                 // Unsubscribe the event.
@@ -104,7 +104,7 @@ actor Stdin
         end
 
         try (_notify as InputNotify).dispose() end
-        _notify = consume notify
+        _notify = notify
 
   
     """
@@ -138,14 +138,14 @@ actor Stdin
     Read a chunk of data from stdin. Read a maximum of _chunk_size bytes, send
     ourself a resume message and stop reading to avoid starving other actors.
     """
-    fun ref _read(): Bool =>
+    fun _read(): Bool =>
         try
             let notify = _notify as InputNotify
             var sum: USize = 0
 
             while true do
                 let chunk_size = _chunk_size
-                var data = recover Array<u8> .> undefined(chunk_size) end
+                var data = Array<u8> .> undefined(chunk_size)
                 var again: bool = false
 
                 let len = C.pony_os_stdin_read(data.cpointer(), data.size(), addressof again)
@@ -163,7 +163,7 @@ actor Stdin
                 end
 
                 data.truncate(len)
-                notify(consume data)
+                notify(data)
 
                 if not again then
                     // Not allowed to call pony_os_stdin_read again yet, exit loop.
@@ -192,7 +192,7 @@ actor Stdin
     """
     Close the event.
     """
-    fun ref _close_event() =>
+    fun _close_event() =>
         if not _event.is_null() then
             C.pony_asio_event_unsubscribe(_event)
             _event = AsioEvent.none()

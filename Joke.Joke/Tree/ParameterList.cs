@@ -4,9 +4,9 @@ using Joke.Joke.Decoding;
 
 namespace Joke.Joke.Tree
 {
-    public class ValueParameterList : Collection<ValueParameter>
+    public class ParameterList : Collection<IParameter>
     {
-        public ValueParameterList(TokenSpan span, IReadOnlyList<ValueParameter> items)
+        public ParameterList(TokenSpan span, IReadOnlyList<IParameter> items)
             : base(span, items)
         {
         }

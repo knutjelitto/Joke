@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class OneName : INamePattern
+    public class OneName : INamePattern, INamed
     {
         public OneName(TokenSpan span, Identifier name)
         {

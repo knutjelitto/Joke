@@ -8,6 +8,7 @@ using Joke.Joke.Tree;
 using String = Joke.Joke.Tree.String;
 using Char = Joke.Joke.Tree.Char;
 using Tuple = Joke.Joke.Tree.Tuple;
+using System.Diagnostics;
 
 namespace Joke.Joke.Decoding
 {
@@ -226,32 +227,11 @@ namespace Joke.Joke.Decoding
                     break;
                 case TK.Try:
                     return Try();
-                case TK.Recover:
-                    return Recover();
-                case TK.Consume:
-                    return Consume();
                 default:
                     return TryPattern(next);
             }
 
             throw Expected("not-implemented");
-        }
-
-        private Recover Recover()
-        {
-            BeginMatch(TK.Recover);
-            var cap = TryCap();
-            var expression = Expression();
-            Match(TK.End);
-            return new Recover(End(), cap, expression);
-        }
-
-        private Consume Consume()
-        {
-            BeginMatch(TK.Consume);
-            var cap = TryCap();
-            var expression = Term();
-            return new Consume(End(), cap, expression);
         }
 
         private For For()
@@ -566,6 +546,8 @@ namespace Joke.Joke.Decoding
                     return Bool();
                 case TK.LParen when !next || Current.Nl:
                     return MaybeTuple();
+                case TK.LBrace:
+                    return Lambda();
                 case TK.LSquare when !next || Current.Nl:
                 case TK.Float:
                 case TK.Object:
@@ -577,6 +559,70 @@ namespace Joke.Joke.Decoding
             }
 
             return null;
+        }
+
+        private Lambda Lambda()
+        {
+            BeginMatch(TK.LBrace);
+            var x = markers.Count;
+            var name = TryIdentifier();
+            var typeParameters = TryTypeParameters();
+            var parameters = LambdaParameters();
+            var captures = TryCaptures();
+            var result = TryTypeAnnotation();
+            var throws = TryThrows();
+            var body = Body();
+            Match(TK.RBrace);
+            Debug.Assert(x == markers.Count);
+
+            return new Lambda(End(), name, typeParameters, parameters, captures, result, throws, body);
+        }
+
+        private ParameterList LambdaParameters()
+        {
+            BeginMatch(TK.LParen);
+            var parameters = CollectOptional(TryLambdaParameter, TK.Comma);
+            Match(TK.RParen);
+            return new ParameterList(End(), parameters);
+        }
+
+        private LambdaParameter? TryLambdaParameter()
+        {
+            if (Is(TK.Identifier))
+            {
+                Begin();
+                var name = Identifier();
+                var type = TryTypeAnnotation();
+                var value = TryInitInfix();
+                return new LambdaParameter(End(), name, type, value);
+            }
+            return null;
+        }
+
+        private CaptureList? TryCaptures()
+        {
+            if (IsBeginMatch(TK.LParen))
+            {
+                var captures = Collect(Capture, TK.Comma);
+                Match(TK.RParen);
+                return new CaptureList(End(), captures);
+            }
+            return null;
+        }
+
+        private ICapture Capture()
+        {
+            if (Is(TK.This))
+            {
+                BeginMatch(TK.This);
+                return new ThisCapture(End());
+            }
+
+            Begin();
+            var name = Identifier();
+            var type = TryTypeAnnotation();
+            var value = TryInitInfix();
+            return new NameCapture(End(), name, type, value);
         }
 
         private Bool Bool()

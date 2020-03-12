@@ -26,7 +26,7 @@ struct NullablePointer<A>
     `this` to be assigned to a field of variable of type A. If `this` is a null
     pointer, an error is raised.
     """
-    fun apply(): this->A ! =>
+    fun apply(): A ! =>
         compile_intrinsic
 
     """

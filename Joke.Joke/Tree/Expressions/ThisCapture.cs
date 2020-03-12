@@ -2,15 +2,13 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Cap : IType
+    public class ThisCapture : ICapture
     {
-        public Cap(TokenSpan span, CapKind kind)
+        public ThisCapture(TokenSpan span)
         {
             Span = span;
-            Kind = kind;
         }
 
         public TokenSpan Span { get; }
-        public CapKind Kind { get; }
     }
 }

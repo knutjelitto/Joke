@@ -38,6 +38,7 @@ namespace Joke.Joke
 
             errors.Describe(Console.Out);
 
+#if false
             var builder = new StringBuilder(source.Content.Length);
             foreach (var token in tokens)
             {
@@ -46,6 +47,7 @@ namespace Joke.Joke
             }
 
             Debug.Assert(builder.ToString() == source.Content);
+#endif
 
             var parser = new Parser(errors, tokens);
 

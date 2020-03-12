@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class AliasType : IType
+    public class AliasType : IType, INamed
     {
         public AliasType(TokenSpan span, Identifier name, IType type)
         {

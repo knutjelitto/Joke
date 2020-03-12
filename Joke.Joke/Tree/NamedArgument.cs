@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class NamedArgument : IExpression
+    public class NamedArgument : IExpression, INamed
     {
         public NamedArgument(TokenSpan span, Identifier name, IExpression value)
         {
