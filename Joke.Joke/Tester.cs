@@ -18,7 +18,7 @@ namespace Joke.Joke
 
         private void MakeBuiltin()
         {
-            foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(25))
+            foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(0))
             {
                 Console.WriteLine($"{unitFile}");
                 var ok = Compile(unitFile);

@@ -365,13 +365,38 @@ namespace Joke.Joke.Decoding
             var name = QualifiedIdentifier();
             var arguments = TryTypeArguments();
             var cap = TryCap();
-            return new NominalType(End(), name, arguments, cap);
+            var ephm = TryEphm();
+            var aliased = ephm == null ? TryAliased() : null;
+            Debug.Assert((ephm == null & aliased == null) | (ephm == null ^ aliased == null));
+
+            return new NominalType(End(), name, arguments, cap, ephm, aliased);
+        }
+
+        private Ephm? TryEphm()
+        {
+            if (IsBeginMatch(TK.Hat))
+            {
+                return new Ephm(End());
+            }
+
+            return null;
+        }
+
+        private Aliased? TryAliased()
+        {
+            if (IsBeginMatch(TK.Exclamation))
+            {
+                return new Aliased(End());
+            }
+
+            return null;
         }
 
         private TypeList TypeArguments()
         {
             return TryTypeArguments() ?? throw Expected("type-arguments");
         }
+
         private TypeList? TryTypeArguments()
         {
             if (IsBeginMatch(TK.Lt))

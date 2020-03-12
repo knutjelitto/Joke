@@ -226,11 +226,32 @@ namespace Joke.Joke.Decoding
                     break;
                 case TK.Try:
                     return Try();
+                case TK.Recover:
+                    return Recover();
+                case TK.Consume:
+                    return Consume();
                 default:
                     return TryPattern(next);
             }
 
             throw Expected("not-implemented");
+        }
+
+        private Recover Recover()
+        {
+            BeginMatch(TK.Recover);
+            var cap = TryCap();
+            var expression = Expression();
+            Match(TK.End);
+            return new Recover(End(), cap, expression);
+        }
+
+        private Consume Consume()
+        {
+            BeginMatch(TK.Consume);
+            var cap = TryCap();
+            var expression = Term();
+            return new Consume(End(), cap, expression);
         }
 
         private For For()

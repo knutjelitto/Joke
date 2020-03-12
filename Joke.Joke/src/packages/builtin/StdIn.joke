@@ -194,6 +194,6 @@ actor Stdin
     """
     fun ref _close_event() =>
         if not _event.is_null() then
-            @pony_asio_event_unsubscribe(_event)
+            C.pony_asio_event_unsubscribe(_event)
             _event = AsioEvent.none()
         end
