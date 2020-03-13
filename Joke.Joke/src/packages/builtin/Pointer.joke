@@ -3,7 +3,7 @@ A Pointer<A> is a raw memory pointer. It has no descriptor and thus can't be
 included in a union or intersection, or be a subtype of any interface. Most
 functions on a Pointer<A> are private to maintain memory safety.
 """
-struct Pointer<A> is Ordered<Pointer<A>>
+struct Pointer<A> is Comparable<Pointer<A>>
       
     """
     A null pointer.
@@ -144,4 +144,4 @@ struct Pointer<A> is Ordered<Pointer<A>>
     """
     Returns a 64-bit hash of the address.
     """
-    fun hash64(): U64 => usize().hash64()
+    fun hash64(): u64 => usize().hash64()

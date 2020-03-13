@@ -8,7 +8,7 @@
         im = im'
 
 
-    new op_widen(that: F) =>
+    new widen(that: F) =>
         create(that, 0)
 
 

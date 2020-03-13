@@ -1,9 +1,9 @@
 ﻿primitive f32 is Floating<f32>
 
-    new op_widen(that: i8): f32 => compile_intrinsic
-    new op_widen(that: i16): f32 => compile_intrinsic
-    new op_widen(that: u8): f32 => compile_intrinsic
-    new op_widen(that: u16): f32 => compile_intrinsic
+    new widen(that: i8): f32 => compile_intrinsic
+    new widen(that: i16): f32 => compile_intrinsic
+    new widen(that: u8): f32 => compile_intrinsic
+    new widen(that: u16): f32 => compile_intrinsic
 
     fun add(that: f32): f32 => compile_intrinsic
     fun sub(that: f32): f32 => compile_intrinsic
@@ -15,13 +15,13 @@
 
 primitive f64 is Floating<f64>
 
-    new op_widen(that: i8): f64 => compile_intrinsic
-    new op_widen(that: i16): f64 => compile_intrinsic
-    new op_widen(that: i32): f64 => compile_intrinsic
-    new op_widen(that: u8): f64 => compile_intrinsic
-    new op_widen(that: u16): f64 => compile_intrinsic
-    new op_widen(that: u32): f64 => compile_intrinsic
-    new op_widen(that: f32): f64 => compile_intrinsic
+    new widen(that: i8): f64 => compile_intrinsic
+    new widen(that: i16): f64 => compile_intrinsic
+    new widen(that: i32): f64 => compile_intrinsic
+    new widen(that: u8): f64 => compile_intrinsic
+    new widen(that: u16): f64 => compile_intrinsic
+    new widen(that: u32): f64 => compile_intrinsic
+    new widen(that: f32): f64 => compile_intrinsic
 
     fun add(that: f64): f64 => compile_intrinsic
     fun sub(that: f64): f64 => compile_intrinsic

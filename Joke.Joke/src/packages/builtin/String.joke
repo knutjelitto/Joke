@@ -69,13 +69,12 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     new from_iso_array(data: Array<u8>) =>
         _size = data.size()
         _alloc = data.space()
-        _ptr = (data).cpointer()._unsafe()
+        _ptr = data.cpointer()._unsafe()
         if _alloc > _size then
             _set(_size, 0)
         end
 
 
-        
     """
     Return a string from binary pointer data without making a
     copy. This must be done only with C-FFI functions that return
@@ -93,7 +92,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             _alloc = alloc.max(_size.min(len.max_value() - 1))
             _ptr = str
         end
-
 
 
     """
@@ -142,7 +140,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Create a string by copying a null-terminated C string. Note that
     the scan is unbounded; the pointed to data must be null-terminated
@@ -169,7 +166,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Create a UTF-8 string from a single UTF-32 code point.
     """
@@ -189,7 +185,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             end
         end
         _set(_size, 0)
-
 
 
     """
@@ -213,13 +208,11 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         _set(_size, 0)
 
 
-
     """
     Copy copy_len characters from this to that at specified offsets.
     """
     fun _copy_to(ptr: Pointer<u8>, copy_len: usize, from_offset: usize = 0, to_offset: usize = 0) =>
         _ptr._offset(from_offset)._copy_to(ptr._offset(to_offset), copy_len)
-
 
       
     """
@@ -227,7 +220,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     """
     fun cpointer(offset: usize = 0): Pointer<u8> =>
         _ptr._offset(offset)
-
 
 
     """
@@ -247,13 +239,11 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         ptr
 
 
-
     """
     Returns an Array<u8> that reuses the underlying data pointer.
     """
     fun array(): Array<u8> =>
         Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
-
 
 
     """
@@ -263,13 +253,11 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         Array<u8>.from_cpointer(_ptr._unsafe(), _size, _alloc)
 
 
-
     """
     Returns the length of the string data in bytes.
     """
     fun size(): usize =>
         _size
-
 
         
     """
@@ -296,13 +284,11 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         return n
 
 
-
     """
     Returns the space available for data, not including the null terminator.
     """
     fun space(): usize =>
         if is_null_terminated() then _alloc - 1 else _alloc end
-
 
       
     """
@@ -342,7 +328,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Recalculates the string length. This is only needed if the string is
     changed via an FFI call. If a null terminator byte is not found within the
@@ -360,7 +345,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Truncates the string at the minimum of len and space. Ensures there is a
     null terminator. Does not check for null terminators inside the string.
@@ -376,7 +360,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
         _set(_size, 0)
-
 
 
     """
@@ -407,7 +390,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             _ptr = _ptr._offset(offset)
         end
 
-
         
     """
     Return a shared portion of this string, covering `from` until `to`.
@@ -430,7 +412,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         else
             create()
         end
-
 
 
     """
@@ -457,7 +438,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             end
 
         (this, right)
-
 
         
     """
@@ -502,7 +482,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             b
         end
 
-
       
     """
     Return true if the string is null-terminated and safe to pass to an FFI
@@ -514,7 +493,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     """
     fun is_null_terminated(): bool =>
         (_alloc > 0) and (_alloc != _size) and (_ptr._apply(_size) == 0)
-
 
         
     """
@@ -603,14 +581,12 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             err
         end
 
-
-        
+    
     """
     Returns the i-th byte. Raise an error if the index is out of bounds.
     """
     fun apply(i: usize): u8 ! =>
         if i < _size then _ptr._apply(i) else error end
-
 
 
     """
@@ -624,7 +600,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Returns the byte at the given offset. Raise an error if the offset is out
     of bounds.
@@ -633,14 +608,12 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         this(offset_to_index(offset))!
 
 
-      
     """
     Changes a byte in the string, returning the previous byte at that offset.
     Raise an error if the offset is out of bounds.
     """
     fun update_offset(offset: ISize, value: u8): u8 ! =>
         this(offset_to_index(offset))! = value
-
 
       
     """
@@ -654,7 +627,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         str._size = len
         str._set(len, 0)
         str
-
 
       
     """
@@ -675,14 +647,12 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
 
         str
 
-
       
     """
     Returns a copy of the string repeated `num` times.
     """
     fun mul(num: usize): String =>
         repeat_str(num)
-
 
       
     """
@@ -713,7 +683,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             i = i + 1
         end
         error
-
 
       
     """
@@ -747,7 +716,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
         error
 
-
       
     """
     Returns true if contains s as a substring, false otherwise.
@@ -776,7 +744,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             i = i + 1
         end
         false
-
 
       
     """
@@ -815,7 +782,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         else
             false
         end
-
 
         
     """
@@ -856,7 +822,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             String
         end
 
-
       
     """
     Returns a lower case version of the string.
@@ -884,7 +849,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             i = i + 1
         end
 
-
       
     """
     Returns an upper case version of the string. Currently only knows ASCII
@@ -894,7 +858,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         let s = clone()
         s.upper_in_place()
         s
-
 
       
     """
@@ -913,7 +876,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             i = i + 1
         end
 
-
       
     """
     Returns a reversed version of the string.
@@ -922,7 +884,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         let s = clone()
         s.reverse_in_place()
         s
-
 
       
     """
@@ -944,7 +905,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Add a byte to the end of the string.
     """
@@ -953,7 +913,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         _set(_size, value)
         _size = _size + 1
         _set(_size, 0)
-
 
 
     """
@@ -966,7 +925,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         else
             error
         end
-
 
       
     """
@@ -983,7 +941,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             _size = 0
         end
 
-
       
     """
     Removes a byte from the beginning of the string.
@@ -997,7 +954,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         else
             error
         end
-
 
       
     """
@@ -1027,7 +983,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             end
             end
         end
-
 
       
     """
@@ -1061,7 +1016,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
                 end
         end
 
-
       
     """
     Truncate the string to zero length.
@@ -1069,7 +1023,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     fun clear() =>
         _set(0, 0)
         _size = 0
-
 
       
     """
@@ -1080,7 +1033,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         let s = clone()
         s.insert_in_place(offset, that)
         s
-
 
       
     """
@@ -1095,7 +1047,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         _size = _size + that._size
         _set(_size, 0)
 
-
       
     """
     Inserts a byte at the given offset. Appends if the offset is out of bounds.
@@ -1108,7 +1059,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         _size = _size + 1
         _set(_size, 0)
 
-
       
     """
     Returns a version of the string with the given range deleted.
@@ -1118,7 +1068,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         let s = clone()
         s.cut_in_place(from, to)
         s
-
 
       
     """
@@ -1144,7 +1093,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-
     """
     Remove all instances of s from the string. Returns the count of removed
     instances.
@@ -1161,7 +1109,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             end
         end
         n
-
 
 
     """
@@ -1188,7 +1135,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
             end
         end
         occur
-
 
       
     """
@@ -1239,7 +1185,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
         result.push(substring(current))
         result
-
 
 
     """
@@ -1322,7 +1267,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
 
         result
 
-
       
     """
     Remove all leading and trailing characters from the string that are in s.
@@ -1330,8 +1274,7 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     fun strip(s: String = " \t\v\f\r\n") =>
         this .> lstrip(s) .> rstrip(s)
 
-      
-      
+            
     """
     Remove all trailing characters within the string that are in s. By default,
     trailing whitespace is removed.
@@ -1363,7 +1306,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
 
             truncate(truncate_at)
         end
-
 
 
     """
@@ -1409,7 +1351,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         this
 
 
-
     """
     Return a string that is a concatenation of this and that.
     """
@@ -1419,7 +1360,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         (s)._append(this)._append(that)
 
 
-      
     """
     Return a string that is a concatenation of the strings in data, using this
     as a separator.
@@ -1438,7 +1378,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         buf
 
 
-
     """
     Lexically compare two strings.
     """
@@ -1446,7 +1385,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         compare_sub(that, _size.max(that._size))
 
 
-      
     """
     Lexically compare at most `n` bytes of the substring of `this` starting at
     `offset` with the substring of `that` starting at `that_offset`. The
@@ -1498,7 +1436,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         Equal
 
 
-        
     """
     Returns true if the two strings have the same contents.
     """
@@ -1510,7 +1447,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-      
     """
     Returns true if this is lexically less than that. Needs to be made UTF-8
     safe.
@@ -1549,12 +1485,10 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         _size <= that._size
 
 
-      
     fun offset_to_index(i: ISize): usize =>
         if i < 0 then i.usize() + _size else i.usize() end
 
 
-      
     fun bool(): bool ! =>
         match lower()
         | "true" => true
@@ -1590,7 +1524,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         // Check the whole string is used
         if (d == 0) or (d.usize() != _size) then error end
         v
-
 
 
     """
@@ -1667,7 +1600,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         (value, index - start_index)
 
 
-      
     """
     Determine the base of an integer starting at the specified index.
     If a non-0 base is given use that. If given base is 0 read the base
@@ -1702,7 +1634,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         (10, 0)
 
 
-      
     """
     Convert this string starting at the given offset
     to a 32-bit floating point number ([F32](builtin-F32.md)).
@@ -1737,7 +1668,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
         end
 
 
-      
     """
     Convert this string starting at the given offset
     to a 64-bit floating point number ([F64](builtin-F64.md)).
@@ -1775,16 +1705,13 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     fun hash(): usize =>
         C.ponyint_hash_block(_ptr, _size)
 
-
         
     fun hash64(): u64 =>
         C.ponyint_hash_block64(_ptr, _size)
 
-
       
     fun string(): String =>
         clone()
-
 
       
     """
@@ -1799,7 +1726,6 @@ class String is (Seq<u8> & Comparable<String> & Stringable)
     """
     fun runes(): StringRunes =>
         StringRunes(this)
-
 
 
     """

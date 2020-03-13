@@ -18,16 +18,28 @@ namespace Joke.Joke
 
         private void MakeBuiltin()
         {
+            var units = new List<CompilationUnit>();
+
             foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(0))
             {
                 Console.WriteLine($"{unitFile}");
                 var (errors, unit) = Compile(unitFile);
-                if (!errors.NoError())
+                if (!errors.NoError() || unit == null)
                 {
                     errors.Describe(Console.Out);
                     break;
                 }
+                units.Add(unit);
             }
+
+            foreach (var unit in units)
+            {
+                foreach (var member in unit.Members.OfType<INamed>())
+                {
+                    Console.Write($"{member.Name} ");
+                }
+            }
+            Console.WriteLine();
         }
 
         private (Errors, CompilationUnit?) Compile(FileRef file)

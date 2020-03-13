@@ -310,6 +310,21 @@ namespace Joke.Joke.Decoding
             return current > start;
         }
 
+        private bool LetterAndLetter()
+        {
+            var start = current;
+            if (IsLetter())
+            {
+                do
+                {
+                    current += 1;
+                }
+                while (IsLetterOrDigit());
+            }
+
+            return current > start;
+        }
+
         private bool LetterOrDigit()
         {
             var start = current;
@@ -324,10 +339,6 @@ namespace Joke.Joke.Decoding
 
         private Token IdentifierOrKeyword()
         {
-            //if (current + 5 < limit && content.Substring(current, 5) == "_size")
-            //{
-            //    Debug.Assert(false);
-            //}
             if (Is_())
             {
                 current += 1;
