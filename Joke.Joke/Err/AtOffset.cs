@@ -23,7 +23,7 @@ namespace Joke.Joke.Err
         {
             var (line, column) = Source.GetLineCol(Start);
             var msg = string.IsNullOrWhiteSpace(Msg) ? string.Empty : $"{Msg}";
-            writer.WriteLine($"({line},{column}): can't continue -- {msg}");
+            writer.WriteLine($"{Source.Name}({line},{column}): {msg}");
             var arrow = new string('-', column - 1) + new string('^', Math.Max(1, Length));
             if (line > 2) Console.WriteLine($" |{Source.GetLine(line - 2).ToString()}");
             if (line > 1) Console.WriteLine($" |{Source.GetLine(line - 1).ToString()}");

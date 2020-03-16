@@ -4,6 +4,7 @@ using System.Linq;
 
 using Joke.Joke.Decoding;
 using Joke.Joke.Err;
+using Joke.Joke.Syntax;
 using Joke.Joke.Tools;
 using Joke.Joke.Tree;
 
@@ -13,17 +14,25 @@ namespace Joke.Joke
     {
         public void Run()
         {
-            MakeBuiltin();
+            MakePackage(BuiltinDir);
+#if false
+            foreach (var pack in GetCores())
+            {
+                MakePackage(pack);
+            }
+#endif
         }
 
-        private void MakeBuiltin()
+        private void MakePackage(DirRef packageDir)
         {
-            var units = new List<Unit>();
+            var units = new List<Tree.Unit>();
 
-            foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(0))
+            foreach (var unitFile in EnumerateJokes(packageDir).Skip(0))
             {
-                Console.WriteLine($"{unitFile}");
-                var (errors, unit) = Compile(unitFile);
+                var name = "pack:" + unitFile.ToString().Substring(PackagesDir.ToString().Length + 1);
+
+                Console.WriteLine($"{name}");
+                var (errors, unit) = Compile(unitFile, name);
                 if (!errors.NoError() || unit == null)
                 {
                     errors.Describe(Console.Out);
@@ -40,11 +49,16 @@ namespace Joke.Joke
                 }
             }
             Console.WriteLine();
+
+            var package = new Package(units);
+            package.Populate();
+
+            package.Errors.Describe(Console.Out);
         }
 
-        private (Errors, Unit?) Compile(FileRef file)
+        private (Errors, Tree.Unit?) Compile(FileRef file, string name)
         {
-            var source = Source.FromFile(file);
+            var source = Source.FromFile(file, name);
             var errors = new Errors();
             var tokenizer = new Tokenizer(errors, source);
             var tokens = tokenizer.Tokenize();
@@ -53,17 +67,6 @@ namespace Joke.Joke
             {
                 return (errors, null);
             }
-
-#if false
-            var builder = new StringBuilder(source.Content.Length);
-            foreach (var token in tokens)
-            {
-                builder.Append(token.Clutter);
-                builder.Append(token.Payload);
-            }
-
-            Debug.Assert(builder.ToString() == source.Content);
-#endif
 
             var parser = new Parser(errors, tokens);
 
@@ -85,17 +88,26 @@ namespace Joke.Joke
         private DirRef SrcDir => ProjectDir.Dir("src");
         private DirRef PackagesDir => SrcDir.Dir("packages");
         private DirRef BuiltinDir => PackagesDir.Dir("builtin");
+        private DirRef CoreDir => PackagesDir.Dir("core");
+
+        private IEnumerable<DirRef> GetCores()
+        {
+            foreach (var corePackage in CoreDir.Directories())
+            {
+                Console.WriteLine($"{corePackage}");
+                yield return corePackage;
+            }
+        }
 
         private IEnumerable<FileRef> EnumerateJokes(params DirRef[] roots)
         {
             foreach (var root in roots)
             {
-                foreach (var joke in root.Files("*.joke", true))
+                foreach (var joke in root.Files("*.joke", false))
                 {
                     yield return joke;
                 }
             }
         }
-
     }
 }

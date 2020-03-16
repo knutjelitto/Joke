@@ -25,7 +25,6 @@ namespace Joke.Joke.Decoding
                 }
 
                 invers.Add(TK.String, "string");
-                invers.Add(TK.DocString, "doc-string");
                 invers.Add(TK.Identifier, "identifier");
                 invers.Add(TK.Wildcard, "_ (wildcard)");
                 invers.Add(TK.Integer, "integer");
@@ -63,6 +62,7 @@ namespace Joke.Joke.Decoding
             { "for", TK.For },
             { "fun", TK.Fun },
             { "if", TK.If },
+            { "ifdef", TK.IfDef },
             { "in", TK.In },
             { "interface", TK.Interface },
             { "is", TK.Is },

@@ -57,6 +57,15 @@ namespace Joke.Joke.Tools
             }
         }
 
+        public IEnumerable<DirRef> Directories(string searchPattern = "*.*", bool recurse = false)
+        {
+            foreach (var dirName in IODirectory.EnumerateDirectories(Path, searchPattern, recurse ? System.IO.SearchOption.AllDirectories : System.IO.SearchOption.TopDirectoryOnly))
+            {
+                yield return Dir(dirName);
+            }
+        }
+
+
         public void Ensure()
         {
             var dirPath = Path;

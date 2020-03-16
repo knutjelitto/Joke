@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Method : IMember, INamed
+    public class Method : INamedMember
     {
         public Method(TokenSpan span, MethodKind kind, String? doc, Identifier name, TypeParameterList? typeParameters, ParameterList valueParameters, IType? @return, Throws? throws, IExpression? body)
         {

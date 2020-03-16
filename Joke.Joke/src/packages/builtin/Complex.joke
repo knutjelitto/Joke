@@ -1,4 +1,4 @@
-﻿struct complex<F: Floating<F>> is Number<complex>
+﻿struct Complex<F: Floating<F>> is Number<Complex>
 
     let re: F
     let im: F
@@ -31,7 +31,7 @@
             ((this.im * that.re) - (this.re * that.im)) / sqr)
 
 
-type complex32 is complex<f32>
-type complex64 is complex<f64>
+type complex32 is Complex<f32>
+type complex64 is Complex<f64>
 
 type complex is complex64

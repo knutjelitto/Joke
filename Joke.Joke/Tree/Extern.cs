@@ -4,15 +4,17 @@ using Joke.Joke.Decoding;
 
 namespace Joke.Joke.Tree
 {
-    public class Extern : IMember
+    public class Extern : INamedMember
     {
-        public Extern(TokenSpan span, IReadOnlyList<IMember> members)
+        public Extern(TokenSpan span, Identifier name, IReadOnlyList<IMember> members)
         {
             Span = span;
+            Name = name;
             Members = members;
         }
 
         public TokenSpan Span { get; }
+        public Identifier Name { get; }
         public IReadOnlyList<IMember> Members { get; }
     }
 }

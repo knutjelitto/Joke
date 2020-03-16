@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class ClassType : IType, IMember, INamed
+    public class ClassType : INamedMember, IType
     {
         public ClassType(TokenSpan span, ClassKind kind, String? doc, Identifier name, TypeParameterList? typeParameters, IType? provides, MemberList members)
         {

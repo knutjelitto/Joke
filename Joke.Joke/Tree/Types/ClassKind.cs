@@ -11,5 +11,6 @@
         Actor,
         Interface,
         Trait,
+        Extern,
     }
 }

@@ -7,7 +7,6 @@
         Wildcard,
         Identifier,
         String,
-        DocString,
         Char,
         Integer,
         Float,
@@ -85,6 +84,7 @@
         For,                // 'for'
         Fun,                // 'fun'
         If,                 // 'if'
+        IfDef,              // 'ifdef'
         In,                 // 'in'
         Interface,          // 'interface'
         Is,                 // 'is'

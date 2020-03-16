@@ -1,9 +1,9 @@
 ﻿interface Comparable<A: Comparable<A>> is Equatable<A>
 
-    fun lt(that: A): bool
-    fun le(that: A): bool => lt(that) or eq(that)
-    fun ge(that: A): bool => not lt(that)
-    fun gt(that: A): bool => not le(that)
+    fun op_lt(that: A): bool
+    fun op_le(that: A): bool => lt(that) or eq(that)
+    fun op_ge(that: A): bool => not lt(that)
+    fun op_gt(that: A): bool => not le(that)
 
     fun min(that: A): A => if this <= that then this else that end
     fun max(that: A): A => if this >= that then this else that end

@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Identifier
+    public class Identifier : IAny
     {
         public Identifier(TokenSpan span)
         {
@@ -14,6 +14,16 @@ namespace Joke.Joke.Tree
         public override string ToString()
         {
             return Span[0].Payload;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ToString().Equals(obj?.ToString());
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
         }
     }
 }

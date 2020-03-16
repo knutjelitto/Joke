@@ -8,6 +8,8 @@
         Scan002,            // binary operators have no precedence, use ( ) to group binary expressions
         Scan003,            // inconclusive parse, beeing not at eof
         Scan004,            // expected ``{}´´, found ``{}´´
+        Syntax001,          // member defined here ...
+        Syntax002,          // ... already defined here
         NoScanToken,        // no scan in toknizer
     }
 }

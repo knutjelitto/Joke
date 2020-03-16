@@ -24,7 +24,7 @@ namespace Joke.Joke.Decoding
         public Tokens Tokens { get; }
         public Token Current => next < limit ? Tokens[next] : Tokens[limit - 1];
         public Token Next => next + 1 < limit ? Tokens[next + 1] : Tokens[limit - 1];
-        public bool CurrentIsDoc => Current.Kind == TK.String || Current.Kind == TK.DocString;
+        public bool CurrentIsDoc => Current.Kind == TK.String;
 
         private readonly Stack<int> markers = new Stack<int>();
 
@@ -48,8 +48,13 @@ namespace Joke.Joke.Decoding
         private Unit Unit()
         {
             Begin();
+            String? packageDoc = null;
+            if (Current.Kind == TK.String && Next.Kind == TK.String)
+            {
+                packageDoc = String();
+            }
             var members = UnitMembers();
-            return new Unit(End(), members);
+            return new Unit(End(), packageDoc, members);
         }
 
         private MemberList UnitMembers()
@@ -61,20 +66,7 @@ namespace Joke.Joke.Decoding
 
         private IMember? TryUnitMember()
         {
-            return TryClassType() ?? TryExtern();
-        }
-
-        private IMember? TryExtern()
-        {
-            if (IsBeginMatch(TK.Extern))
-            {
-                var name = Identifier();
-                var funs = Collect(TryMethod);
-                Match(TK.End);
-                return new Extern(End(), funs);
-            }
-
-            return null;
+            return TryClassType();
         }
 
         private IMember? TryClassType()
@@ -96,6 +88,8 @@ namespace Joke.Joke.Decoding
                     return ClassType(token, ClassKind.Trait);
                 case TK.Actor:
                     return ClassType(token, ClassKind.Actor);
+                case TK.Extern:
+                    return ClassType(token, ClassKind.Extern);
                 default:
                     return null;
             }
@@ -104,7 +98,7 @@ namespace Joke.Joke.Decoding
         private ClassType ClassType(TK token, ClassKind kind)
         {
             Begin();
-            var doc = TryAnyString();
+            var doc = TryString();
             Match(token);
             var name = Identifier();
             var typeparameters = TryTypeParameters();
@@ -145,7 +139,7 @@ namespace Joke.Joke.Decoding
         private IMember Field(TK token, FieldKind kind)
         {
             Begin();
-            var doc = TryAnyString();
+            var doc = TryString();
             Match(token);
             var name = Identifier();
             var type = TypeAnnotation();
@@ -173,7 +167,7 @@ namespace Joke.Joke.Decoding
         private IMember Method(TK token, MethodKind kind)
         {
             Begin();
-            var doc = TryAnyString();
+            var doc = TryString();
             Match(token);
             var name = Identifier();
             var typeParameters = TryTypeParameters();
@@ -432,7 +426,7 @@ namespace Joke.Joke.Decoding
 
         private String? TryDoc()
         {
-            if (IsBeginMatch(TK.DocString))
+            if (IsBeginMatch(TK.String))
             {
                 return new String(End());
             }

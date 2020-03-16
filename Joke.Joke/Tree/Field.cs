@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class Field : IMember, INamed
+    public class Field : INamedMember
     {
         public Field(TokenSpan span, FieldKind kind, String? doc, Identifier name, IType type, IExpression? init)
         {
@@ -20,5 +20,10 @@ namespace Joke.Joke.Tree
         public Identifier Name { get; }
         public IType Type { get; }
         public IExpression? Init { get; }
+
+        public override string ToString()
+        {
+            return Span.ToString();
+        }
     }
 }

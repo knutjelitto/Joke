@@ -215,6 +215,8 @@ namespace Joke.Joke.Decoding
             {
                 case TK.If:
                     return If();
+                case TK.IfDef:
+                    return IfDef();
                 case TK.Match:
                     return DoMatch();
                 case TK.While:
@@ -338,13 +340,23 @@ namespace Joke.Joke.Decoding
 
         private IExpression If()
         {
+            return If(TK.If, IfKind.If);
+        }
+
+        private IExpression IfDef()
+        {
+            return If(TK.IfDef, IfKind.IfDef);
+        }
+
+        private IExpression If(TK whichIf, IfKind kind)
+        {
             Begin();
-            var conditional = Conditional(TK.If);
+            var conditional = Conditional(whichIf);
             var conditionals = Collect(conditional, TryElseIf);
             var @else = TryElse();
             Match(TK.End);
 
-            return new If(End(), conditionals, @else);
+            return new If(End(), kind, conditionals, @else);
         }
 
         private Conditional Conditional(TK token)
@@ -529,8 +541,6 @@ namespace Joke.Joke.Decoding
             {
                 case TK.String:
                     return String();
-                case TK.DocString:
-                    return DocString();
                 case TK.Char:
                     return Character();
                 case TK.This:
@@ -651,20 +661,13 @@ namespace Joke.Joke.Decoding
             return new String(End());
         }
 
-        private String DocString()
+        private String? TryString()
         {
-            BeginMatch(TK.DocString);
-            return new String(End());
-        }
-
-        private String? TryAnyString()
-        {
-            return Current.Kind switch
+            if (Is(TK.String))
             {
-                TK.String => String(),
-                TK.DocString => DocString(),
-                _ => null,
-            };
+                return String();
+            }
+            return null;
         }
 
         private ThisValue ThisValue()

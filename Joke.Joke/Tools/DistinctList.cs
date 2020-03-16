@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Joke.Joke.Tools
 {
-    public class LookupList<K, V> : IReadOnlyList<V>, IReadOnlyDictionary<K, V>
+    public class DistinctList<K, V> : IReadOnlyList<V>, IReadOnlyDictionary<K, V>
         where K : notnull
         where V : class        
     {
@@ -50,6 +50,17 @@ namespace Joke.Joke.Tools
         public bool TryGetValue(K key, [MaybeNullWhen(false)] out V value)
         {
             return lookup.TryGetValue(key, out value);
+        }
+
+        public bool TryAdd(K key, V value)
+        {
+            if (lookup.TryAdd(key, value))
+            {
+                items.Add(value);
+                return true;
+            }
+
+            return false;
         }
 
         IEnumerator IEnumerable.GetEnumerator()

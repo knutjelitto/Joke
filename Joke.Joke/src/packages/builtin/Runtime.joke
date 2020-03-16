@@ -1,4 +1,4 @@
-﻿extern C
+﻿extern LibC
     fun memcmp(dst: Pointer<u8>, src: Pointer<u8>, len: usize) : int
     fun memset(dst: Pointer<none>, set: u32, len: usize) : Pointer<None>
     fun memmove(dst: Pointer<none>, src: Pointer<none>, len: usize) : Pointer<none>
@@ -6,9 +6,14 @@
     fun strtof(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f32
     fun strtod(nptr: Pointer<u8>, endptr: Pointer<Pointer<u8>>) : f64
 
+    fun fprintf(file: Pointer<u8>, fmt: string, content: string) : i32
+
+extern Pony
+
     fun pony_os_stdin_setup() : bool
     fun pony_os_stdin_read(buffer: Pointer<u8>, size: usize, again: Pointer<bool>) : usize
     fun pony_os_stdout_setup()
+    fun pony_os_stderr() : Pointer<u8>
 
     fun pony_os_clear_errno() : none
     fun pony_os_errno() : int
@@ -17,5 +22,3 @@
     fun pony_asio_event_create(owner: AsioEventNotify, fd: u32, flags: u32, nsec: u64, noisy: bool) : AsioEventID
     fun pony_asio_event_unsubscribe(event: AsioEventID)
     fun pony_asio_event_destroy(event: AsioEventID)
-
-end

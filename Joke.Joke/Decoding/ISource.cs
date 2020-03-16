@@ -3,6 +3,7 @@
     public interface ISource
     {
         string Name { get; }
+        string FullName { get; }
         string Content { get; }
         (int lineNo, int colNo) GetLineCol(int index);
         string GetLine(int lineNo);

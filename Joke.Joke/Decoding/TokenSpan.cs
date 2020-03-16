@@ -22,6 +22,8 @@ namespace Joke.Joke.Decoding
 
         public ISourceSpan PayloadSpan => new SourceSpan(Tokens[0].Source, Tokens[Start].PayloadOffset, Tokens[Next].ClutterOffset);
 
+        public IToken First => Tokens[Start];
+
         public Token this[int index]
         {
             get
@@ -49,7 +51,7 @@ namespace Joke.Joke.Decoding
 
         public override string ToString()
         {
-            return string.Join("-", GetPayloads());
+            return string.Join(" ", GetPayloads());
         }
     }
 }

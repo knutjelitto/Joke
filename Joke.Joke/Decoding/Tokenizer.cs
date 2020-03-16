@@ -594,7 +594,7 @@ namespace Joke.Joke.Decoding
                 throw NoScan("unterminated doc-string literal");
             }
 
-            return Token(TK.DocString);
+            return Token(TK.String);
         }
 
         //

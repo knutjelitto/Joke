@@ -6,15 +6,14 @@ namespace Joke.Joke.Decoding
 {
     public class Source : ISource
     {
-        public static readonly ISource NoSource = new Source("<no-name>", "<no-content>");
-
         private static readonly string lineEndings = "\u000A\u000B\u000C\u000D\u0085\u2028\u2029";
         private static readonly string otherLineEndings = "\u000B\u000C\u0085\u2028\u2029";
 
         private readonly Lazy<List<int>> lazyLines;
 
-        private Source(string name, string content)
+        private Source(string fullName, string name, string content)
         {
+            FullName = fullName;
             Name = name;
             Content = content;
 
@@ -25,7 +24,7 @@ namespace Joke.Joke.Decoding
         }
 
         public string Content { get; }
-
+        public string FullName { get; }
         public string Name { get; }
         public int Length => Content.Length;
         protected List<int> Lines => lazyLines.Value;
@@ -34,14 +33,9 @@ namespace Joke.Joke.Decoding
         public bool AtEnd(int index) => index >= Content.Length;
 
         
-        public static ISource FromString(string name, string content)
+        public static Source FromFile(FileRef file, string name)
         {
-            return new Source(name, content);
-        }
-
-        public static Source FromFile(FileRef file)
-        {
-            return new Source(file, file.GetContent());
+            return new Source(file, name, file.GetContent());
         }
 
         public (int lineNo, int colNo) GetLineCol(int index)
