@@ -1,3 +1,3 @@
 ﻿interface Hashable
 
-    fun get-hash(): int
+    fun get-hash(): usize

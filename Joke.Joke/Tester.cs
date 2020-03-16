@@ -18,7 +18,7 @@ namespace Joke.Joke
 
         private void MakeBuiltin()
         {
-            var units = new List<CompilationUnit>();
+            var units = new List<Unit>();
 
             foreach (var unitFile in EnumerateJokes(BuiltinDir).Skip(0))
             {
@@ -42,7 +42,7 @@ namespace Joke.Joke
             Console.WriteLine();
         }
 
-        private (Errors, CompilationUnit?) Compile(FileRef file)
+        private (Errors, Unit?) Compile(FileRef file)
         {
             var source = Source.FromFile(file);
             var errors = new Errors();

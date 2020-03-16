@@ -1,10 +1,5 @@
-﻿namespace Hello
+﻿using Core
 
-    using Core
+actor Main
 
-    actor Main
-
-        new create()
-
-
-end
+    new create()

@@ -29,3 +29,6 @@ primitive f64 is Floating<f64>
     fun div(that: f64): f64 => compile_intrinsic
     fun rem(that: f64): f64 => compile_intrinsic
     fun neg(): f64 => compile_intrinsic
+
+type single is f32
+type double is f64

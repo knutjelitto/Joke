@@ -1,4 +1,4 @@
-﻿trait Floating<N: Floating<N>> is Fractional<F>
+﻿trait Floating<N: Floating<N>> is Fractional<N>
 
     new pi()
     new e()

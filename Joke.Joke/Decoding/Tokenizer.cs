@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-
 using Joke.Joke.Err;
 using Joke.Joke.Tools;
 
@@ -39,7 +38,7 @@ namespace Joke.Joke.Decoding
         {
             Errors = errors;
             Source = source;
-            Tokens = new Tokens(Source, new Token[] { });
+            Tokens = new Tokens(Source, System.Array.Empty<Token>());
 
             content = Source.Content;
             limit = content.Length;
@@ -50,6 +49,10 @@ namespace Joke.Joke.Decoding
 
         public Errors Errors { get; }
         public ISource Source { get; }
+        private char Current => current < limit ? content[current] : NoCharacter;
+        private char Next => current + 1 < limit ? content[current + 1] : NoCharacter;
+        private char OverNext => current + 2 < limit ? content[current + 2] : NoCharacter;
+
 
         public Tokens Tokenize()
         {
@@ -69,7 +72,7 @@ namespace Joke.Joke.Decoding
             {
                 try
                 {
-                    token = Next();
+                    token = NextToken();
                     tokens.Add(token);
                     if (token.Kind == TK.Eof)
                     {
@@ -86,7 +89,7 @@ namespace Joke.Joke.Decoding
             return tokens;
         }
 
-        private Token Next()
+        private Token NextToken()
         {
             clutter = current;
 
@@ -102,7 +105,7 @@ namespace Joke.Joke.Decoding
                     return Token(TK.Eof);
                 }
 
-                switch (content[current])
+                switch (Current)
                 {
                     case '"':
                         return String();
@@ -149,18 +152,18 @@ namespace Joke.Joke.Decoding
                         return Token(TK.Hat);
                     case '&':
                         current += 1;
-                        return Token(TK.Amper);
+                       return Token(TK.Amper);
 
                     case '.':
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == '>')
+                            if (Current == '>')
                             {
                                 current += 1;
                                 return Token(TK.Chain);
                             }
-                            if (content[current] == '.' && current + 1 < limit && content[current + 1] == '.')
+                            if (Current == '.' && current + 1 < limit && Next== '.')
                             {
                                 current += 2;
                                 return Token(TK.Ellipsis);
@@ -170,7 +173,7 @@ namespace Joke.Joke.Decoding
 
                     case '@':
                         current += 1;
-                        if (current < limit && content[current] == '{')
+                        if (current < limit && Current == '{')
                         {
                             current += 1;
                             return Token(TK.AtLBrace);
@@ -185,7 +188,7 @@ namespace Joke.Joke.Decoding
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == '>')
+                            if (Current == '>')
                             {
                                 current += 1;
                                 return Token(TK.Arrow);
@@ -205,7 +208,7 @@ namespace Joke.Joke.Decoding
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == '%')
+                            if (Current == '%')
                             {
                                 current += 1;
                                 return Token(TK.Mod);
@@ -217,12 +220,12 @@ namespace Joke.Joke.Decoding
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == '>')
+                            if (Current == '>')
                             {
                                 current += 1;
                                 return Token(TK.DblArrow);
                             }
-                            else if (content[current] == '=')
+                            else if (Current == '=')
                             {
                                 current += 1;
                                 return Token(TK.Eq);
@@ -234,7 +237,7 @@ namespace Joke.Joke.Decoding
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == '=')
+                            if (Current == '=')
                             {
                                 current += 1;
                                 return Token(TK.Ne);
@@ -246,17 +249,17 @@ namespace Joke.Joke.Decoding
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == ':')
+                            if (Current == ':')
                             {
                                 current += 1;
                                 return Token(TK.Subtype);
                             }
-                            if (content[current] == '=')
+                            if (Current == '=')
                             {
                                 current += 1;
                                 return Token(TK.Le);
                             }
-                            if (content[current] == '<')
+                            if (Current == '<')
                             {
                                 current += 1;
                                 return Token(TK.LShift);
@@ -268,7 +271,7 @@ namespace Joke.Joke.Decoding
                         current += 1;
                         if (current < limit)
                         {
-                            if (content[current] == '=')
+                            if (Current == '=')
                             {
                                 current += 1;
                                 return Token(TK.Ge);
@@ -277,58 +280,43 @@ namespace Joke.Joke.Decoding
                         return Token(TK.Gt);
 
                     default:
-                        if (IsLetter_())
+                        if (Current.IsLetterOrUnderscore())
                         {
                             return IdentifierOrKeyword();
                         }
-                        if (IsDigit())
+                        if (Current.IsDigit())
                         {
                             return Number();
                         }
                         break;
                 }
 
-                Errors.AtOffset(ErrNo.Lex001, Source, current, $"unknown character ``{CharRep.InText(content[current])}´´ in source stream");
+                Errors.AtOffset(ErrNo.Lex001, Source, current, $"unknown character ``{CharRep.InText(Current)}´´ in source stream");
                 current += 1;
 
                 nl = Skip() || nl;
             }
         }
 
-        private bool LetterAndLetterOrDigit()
+        private bool CollectLetterAndLettersOrDigits()
         {
             var start = current;
-            if (IsLetter())
+            if (Current.IsLetter())
             {
                 do
                 {
                     current += 1;
                 }
-                while (IsLetterOrDigit());
+                while (Current.IsLetterOrDigit());
             }
 
             return current > start;
         }
 
-        private bool LetterAndLetter()
+        private bool CollectLetterOrDigit()
         {
             var start = current;
-            if (IsLetter())
-            {
-                do
-                {
-                    current += 1;
-                }
-                while (IsLetterOrDigit());
-            }
-
-            return current > start;
-        }
-
-        private bool LetterOrDigit()
-        {
-            var start = current;
-            while (IsLetterOrDigit())
+            while (Current.IsLetterOrDigit())
             {
                 current += 1;
             }
@@ -339,11 +327,11 @@ namespace Joke.Joke.Decoding
 
         private Token IdentifierOrKeyword()
         {
-            if (Is_())
+            if (Current.IsUnderscore())
             {
                 current += 1;
                 var start = current;
-                while (IsLetterOrDigit())
+                while (Current.IsLetterOrDigit())
                 {
                     current += 1;
                 }
@@ -354,12 +342,12 @@ namespace Joke.Joke.Decoding
             }
             else
             {
-                LetterAndLetterOrDigit();
+                CollectLetterAndLettersOrDigits();
             }
-            while (Is('_', '-'))
+            while (Current.Is('_', '-'))
             {
                 current += 1;
-                if (LetterOrDigit())
+                if (CollectLetterOrDigit())
                 {
                     continue;
                 }
@@ -370,7 +358,7 @@ namespace Joke.Joke.Decoding
                 }
             }
 
-            while (current < limit && content[current] == '\'')
+            while (current < limit && Current == '\'')
             {
                 current += 1;
             }
@@ -382,22 +370,26 @@ namespace Joke.Joke.Decoding
 
         private Token Number()
         {
-            if (content[current] == '0')
+            if (Current == '0')
             {
                 current += 1;
-                if (current < limit && (content[current] == 'x' || content[current] == 'X'))
+                if (Current.Is('x', 'X'))
                 {
                     current += 1;
                     // Hex
-                    if (current == limit || !IsHexDigit())
+                    if (current == limit)
                     {
-                        throw NoScan("incomplete hex number");
+                        throw NoScan("EOF in hex-number");
+                    }
+                    if (!Current.IsHexDigit())
+                    {
+                        throw NoScan("expected hex-digit");
                     }
                     do
                     {
                         current += 1;
                     }
-                    while (IsHexDigit());
+                    while (Current.IsHexDigit());
 
                     return Token(TK.Integer);
                 }
@@ -407,7 +399,7 @@ namespace Joke.Joke.Decoding
                 current += 1;
             }
 
-            while (current < limit && (IsDigit() || content[current] == '_'))
+            while (current < limit && (Current.IsDigit() || Current == '_'))
             {
                 current += 1;
             }
@@ -416,11 +408,11 @@ namespace Joke.Joke.Decoding
 
             if (current < limit)
             {
-                if (content[current] == '.')
+                if (Current == '.')
                 {
                     floating = true;
                     current += 1;
-                    if (current == limit || !IsDigit())
+                    if (current == limit || !Current.IsDigit())
                     {
                         throw NoScan("incomplete floating point number");
                     }
@@ -428,18 +420,18 @@ namespace Joke.Joke.Decoding
                     {
                         current += 1;
                     }
-                    while (current < limit && IsDigit());
+                    while (current < limit && Current.IsDigit());
                 }
 
-                if (current < limit && (content[current] == 'e' || content[current] == 'E'))
+                if (current < limit && (Current == 'e' || Current == 'E'))
                 {
                     floating = true;
                     current += 1;
-                    if (current < limit && (content[current] == '-' || content[current] == '+'))
+                    if (current < limit && (Current == '-' || Current == '+'))
                     {
                         current += 1;
                     }
-                    if (current == limit || !IsDigit())
+                    if (current == limit || !Current.IsDigit())
                     {
                         throw NoScan("incomplete floating point number");
                     }
@@ -447,7 +439,7 @@ namespace Joke.Joke.Decoding
                     {
                         current += 1;
                     }
-                    while (current < limit && IsDigit());
+                    while (current < limit && Current.IsDigit());
                 }
             }
 
@@ -456,9 +448,9 @@ namespace Joke.Joke.Decoding
 
         private Token String()
         {
-            Debug.Assert(StartsWith("\""));
+            Debug.Assert(Current == '\"');
 
-            if (current + 3 <= limit && content[current+1] == '"' && content[current+2] == '"')
+            if (Next == '"' && OverNext == '"')
             {
                 return DocString();
             }
@@ -466,11 +458,11 @@ namespace Joke.Joke.Decoding
             current += 1;
             while (current < limit)
             {
-                if (content[current] == '"')
+                if (Current == '"')
                 {
                     break;
                 }
-                if (content[current] == '\\')
+                if (Current == '\\')
                 {
                     MatchEscape("string literal");
                 }
@@ -483,7 +475,7 @@ namespace Joke.Joke.Decoding
             {
                 throw NoScan("unterminated string literal");
             }
-            Debug.Assert(content[current] == '"');
+            Debug.Assert(Current == '"');
             current += 1;
 
             return Token(TK.String);
@@ -491,13 +483,13 @@ namespace Joke.Joke.Decoding
 
         private Token Char()
         {
-            Debug.Assert(content[current] == '\'');
+            Debug.Assert(Current == '\'');
             current += 1;
             if (current == limit)
             {
                 throw NoScan("unterminated character literal");
             }
-            if (content[current] == '\\')
+            if (Current == '\\')
             {
                 MatchEscape("character literal");
             }
@@ -506,7 +498,7 @@ namespace Joke.Joke.Decoding
                 current += 1;
             }
 
-            if (current < limit && content[current] == '\'')
+            if (current < limit && Current == '\'')
             {
                 current += 1;
                 return Token(TK.Char);
@@ -516,7 +508,7 @@ namespace Joke.Joke.Decoding
 
         private void MatchEscape(string inWhat)
         {
-            Debug.Assert(content[current] == '\\');
+            Debug.Assert(Current == '\\');
 
             current += 1;
 
@@ -527,7 +519,7 @@ namespace Joke.Joke.Decoding
 
             Debug.Assert(current < limit);
 
-            switch (content[current])
+            switch (Current)
             {
                 case '\"':
                 case '\'':
@@ -564,7 +556,7 @@ namespace Joke.Joke.Decoding
         {
             for (var i = 0; i < n; ++i)
             {
-                if (IsHexDigit())
+                if (Current.IsHexDigit())
                 {
                     current += 1;
                 }
@@ -577,18 +569,18 @@ namespace Joke.Joke.Decoding
 
         private Token DocString()
         {
-            Debug.Assert(StartsWith("\"\"\""));
+            Debug.Assert(Current == '\"' && Next == '\"' && OverNext == '\"');
 
             current += 3;
 
             var done = false;
             while (!done && current + 3 <= limit)
             {
-                if (content[current] == '"' && content[current+1] == '"' && content[current+2] == '"')
+                if (Current == '"' && Next == '"' && OverNext == '"')
                 {
                     current += 3;
 
-                    while (current < limit && content[current] == '"')
+                    while (current < limit && Current == '"')
                     {
                         current += 1;
                     }
@@ -609,70 +601,9 @@ namespace Joke.Joke.Decoding
         // Helpers
         //
 
-        private bool IsLetter()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z';
-        }
-
-        private bool IsLetter_()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_';
-        }
-
-        private bool IsLetterOrDigit()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9';
-        }
-
-        private bool IsLetterOrDigit_()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || '0' <= ch && ch <= '9' || ch == '_';
-        }
-
-        private bool Is_()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return ch == '_';
-        }
-
-        private bool Is(char ch1, char ch2)
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return ch == ch1 || ch == ch2; ;
-        }
-
-        private bool IsDigit()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return '0' <= ch && ch <= '9';
-        }
-
-        private bool IsHexDigit()
-        {
-            var ch = current < limit ? content[current] : NoCharacter;
-
-            return '0' <= ch && ch <= '9' || 'a' <= ch && ch <= 'f' || 'A' <= ch && ch <= 'F';
-        }
-
         private Token Token(TK kind)
         {
             return new Token(kind, Source, clutter, payload, current, nl);
-        }
-
-        private bool StartsWith(string start)
-        {
-            return current + start.Length <= limit && content.Substring(current, start.Length) == start;
         }
 
         private bool Skip()
@@ -681,24 +612,22 @@ namespace Joke.Joke.Decoding
             var nl = false;
             while (current < limit && !done)
             {
-                switch (content[current])
+                switch (Current)
                 {
                     case '\n':
-                        nl = true;
-                        current += 1;
-                        break;
                     case '\t':
                     case '\r':
                     case ' ':
+                        nl = nl || Current == '\n';
                         current += 1;
                         break;
                     case '/':
                         if (current + 1 < limit)
                         {
-                            if (content[current + 1] == '/')
+                            if (Next == '/')
                             {
                                 current += 2;
-                                while (current < limit && content[current] != '\n')
+                                while (current < limit && Current != '\n')
                                 {
                                     current += 1;
                                 }
@@ -708,7 +637,7 @@ namespace Joke.Joke.Decoding
                                 }
                                 break;
                             }
-                            if (content[current + 1] == '*')
+                            if (Next == '*')
                             {
                                 nl = SkipMulitlineComment() || nl;
                                 break;
@@ -727,20 +656,20 @@ namespace Joke.Joke.Decoding
 
         private bool SkipMulitlineComment()
         {
-            Debug.Assert(current + 1 < limit && content[current] == '/' && content[current + 1] == '*');
+            Debug.Assert(Current == '/' && Next == '*');
 
             var nl = false;
 
             current += 2;
-            while (current + 1 < limit && (content[current] != '*' || content[current + 1] != '/'))
+            while (current + 1 < limit && (Current != '*' || Next != '/'))
             {
-                if (content[current] == '/' && content[current + 1] == '*')
+                if (Current == '/' && Next == '*')
                 {
                     nl = SkipMulitlineComment() || nl;
                 }
                 else
                 {
-                    nl = content[current] == '\n' || nl;
+                    nl = Current == '\n' || nl;
                     current += 1;
                 }
             }

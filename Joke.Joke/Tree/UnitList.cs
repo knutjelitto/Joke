@@ -2,9 +2,9 @@
 
 namespace Joke.Joke.Tree
 {
-    public class UnitList : Collection<CompilationUnit>
+    public class UnitList : Collection<Unit>
     {
-        public UnitList(IReadOnlyList<CompilationUnit> units)
+        public UnitList(IReadOnlyList<Unit> units)
             : base(units)
         { 
         }

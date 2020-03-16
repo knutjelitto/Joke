@@ -128,3 +128,6 @@ primitive i64 is Integral<i64>
     fun op_rem(that: i64): i64 => compile_intrinsic
     fun op_not(): i64 => compile_intrinsic
     fun op_neg(): i64 => compile_intrinsic
+
+type int is i32
+type uint is u32

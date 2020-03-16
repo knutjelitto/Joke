@@ -31,7 +31,7 @@ namespace Joke.Joke.Decoding
         private int next;
         private readonly int limit;
 
-        public CompilationUnit ParseUnit()
+        public Unit ParseUnit()
         {
             next = 0;
 
@@ -42,15 +42,14 @@ namespace Joke.Joke.Decoding
                 Errors.AtToken(ErrNo.Scan002, Current, "inconclusive parse, not at ``EOF´´");
             }
 
-
             return unit;
         }
 
-        private CompilationUnit Unit()
+        private Unit Unit()
         {
             Begin();
             var members = UnitMembers();
-            return new CompilationUnit(End(), members);
+            return new Unit(End(), members);
         }
 
         private MemberList UnitMembers()

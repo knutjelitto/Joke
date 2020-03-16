@@ -6,33 +6,33 @@ interface Seq<A>
     """
     Create a sequence, reserving space for len elements.
     """
-    new create(len: USize = 0)
+    new create(len: usize = 0)
 
 
     """
     Reserve space for len elements.
     """
-    fun reserve(len: USize)
+    fun reserve(len: usize)
 
 
     """
     Returns the number of elements in the sequence.
     """
-    fun size(): USize
+    fun size(): usize
 
       
     """
     Returns the i-th element of the sequence. Raises an error if the index
     is out of bounds.
     """
-    fun apply(i: USize): A !
+    fun apply(i: usize): A !
 
       
     """
     Replaces the i-th element of the sequence. Returns the previous value.
     Raises an error if the index is out of bounds.
     """
-    fun update(i: USize, value: A): A !
+    fun update(i: usize, value: A): A !
 
       
     """
@@ -103,14 +103,14 @@ interface ReadSeq<A>
     """
     Returns the number of elements in the sequence.
     """
-    fun size(): USize
+    fun size(): usize
 
   
     """
     Returns the i-th element of the sequence. Raises an error if the index
     is out of bounds. Note that this returns this->A, not A.
     """
-    fun apply(i: USize): A !
+    fun apply(i: usize): A !
 
   
     """
