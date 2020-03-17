@@ -4,9 +4,7 @@ using System.Linq;
 
 using Joke.Joke.Decoding;
 using Joke.Joke.Err;
-using Joke.Joke.Syntax;
 using Joke.Joke.Tools;
-using Joke.Joke.Tree;
 
 namespace Joke.Joke
 {
@@ -43,15 +41,27 @@ namespace Joke.Joke
 
             foreach (var unit in units)
             {
-                foreach (var member in unit.Members.OfType<INamed>())
+                foreach (var member in unit.Members.OfType<Tree.INamedMember>())
                 {
-                    Console.Write($"{member.Name} ");
+                    Console.Write($"{member.Name} [");
+                    Console.WriteLine("]");
                 }
             }
-            Console.WriteLine();
 
-            var package = new Package(units);
-            package.Populate();
+            var package = new Syntax.Package();
+            package.Populate(units);
+
+            foreach (var unit in package.Units)
+            {
+                foreach (var @class in unit)
+                {
+                    foreach (var member in @class)
+                    {
+                        Console.WriteLine($"{member}");
+                    }
+                }
+
+            }
 
             package.Errors.Describe(Console.Out);
         }

@@ -1,20 +1,17 @@
-﻿using Joke.Joke.Err;
+﻿using Joke.Joke.Tools;
 
 namespace Joke.Joke.Syntax
 {
-    public class Class
+    public class Class : DistinctList<Tree.Identifier, Member>, ISourcedName
     {
-        public Class(Package package, Tree.ClassType source)
+        public Class(Unit unit, Tree.ClassType source)
         {
-            Package = package;
+            Unit = unit;
             Source = source;
-            Members = new ClassMemberList();
         }
 
-        public Package Package { get; }
-        public Errors Errors => Package.Errors;
-        public Tree.ClassType Source { get; }
-
-        public ClassMemberList Members { get; }
+        public Unit Unit { get; }
+        public Tree.INamedMember Source { get; }
+        public Tree.Identifier Name => Source.Name;
     }
 }

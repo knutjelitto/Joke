@@ -3,66 +3,94 @@ using System.Diagnostics;
 using System.Linq;
 
 using Joke.Joke.Err;
+using Joke.Joke.Tools;
 
 namespace Joke.Joke.Syntax
 {
-    public class Package
+    public class Package : DistinctList<string, Unit>
     {
-        public Package(IReadOnlyList<Tree.Unit> source)
+        public Package()
         {
             Units = new List<Unit>();
-            Members = new TopMemberlist();
+            Members = new DistinctList<Tree.Identifier, Class>();
             Errors = new Errors();
-            Source = source;
         }
 
         public List<Unit> Units { get; }
-        public TopMemberlist Members { get; }
+        public DistinctList<Tree.Identifier, Class> Members { get; }
         public Errors Errors { get; }
-        public IReadOnlyList<Tree.Unit> Source { get; }
 
-        public void Populate()
+        public void Populate(IEnumerable<Tree.Unit> source)
         {
-            foreach (var sourceUnit in Source)
+            foreach (var unitSource in source)
             {
-                var unit = new Unit(this, sourceUnit);
+                var unit = new Unit(this, unitSource);
 
-                foreach (var pkgMember in sourceUnit.Members.OfType<Tree.ClassType>())
-                {
-                    var name = pkgMember.Name;
-                    var member = new TopMember(unit, pkgMember);
+                var noNotNamed = unitSource.Members.All(m => m is Tree.INamedMember);
+                Debug.Assert(noNotNamed);
 
-                    if (!Members.TryAdd(name, member))
-                    {
-                        AlreadyError(name);
-                    }
-
-                    foreach (var classMember in pkgMember.Members)
-                    {
-                        if (classMember is Tree.Field field)
-                        {
-
-                        }
-                        else if (classMember is Tree.Method method)
-                        {
-
-                        }
-                        else
-                        {
-                            Debug.Assert(false);
-                        }
-                    }
-                }
+                Populate(unit, unitSource.Members.OfType<Tree.INamedMember>());
 
                 Units.Add(unit);
             }
         }
 
-        private void AlreadyError(Tree.Identifier name)
+        private void Populate(Unit unit, IEnumerable<Tree.INamedMember> members)
         {
-            var already = Members[name].Source.Name;
-            Errors.AtToken(ErrNo.Syntax001, name, $"``{name}´´ defined here ...");
-            Errors.AtToken(ErrNo.Syntax002, already, $"... is already defined here");
+            foreach (var classSource in members.OfType<Tree.ClassType>())
+            {
+                var @class = new Class(unit, classSource);
+
+                var name = classSource.Name;
+                var member = new Class(unit, classSource);
+
+                if (!MaybeAlreadyError(Members, name))
+                {
+                    unit.Add(name, member);
+                }
+
+                Populate(@class, classSource.Members.OfType<Tree.INamedMember>().ToList());
+            }
+        }
+
+        private void Populate(Class @class, IReadOnlyList<Tree.INamedMember> sources)
+        {
+            foreach (var source in sources)
+            {
+                if (source is Tree.Field fieldSource)
+                {
+                    if (!MaybeAlreadyError(@class, fieldSource.Name))
+                    {
+                        var field = new Field(@class, fieldSource);
+                        @class.Add(field.Name, field);
+                    }
+                }
+                else if (source is Tree.Method methodSource)
+                {
+                    if (!MaybeAlreadyError(@class, methodSource.Name))
+                    {
+                        var method = new Method(@class, methodSource);
+                        @class.Add(method.Name, method);
+                    }
+                }
+                else
+                {
+                    Debug.Assert(false);
+                }
+            }
+        }
+
+        private bool MaybeAlreadyError<T>(DistinctList<Tree.Identifier,T> list, Tree.Identifier name)
+            where T : class, ISourcedName
+        {
+            if (list.ContainsKey(name))
+            {
+                var already = list[name].Source.Name;
+                Errors.AtToken(ErrNo.Syntax001, name, $"``{name}´´ defined here ...");
+                Errors.AtToken(ErrNo.Syntax002, already, $"... is already defined here");
+                return true;
+            }
+            return false;
         }
     }
 }

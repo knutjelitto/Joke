@@ -1,6 +1,6 @@
 ﻿namespace Joke.Joke.Tree
 {
-    public interface INamed : IAny
+    public interface INamed
     {
         Identifier Name { get; }
     }
