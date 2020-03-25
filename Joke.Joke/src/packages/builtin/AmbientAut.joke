@@ -1,4 +1,5 @@
-﻿"""
+﻿primitive AmbientAuth
+"""
 This type represents the root capability. When a Pony program starts, the
 Env passed to the Main actor contains an instance of the root capability.
 
@@ -11,6 +12,5 @@ constructor for some resource that expects a limiting capability specific to
 the package, but will also accept the root capability as representing
 unlimited access.
 """
-primitive AmbientAuth
   new _create() =>
     none

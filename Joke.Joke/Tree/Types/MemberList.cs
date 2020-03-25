@@ -4,9 +4,9 @@ using Joke.Joke.Decoding;
 
 namespace Joke.Joke.Tree
 {
-    public class MemberList : Collection<IMember>, IAny
+    public class MemberList : Collection<INamedMember>, IAny
     {
-        public MemberList(TokenSpan span, IReadOnlyList<IMember> items)
+        public MemberList(TokenSpan span, IReadOnlyList<INamedMember> items)
             : base(items)
         {
             Span = span;

@@ -1,16 +1,18 @@
-﻿"""
+﻿/*
+"""
 # Assert package
 
 Contains runtime assertions. If you are looking for assertion that only run
 when your code was compiled with the `debug` flag, check out `Assert`. For
 assertions that are always enabled, check out `Fact`.
 """
+*/
 
+primitive Assert
 """
 This is a debug only assertion. If the test is false, it will print any
 supplied error message to stderr and raise an error.
 """
-primitive Assert
 
     fun apply(test: Bool, msg: String = "") ! =>
         ifdef debug then
@@ -18,11 +20,11 @@ primitive Assert
         end
 
 
+primitive Fact
 """
 This is an assertion that is always enabled. If the test is false, it will
 print any supplied error message to stderr and raise an error.
 """
-primitive Fact
   
     fun apply(test: Bool, msg: String = "") ! =>
         if not test then

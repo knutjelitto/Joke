@@ -11,19 +11,19 @@ namespace Joke.Joke.Err
 
         public Errors Errors { get; }
 
-        public void Add(ISourceSpan span, ErrNo no, string msg)
+        public void Add(ISourceSpan span, ErrNo errNo, string msg)
         {
-            Errors.Add(new JokeError(no, new AtOffset(span, msg)));
+            Errors.Add(new JokeError(errNo, new AtOffset(span, msg)));
         }
 
-        public void Add(ITokenSpan span, ErrNo no, string msg)
+        public void Add(ITokenSpan span, ErrNo errNo, string msg)
         {
-            Errors.Add(new JokeError(no, new AtTokens(span, msg)));
+            Errors.Add(new JokeError(errNo, new AtTokens(span, msg)));
         }
 
-        public void Add(IToken token, ErrNo no, string msg)
+        public void Add(IToken token, ErrNo errNo, string msg)
         {
-            Errors.Add(new JokeError(no, new AtToken(token, msg)));
+            Errors.Add(new JokeError(errNo, new AtToken(token, msg)));
         }
     }
 }

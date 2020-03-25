@@ -1,4 +1,5 @@
-﻿"""
+﻿class Array<A> is Seq<A>
+"""
 Contiguous, resizable memory to store elements of type A.
 
 ## Usage
@@ -83,17 +84,17 @@ Call the `compact()` method to ask the GC to reclaim unused space. There are
 no guarantees that the GC will actually reclaim any space.
 
 """
-class Array<A> is Seq<A>
     
     var _size: USize
     var _alloc: USize
     var _ptr: Pointer<A>
 
     
+    new create(len: USize = 0)
     """
     Create an array with zero elements, but space for len elements.
     """
-    new create(len: USize = 0) =>
+    =>
         _size = 0
 
         if len > 0 then
@@ -105,10 +106,11 @@ class Array<A> is Seq<A>
         end
 
     
+    new init(from: A, len: USize)
     """
     Create an array of len elements, all initialised to the given value.
     """
-    new init(from: A, len: USize) =>
+    =>
         _size = len
 
         if len > 0 then
@@ -126,12 +128,12 @@ class Array<A> is Seq<A>
             _ptr = Pointer<A>
         end
 
-
   
+    new from_cpointer(ptr: Pointer<A>, len: USize, alloc: USize = 0)
     """
     Create an array from a C-style pointer and length. The contents are not copied.
     """
-    new from_cpointer(ptr: Pointer<A>, len: USize, alloc: USize = 0) =>
+    =>
         _size = len
 
         if alloc > len then
@@ -143,57 +145,64 @@ class Array<A> is Seq<A>
         _ptr = ptr
 
   
+    fun cpointer(offset: USize = 0): Pointer<A>
     """
     Return the underlying C-style pointer.
     """
-    fun cpointer(offset: USize = 0): Pointer<A> =>
+    =>
         _ptr._offset(offset)
 
 
+    fun _copy_to(ptr: Pointer<A>, copy_len: USize, from_offset: USize = 0, to_offset: USize = 0)
     """
     Copy copy_len elements from this to that at specified offsets.
     """
-    fun _copy_to(ptr: Pointer<A>, copy_len: USize, from_offset: USize = 0, to_offset: USize = 0) =>
+    =>
         _ptr._offset(from_offset)._copy_to(ptr._offset(to_offset), copy_len)
 
   
+    fun size(): USize
     """
     The number of elements in the array.
     """
-    fun size(): USize =>
+    =>
         _size
 
   
+    fun space(): USize
     """
     The available space in the array.
     """
-    fun space(): USize =>
+    =>
         _alloc
 
   
+    fun reserve(len: USize)
     """
     Reserve space for len elements, including whatever elements are already in
     the array. Array space grows geometrically.
     """
-    fun reserve(len: USize) =>
+    =>
         if _alloc < len then
             _alloc = len.next_pow2().max(len).max(8)
             _ptr = _ptr._realloc(_alloc)
         end
 
   
+    fun _element_size(): USize
     """
     Element size in bytes for an element.
     """
-    fun _element_size(): USize =>
+    =>
         _ptr._element_size()
 
   
+    fun compact()
     """
     Try to remove unused space, making it available for garbage collection. The
     request may be ignored.
     """
-    fun compact() =>
+    =>
         if _size <= (512 / _ptr._element_size()) then
             if _size.next_pow2() != _alloc.next_pow2() then
                 _alloc = _size.next_pow2()
@@ -207,19 +216,21 @@ class Array<A> is Seq<A>
         end
 
 
+    fun undefined<B: (A & Real<B> & Number) = A>(len: USize)
     """
     Resize to len elements, populating previously empty elements with random
     memory. This is only allowed for an array of numbers.
     """
-    fun undefined<B: (A & Real<B> & Number) = A>(len: USize) =>
+    =>
         reserve(len)
         _size = len
 
   
+    fun read_u8<B: (A & Real<B> & U8) = A>(offset: USize): U8 !
     """
     Reads a U8 from offset. This is only allowed for an array of U8s.
     """
-    fun read_u8<B: (A & Real<B> & U8) = A>(offset: USize): U8 ! =>
+    =>
         if offset < _size then
             _ptr._offset(offset)._convert<U8>()._apply(0)
         else
@@ -227,10 +238,11 @@ class Array<A> is Seq<A>
         end
 
     
+    fun read_u16<B: (A & Real<B> & U8) = A>(offset: USize): U16 !
     """
     Reads a U16 from offset. This is only allowed for an array of U8s.
     """
-    fun read_u16<B: (A & Real<B> & U8) = A>(offset: USize): U16 ! =>
+    =>
         let u16_bytes = U16(0).bytewidth()
         if (offset + u16_bytes) <= _size then
             _ptr._offset(offset)._convert<U16>()._apply(0)
@@ -239,10 +251,11 @@ class Array<A> is Seq<A>
         end
 
   
+    fun read_u32<B: (A & Real<B> & U8) = A>(offset: USize): U32 !
     """
     Reads a U32 from offset. This is only allowed for an array of U8s.
     """
-    fun read_u32<B: (A & Real<B> & U8) = A>(offset: USize): U32 ! =>
+    =>
         let u32_bytes = U32(0).bytewidth()
         if (offset + u32_bytes) <= _size then
             _ptr._offset(offset)._convert<u32>()._apply(0)
@@ -251,10 +264,11 @@ class Array<A> is Seq<A>
         end
 
     
+    fun read_u64<B: (A & Real<B> & U8) = A>(offset: USize): U64 !
     """
     Reads a U64 from offset. This is only allowed for an array of U8s.
     """
-    fun read_u64<B: (A & Real<B> & U8) = A>(offset: USize): U64 ! =>
+    =>
         let u64_bytes = U64(0).bytewidth()
         if (offset + u64_bytes) <= _size then
             _ptr._offset(offset)._convert<u64>()._apply(0)
@@ -263,10 +277,11 @@ class Array<A> is Seq<A>
         end
 
   
+    fun read_u128<B: (A & Real<B> & U8) = A>(offset: USize): U128 !
     """
     Reads a U128 from offset. This is only allowed for an array of U8s.
     """
-    fun read_u128<B: (A & Real<B> & U8) = A>(offset: USize): U128 ! =>
+    =>
         let u128_bytes = U128(0).bytewidth()
         if (offset + u128_bytes) <= _size then
             _ptr._offset(offset)._convert<u128>()._apply(0)
@@ -274,10 +289,11 @@ class Array<A> is Seq<A>
             error
         end
 
+    fun apply(i: USize): A !
     """
     Get the i-th element, raising an error if the index is out of bounds.
     """
-    fun apply(i: USize): A ! =>
+    =>
         if i < _size then
             _ptr._apply(i)
         else
@@ -285,10 +301,11 @@ class Array<A> is Seq<A>
         end
 
     
+    fun update_u8<B: (A & Real<B> & U8) = A>(offset: USize, value: U8): U8 !
     """
     Write a U8 at offset. This is only allowed for an array of U8s.
     """
-    fun update_u8<B: (A & Real<B> & U8) = A>(offset: USize, value: U8): U8 ! =>
+    =>
         if offset < _size then
             _ptr._offset(offset)._convert<u8>()._update(0, value)
         else
@@ -296,10 +313,11 @@ class Array<A> is Seq<A>
         end
 
   
+    fun update_u16<B: (A & Real<B> & U8) = A>(offset: USize, value: U16): U16 !
     """
     Write a U16 at offset. This is only allowed for an array of U8s.
     """
-    fun update_u16<B: (A & Real<B> & U8) = A>(offset: USize, value: U16): U16 ! =>
+    =>
         let u16_bytes = U16(0).bytewidth()
         if (offset + u16_bytes) <= _size then
             _ptr._offset(offset)._convert<u16>()._update(0, value)
@@ -308,10 +326,11 @@ class Array<A> is Seq<A>
         end
 
 
+    fun update_u32<B: (A & Real<B> & U8) = A>(offset: USize, value: U32): U32 !
     """
     Write a U32 at offset. This is only allowed for an array of U8s.
     """
-    fun update_u32<B: (A & Real<B> & U8) = A>(offset: USize, value: U32): U32 ! =>
+    =>
         let u32_bytes = U32(0).bytewidth()
         if (offset + u32_bytes) <= _size then
             _ptr._offset(offset)._convert<u32>()._update(0, value)
@@ -320,10 +339,11 @@ class Array<A> is Seq<A>
         end
 
 
+    fun update_u64<B: (A & Real<B> & U8) = A>(offset: USize, value: U64): U64 !
     """
     Write a U64 at offset. This is only allowed for an array of U8s.
     """
-    fun update_u64<B: (A & Real<B> & U8) = A>(offset: USize, value: U64): U64 ! =>
+    =>
         let u64_bytes = U64(0).bytewidth()
         if (offset + u64_bytes) <= _size then
             _ptr._offset(offset)._convert<u64>()._update(0, value)
@@ -332,10 +352,11 @@ class Array<A> is Seq<A>
         end
 
 
+    fun update_u128<B: (A & Real<B> & U8) = A>(offset: USize, value: U128): U128 !
     """
     Write a U128 at offset. This is only allowed for an array of U8s.
     """
-    fun update_u128<B: (A & Real<B> & U8) = A>(offset: USize, value: U128): U128 ! =>
+    =>
         let u128_bytes = U128(0).bytewidth()
         if (offset + u128_bytes) <= _size then
             _ptr._offset(offset)._convert<u128>()._update(0, value)
@@ -344,10 +365,11 @@ class Array<A> is Seq<A>
         end
 
   
+    fun update(i: USize, value: A): A !
     """
     Change the i-th element, raising an error if the index is out of bounds.
     """
-    fun update(i: USize, value: A): A ! =>
+    =>
         if i < _size then
             _ptr._update(i, value)
         else
@@ -355,6 +377,7 @@ class Array<A> is Seq<A>
         end
 
   
+    fun insert(i: USize, value: A) !
     """
     Insert an element into the array. Elements after this are moved up by one
     index, extending the array.
@@ -365,14 +388,14 @@ class Array<A> is Seq<A>
     An insert into an index beyond `this.size()` raises an error.
 
     ```pony
-    let array = Array<u8>(4)              // <>
-    array.insert(0, 0xDE)?                // prepend: <0xDE>
-    array.insert(array.size(), 0xBE)?     // append:  <0xDE; 0xBE>
-    array.insert(1, 0xAD)?                // insert:  <0xDE; 0xAD; 0xBE>
-    array.insert(array.size() + 1, 0xEF)? // error
+        let array = Array<u8>(4)              // <>
+        array.insert(0, 0xDE)?                // prepend: <0xDE>
+        array.insert(array.size(), 0xBE)?     // append:  <0xDE; 0xBE>
+        array.insert(1, 0xAD)?                // insert:  <0xDE; 0xAD; 0xBE>
+        array.insert(array.size() + 1, 0xEF)? // error
     ```
     """
-    fun insert(i: USize, value: A) ! =>
+    =>
         if i <= _size then
             reserve(_size + 1)
             _ptr._offset(i)._insert(1, _size - i)
@@ -383,13 +406,14 @@ class Array<A> is Seq<A>
         end
 
 
+    fun delete(i: USize): A !
     """
     Delete an element from the array. Elements after this are moved down by one
     index, compacting the array.
     An out of bounds index raises an error.
     The deleted element is returned.
     """
-    fun delete(i: USize): A ! =>
+    =>
         if i < _size then
             _size = _size - 1
             _ptr._offset(i)._delete(1, _size - i)
@@ -398,19 +422,21 @@ class Array<A> is Seq<A>
         end
 
 
+    fun truncate(len: USize)
     """
     Truncate an array to the given length, discarding excess elements. If the
     array is already smaller than len, do nothing.
     """
-    fun truncate(len: USize) =>
+    =>
         _size = _size.min(len)
 
   
+    fun trim_in_place(from: USize = 0, to: USize = -1)
     """
     Trim the array to a portion of itself, covering `from` until `to`.
     Unlike slice, the operation does not allocate a new array nor copy elements.
     """
-    fun trim_in_place(from: USize = 0, to: USize = -1) =>
+    =>
         let last = _size.min(to)
         let offset = last.min(from)
         let size' = last - offset
@@ -434,12 +460,13 @@ class Array<A> is Seq<A>
         end
 
 
+    fun trim(from: USize = 0, to: USize = -1): Array<A>
     """
     Return a shared portion of this array, covering `from` until `to`.
     Both the original and the new array are immutable, as they share memory.
     The operation does not allocate a new array pointer nor copy elements.
     """
-    fun trim(from: USize = 0, to: USize = -1): Array<A> =>
+    =>
         let last = _size.min(to)
         let offset = last.min(from)
 
@@ -457,6 +484,7 @@ class Array<A> is Seq<A>
         end
 
   
+    fun chop(split_point: USize): (Array<A>, Array<A>)
     """
     Chops the array in half at the split point requested and returns both
     the left and right portions. The original array is trimmed in place and
@@ -466,7 +494,7 @@ class Array<A> is Seq<A>
     Both arrays are isolated and mutable, as they do not share memory.
     The operation does not allocate a new array pointer nor copy elements.
     """
-    fun chop(split_point: USize): (Array<A>, Array<A>) =>
+    =>
         let start_ptr = cpointer(split_point)
         let size' = _size - _size.min(split_point)
         let alloc = _alloc - _size.min(split_point)
@@ -483,6 +511,7 @@ class Array<A> is Seq<A>
         (this, right)
 
 
+    fun unchop(b: Array<A>): ((Array<A>, Array<A>) | Array<A>)
     """
     Unchops two arrays to return the original array they were chopped from.
     Both input arrays are isolated and mutable and were originally chopped from
@@ -492,7 +521,7 @@ class Array<A> is Seq<A>
     unchopped it returns both arrays without modifying them.
     The operation does not allocate a new array pointer nor copy elements.
     """
-    fun unchop(b: Array<A>): ((Array<A>, Array<A>) | Array<A>) =>
+    =>
         if _size == 0 then
             return b
         end
@@ -525,11 +554,12 @@ class Array<A> is Seq<A>
           b
         end
 
+    fun copy_from<B: (A & Real<B> & U8) = A>(src: Array<u8>, src_idx: USize, dst_idx: USize, len: USize)
     """
     Copy len elements from src(src_idx) to this(dst_idx).
     Only works for Array<u8>.
     """
-    fun copy_from<B: (A & Real<B> & U8) = A>(src: Array<u8>, src_idx: USize, dst_idx: USize, len: USize) =>
+    =>
         reserve(dst_idx + len)
         src._ptr._offset(src_idx)._copy_to(_ptr._convert<u8>()._offset(dst_idx), len)
 
@@ -538,10 +568,11 @@ class Array<A> is Seq<A>
         end
 
 
+    fun copy_to(dst: Array<A>, src_idx: USize, dst_idx: USize, len: USize) 
     """
     Copy len elements from this(src_idx) to dst(dst_idx).
     """
-    fun copy_to(dst: Array<A>, src_idx: USize, dst_idx: USize, len: USize) =>
+    =>
         dst.reserve(dst_idx + len)
         _ptr._offset(src_idx)._copy_to(dst._ptr._offset(dst_idx), len)
 
@@ -550,10 +581,11 @@ class Array<A> is Seq<A>
         end
 
   
+    fun remove(i: USize, n: USize)
     """
     Remove n elements from the array, beginning at index i.
     """
-    fun remove(i: USize, n: USize) =>
+    =>
         if i < _size then
             let count = n.min(_size - i)
             _size = _size - count
@@ -561,101 +593,112 @@ class Array<A> is Seq<A>
         end
 
   
+    fun clear()
     """
     Remove all elements from the array.
     """
-    fun clear() =>
+    =>
         _size = 0
 
 
+    fun push_u8<B: (A & Real<B> & U8) = A>(value: U8)
     """
     Add a U8 to the end of the array. This is only allowed for an array of U8s.
     """
-    fun push_u8<B: (A & Real<B> & U8) = A>(value: U8) =>
+    =>
         let u8_bytes = U8(0).bytewidth()
         reserve(_size + u8_bytes)
         _ptr._offset(_size)._convert<u8>()._update(0, value)
         _size = _size + u8_bytes
 
   
+    fun push_u16<B: (A & Real<B> & U8) = A>(value: U16)
     """
     Add a U16 to the end of the array. This is only allowed for an array of U8s.
     """
-    fun push_u16<B: (A & Real<B> & U8) = A>(value: U16) =>
+    =>
         let u16_bytes = U16(0).bytewidth()
         reserve(_size + u16_bytes)
         _ptr._offset(_size)._convert<u16>()._update(0, value)
         _size = _size + u16_bytes
 
   
+    fun push_u32<B: (A & Real<B> & U8) = A>(value: U32)
     """
     Add a U32 to the end of the array. This is only allowed for an array of U8s.
     """
-    fun push_u32<B: (A & Real<B> & U8) = A>(value: U32) =>
+    =>
         let u32_bytes = U32(0).bytewidth()
         reserve(_size + u32_bytes)
         _ptr._offset(_size)._convert<u32>()._update(0, value)
         _size = _size + u32_bytes
 
   
+    fun push_u64<B: (A & Real<B> & U8) = A>(value: U64)
     """
     Add a U64 to the end of the array. This is only allowed for an array of U8s.
     """
-    fun push_u64<B: (A & Real<B> & U8) = A>(value: U64) =>
+    =>
         let u64_bytes = U64(0).bytewidth()
         reserve(_size + u64_bytes)
         _ptr._offset(_size)._convert<u64>()._update(0, value)
         _size = _size + u64_bytes
 
   
+    fun push_u128<B: (A & Real<B> & U8) = A>(value: U128)
     """
     Add a U128 to the end of the array. This is only allowed for an array of U8s.
     """
-    fun push_u128<B: (A & Real<B> & U8) = A>(value: U128) =>
+    =>
         let u128_bytes = U128(0).bytewidth()
         reserve(_size + u128_bytes)
         _ptr._offset(_size)._convert<u128>()._update(0, value)
         _size = _size + u128_bytes
 
   
+    fun push(value: A)
     """
     Add an element to the end of the array.
     """
-    fun push(value: A) =>
+    =>
         reserve(_size + 1)
         _ptr._update(_size, value)
         _size = _size + 1
 
   
+    fun pop(): A !
     """
     Remove an element from the end of the array.
     The removed element is returned.
     """
-    fun pop(): A ! =>
+    =>
         delete(_size - 1)!
 
   
+    fun unshift(value: A)
     """
     Add an element to the beginning of the array.
     """
-    fun unshift(value: A) =>
+    =>
         try
           insert(0, value)!
         end
 
   
+    fun shift(): A !
     """
     Remove an element from the beginning of the array.
     The removed element is returned.
     """
-    fun shift(): A ! =>
+    =>
         delete(0)!
 
   
+    fun append(seq: (ReadSeq<A> & ReadElement<A>), offset: USize = 0, len: USize = -1)
     """
     Append the elements from a sequence, starting from the given offset.
     """
-    fun append(seq: (ReadSeq<A> & ReadElement<A>), offset: USize = 0, len: USize = -1) =>
+    =>
         if offset >= seq.size() then
             return
         end
@@ -675,12 +718,12 @@ class Array<A> is Seq<A>
         _size = _size + n
 
 
+    fun concat(iter: Iterator<A>, offset: USize = 0, len: USize = -1)
     """
     Add len iterated elements to the end of the array, starting from the given
     offset.
     """
-    fun concat(iter: Iterator<A>, offset: USize = 0, len: USize = -1) =>
-
+    =>
         var n = USize(0)
 
         try
@@ -732,6 +775,7 @@ class Array<A> is Seq<A>
         end
 
   
+    fun find(value: A, offset: USize = 0, nth: USize = 0, predicate: {(A, A): Bool} = {(l, r) => l is r }) : USize !
     """
     Find the `nth` appearance of `value` from the beginning of the array,
     starting at `offset` and examining higher indices, and using the supplied
@@ -742,7 +786,7 @@ class Array<A> is Seq<A>
     the first instance of `value` found, and uses object identity for
     comparison.
     """
-    fun find(value: A, offset: USize = 0, nth: USize = 0, predicate: {(A, A): Bool} = {(l, r) => l is r }) : USize ! =>
+    =>
         var i = offset
         var n = USize(0)
 
@@ -761,13 +805,14 @@ class Array<A> is Seq<A>
         error
 
 
+    fun contains(value: A, predicate: {(A, A): Bool} = {(l: A, r: A): Bool => l is r }) : Bool
     """
     Returns true if the array contains `value`, false otherwise.
 
     The default predicate checks for matches by identity. To search for matches
     by structural equality, pass an object literal such as `{(l, r) => l == r}`.
     """
-    fun contains(value: A, predicate: {(A, A): Bool} = {(l: A, r: A): Bool => l is r }) : Bool =>
+    =>
         var i = USize(0)
 
         while i < _size do
@@ -780,6 +825,7 @@ class Array<A> is Seq<A>
         false
 
 
+    fun rfind(value: A, offset: USize = -1, nth: USize = 0, predicate: {(A, A): bool} = {(l: A, r: A): bool => l is r }) : USize !
     """
     Find the `nth` appearance of `value` from the end of the array, starting at
     `offset` and examining lower indices, and using the supplied `predicate` for
@@ -789,7 +835,7 @@ class Array<A> is Seq<A>
     By default, the search starts at the last element of the array, returns the
     first instance of `value` found, and uses object identity for comparison.
     """
-    fun rfind(value: A, offset: USize = -1, nth: USize = 0, predicate: {(A, A): bool} = {(l: A, r: A): bool => l is r }) : USize ! =>
+    =>
         if _size > 0 then
             var i = if offset >= _size then _size - 1 else offset end
             var n = USize(0)
@@ -809,25 +855,27 @@ class Array<A> is Seq<A>
         error
 
   
+    fun clone(): Array<A>
     """
     Clone the array.
     The new array contains references to the same elements that the old array
     contains, the elements themselves are not cloned.
     """
-    fun clone(): Array<A> =>
+    =>
         let out = Array<A>(_size)
         _ptr._copy_to(out._ptr, _size)
         out._size = _size
         out
 
   
+    fun slice(from: USize = 0, to: USize = -1, step: USize = 1) : Array<A>
     """
     Create a new array that is a clone of a portion of this array. The range is
     exclusive and saturated.
     The new array contains references to the same elements that the old array
     contains, the elements themselves are not cloned.
     """
-    fun slice(from: USize = 0, to: USize = -1, step: USize = 1) : Array<A> =>
+    =>
         let out = Array<A>
         let last = _size.min(to)
         let len = last - from
@@ -851,6 +899,7 @@ class Array<A> is Seq<A>
         out
 
   
+    fun permute(indices: Iterator<uSize>): Array<A> !
     """
     Create a new array with the elements permuted.
     Permute to an arbitrary order that may include duplicates. An out of bounds
@@ -858,7 +907,7 @@ class Array<A> is Seq<A>
     The new array contains references to the same elements that the old array
     contains, the elements themselves are not copied.
     """
-    fun permute(indices: Iterator<uSize>): Array<A> ! =>
+    =>
         let out = Array<A>
         for i in indices do
             out.push(this(i)!)
@@ -866,19 +915,21 @@ class Array<A> is Seq<A>
         out
 
   
+    fun reverse(): Array<A>
     """
     Create a new array with the elements in reverse order.
     The new array contains references to the same elements that the old array
     contains, the elements themselves are not copied.
     """
-    fun reverse(): Array<A> =>
+    =>
         clone() .> reverse_in_place()
 
   
+    fun reverse_in_place()
     """
     Reverse the array in place.
     """
-    fun reverse_in_place() =>
+    =>
         if _size > 1 then
             var i: USize = 0
             var j = _size - 1
@@ -893,11 +944,12 @@ class Array<A> is Seq<A>
         end
 
   
+    fun swap_elements(i: USize, j: USize) !
     """
     Swap the element at index i with the element at index j.
     If either i or j are out of bounds, an error is raised.
     """
-    fun swap_elements(i: USize, j: USize) ! =>
+    =>
         if (i >= _size) or (j >= _size) then error end
 
         let x = _ptr._apply(i)
@@ -905,28 +957,31 @@ class Array<A> is Seq<A>
         _ptr._update(j, x)
 
   
+    fun keys(): ArrayKeys<A, Array<A>>
     """
     Return an iterator over the indices in the array.
     """
-    fun keys(): ArrayKeys<A, Array<A>> =>
+    =>
         ArrayKeys<A, Array<A>>(this)
 
 
+    fun values(): ArrayValues<A, Array<A>>
     """
     Return an iterator over the values in the array.
     """
-    fun values(): ArrayValues<A, Array<A>> =>
+    =>
         ArrayValues<A, Array<A>>(this)
 
   
+    fun pairs(): ArrayPairs<A, Array<A>>
     """
     Return an iterator over the (index, value) pairs in the array.
     """
-    fun pairs(): ArrayPairs<A, Array<A>> =>
+    =>
         ArrayPairs<A, Array<A>>(this)
 
 
-    class ArrayKeys<A, B: Array<A>> is Iterator<uSize>
+    class ArrayKeys<A, B: Array<A>> is Iterator<usize>
         let _array: B
         var _i: USize
 

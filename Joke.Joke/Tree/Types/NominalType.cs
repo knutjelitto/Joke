@@ -14,5 +14,7 @@ namespace Joke.Joke.Tree
         public TokenSpan Span { get; }
         public QualifiedIdentifier Name { get; }
         public TypeList? Arguments { get; }
+
+        public void Accept(IVisitor visitor) => visitor.Visit(this);
     }
 }

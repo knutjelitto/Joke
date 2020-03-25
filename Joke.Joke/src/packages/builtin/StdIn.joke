@@ -1,35 +1,41 @@
-﻿"""
+﻿interface InputNotify
+"""
 Notification for data arriving via an input stream.
 """
-interface InputNotify
     
+    fun apply(data: Array<u8>)
     """
     Called when data is available on the stream.
     """
-    fun apply(data: Array<u8>) => none
+    =>
+        none
 
+    fun dispose()
     """
     Called when no more data will arrive on the stream.
     """
-    fun dispose() => none
+    =>
+        none
 
+interface InputStream
 """
 Asynchronous access to some input stream.
 """
-interface InputStream
     
+    be apply(notify: (InputNotify | none), chunk_size: USize = 32)
     """
     Set the notifier. Optionally, also sets the chunk size, dictating the
     maximum number of bytes of each chunk that will be passed to the notifier.
     """
-    be apply(notify: (InputNotify | none), chunk_size: USize = 32)
 
+    be dispose() =>
     """
     Clear the notifier in order to shut down input.
     """
-    be dispose() => none
+        none
 
 
+actor Stdin
 """
 Asynchronous access to stdin. The constructor is private to ensure that
 access is provided only via an environment.
@@ -53,7 +59,6 @@ Reading from stdin is done by registering an `InputNotify`:
 
 **Note:** For reading user input from a terminal, use the [term](term--index.md) package.
 """
-actor Stdin
     
     var _notify: (InputNotify | none) = none
     var _chunk_size: USize = 32
@@ -61,33 +66,37 @@ actor Stdin
     let _use_event: bool
 
   
+    new _create(use_event: Bool)
     """
     Create an asynchronous stdin provider.
     """
-    new _create(use_event: Bool) =>
+    =>
         _use_event = use_event
 
   
+    be apply(notify: (InputNotify | none), chunk_size: USize = 32)
     """
     Set the notifier. Optionally, also sets the chunk size, dictating the
     maximum number of bytes of each chunk that will be passed to the notifier.
     """
-    be apply(notify: (InputNotify | none), chunk_size: USize = 32) =>
+    =>
         _set_notify(notify)
         _chunk_size = chunk_size
 
   
+    be dispose()
     """
     Clear the notifier in order to shut down input.
     """
-    be dispose() =>
-    _set_notify(none)
+    =>
+        _set_notify(none)
 
   
+    fun _set_notify(notify: (InputNotify | none))
     """
     Set the notifier.
     """
-    fun _set_notify(notify: (InputNotify | none)) =>
+    =>
         if notify is None then
             if _use_event and not _event.is_null() then
                 // Unsubscribe the event.
@@ -108,19 +117,21 @@ actor Stdin
         _notify = notify
 
   
+    be _loop_read()
     """
     If we are able to read from stdin, schedule another read.
     """
-    be _loop_read() =>
+    =>
         if _read() then
             _loop_read()
         end
 
   
+    be _event_notify(event: AsioEventID, flags: u32, arg: u32)
     """
     When the event fires, read from stdin.
     """
-    be _event_notify(event: AsioEventID, flags: u32, arg: u32) =>
+    =>
         if AsioEvent.disposable(flags) then
             C.pony_asio_event_destroy(event)
         elseif (_event is event) and AsioEvent.readable(flags) then
@@ -128,18 +139,20 @@ actor Stdin
         end
 
   
+    be _read_again()
     """
     Resume reading.
     """
-    be _read_again() =>
+    =>
         _read()
 
   
+    fun _read(): Bool
     """
     Read a chunk of data from stdin. Read a maximum of _chunk_size bytes, send
     ourself a resume message and stop reading to avoid starving other actors.
     """
-    fun _read(): Bool =>
+    =>
         try
             let notify = _notify as InputNotify
             var sum: USize = 0
@@ -190,10 +203,11 @@ actor Stdin
         end
 
     
+    fun _close_event()
     """
     Close the event.
     """
-    fun _close_event() =>
+    =>
         if not _event.is_null() then
             C.pony_asio_event_unsubscribe(_event)
             _event = AsioEvent.none()

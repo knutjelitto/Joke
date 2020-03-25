@@ -4,6 +4,7 @@ using System.Linq;
 
 using Joke.Joke.Decoding;
 using Joke.Joke.Err;
+using Joke.Joke.Syntax;
 using Joke.Joke.Tools;
 
 namespace Joke.Joke
@@ -13,7 +14,7 @@ namespace Joke.Joke
         public void Run()
         {
             MakePackage(BuiltinDir);
-#if false
+#if true
             foreach (var pack in GetCores())
             {
                 MakePackage(pack);
@@ -34,30 +35,22 @@ namespace Joke.Joke
                 if (!errors.NoError() || unit == null)
                 {
                     errors.Describe(Console.Out);
-                    break;
+                    return;
                 }
                 units.Add(unit);
             }
 
-            foreach (var unit in units)
-            {
-                foreach (var member in unit.Members.OfType<Tree.INamedMember>())
-                {
-                    Console.Write($"{member.Name} [");
-                    Console.WriteLine("]");
-                }
-            }
-
-            var package = new Syntax.Package();
-            package.Populate(units);
+            var package = new Package(units);
+            package.Build();
 
             foreach (var unit in package.Units)
             {
-                foreach (var @class in unit)
+                foreach (var unitMember in unit.Members)
                 {
-                    foreach (var member in @class)
+                    Console.WriteLine($"{unitMember.Name}");
+                    foreach (var classMember in unitMember.Items)
                     {
-                        Console.WriteLine($"{member}");
+                        Console.WriteLine($"  {classMember}");
                     }
                 }
 

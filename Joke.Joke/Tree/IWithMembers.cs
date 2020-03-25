@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public interface IWithMembers<M> where M : class, IMember
+    public interface IWithMembers<M> where M : class, INamedMember
     {
         DistinctList<Identifier, M> Members { get; }
     }

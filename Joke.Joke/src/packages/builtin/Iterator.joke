@@ -1,4 +1,5 @@
-﻿"""
+﻿interface Iterator<A>
+"""
 
 Iterators generate a series of values, one value at a time on each call to `next()`.
 
@@ -63,8 +64,8 @@ class ref Countdown is Iterator[USize]
     elem
 ```
 """
-interface Iterator<A>
 
+    fun has_next(): bool
     """
     Returns `true` if this Iterator is not yet exhausted.
     That means that a value returned from a subsequent call to `next()`
@@ -75,12 +76,11 @@ interface Iterator<A>
     The behavior of `next()` after this function returned `false` is undefined,
     it might throw an error or return values which are not part of this Iterator.
     """
-    fun has_next(): bool
 
   
+    fun next(): A !
     """
     Generate the next value.
 
     This might error, which does not necessarily mean that the Iterator is exhausted.
     """
-    fun next(): A !

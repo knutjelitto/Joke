@@ -421,7 +421,8 @@ namespace Joke.Joke.Decoding
             BeginMatch(Current.Kind);
             var name = Identifier();
             var type = TryTypeAnnotation();
-            return new Local(End(), kind, name, type);
+            var doc = TryString();
+            return new Local(End(), kind, name, type, doc);
         }
 
         private IExpression ParamPattern(bool next = false)

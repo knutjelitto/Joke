@@ -1,6 +1,6 @@
 ﻿namespace Joke.Joke.Tree
 {
-    public interface IType : IMember
+    public interface IType : IMember, IVisited
     {
     }
 }

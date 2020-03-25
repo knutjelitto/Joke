@@ -10,5 +10,7 @@ namespace Joke.Joke.Tree
         }
 
         public TokenSpan Span { get; }
+
+        public void Accept(IVisitor visitor) => visitor.Visit(this);
     }
 }

@@ -1,6 +1,6 @@
-﻿"""
+﻿interface any
+"""
 ## Any interface
 
 Type `any` implements any
 """
-interface any

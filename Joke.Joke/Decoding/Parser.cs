@@ -64,49 +64,48 @@ namespace Joke.Joke.Decoding
             return new MemberList(End(), items);
         }
 
-        private IMember? TryUnitMember()
+        private INamedMember? TryUnitMember()
         {
             return TryClassType();
         }
 
-        private IMember? TryClassType()
+        private INamedMember? TryClassType()
         {
-            var token = CurrentIsDoc ? Next.Kind : Current.Kind;
-            switch (token)
+            switch (Current.Kind)
             {
                 case TK.Type:
-                    return ClassType(token, ClassKind.Alias);
+                    return ClassType(Current.Kind, ClassKind.Alias);
                 case TK.Primitive:
-                    return ClassType(token, ClassKind.Primitive);
+                    return ClassType(Current.Kind, ClassKind.Primitive);
                 case TK.Interface:
-                    return ClassType(token, ClassKind.Interface);
+                    return ClassType(Current.Kind, ClassKind.Interface);
                 case TK.Struct:
-                    return ClassType(token, ClassKind.Struct);
+                    return ClassType(Current.Kind, ClassKind.Struct);
                 case TK.Class:
-                    return ClassType(token, ClassKind.Class);
+                    return ClassType(Current.Kind, ClassKind.Class);
                 case TK.Trait:
-                    return ClassType(token, ClassKind.Trait);
+                    return ClassType(Current.Kind, ClassKind.Trait);
                 case TK.Actor:
-                    return ClassType(token, ClassKind.Actor);
+                    return ClassType(Current.Kind, ClassKind.Actor);
                 case TK.Extern:
-                    return ClassType(token, ClassKind.Extern);
+                    return ClassType(Current.Kind, ClassKind.Extern);
                 default:
                     return null;
             }
         }
 
-        private ClassType ClassType(TK token, ClassKind kind)
+        private Class ClassType(TK token, ClassKind kind)
         {
             Begin();
-            var doc = TryString();
             Match(token);
             var name = Identifier();
             var typeparameters = TryTypeParameters();
             var provides = TryProvides();
+            var doc = TryString();
             var members = ClassMembers();
 
 
-            return new ClassType(End(), kind, doc, name, typeparameters, provides, members);
+            return new Class(End(), kind, name, typeparameters, provides, doc, members);
         }
 
         private MemberList ClassMembers()
@@ -116,67 +115,57 @@ namespace Joke.Joke.Decoding
             return new MemberList(End(), members);
         }
 
-        private IMember? TryClassMember()
+        private INamedMember? TryClassMember()
         {
             return TryField() ?? TryMethod();
         }
 
-        private IMember? TryField()
+        private INamedMember? TryField()
         {
-            var token = CurrentIsDoc ? Next.Kind : Current.Kind;
-            switch (token)
+            return Current.Kind switch
             {
-                case TK.Let:
-                    return Field(token, FieldKind.Let);
-                case TK.Var:
-                    return Field(token, FieldKind.Var);
-                case TK.Embed:
-                    return Field(token, FieldKind.Embed);
-                default:
-                    return null;
-            }
+                TK.Let => Field(Current.Kind, FieldKind.Let),
+                TK.Var => Field(Current.Kind, FieldKind.Var),
+                TK.Embed => Field(Current.Kind, FieldKind.Embed),
+                _ => null,
+            };
         }
-        private IMember Field(TK token, FieldKind kind)
+        private INamedMember Field(TK token, FieldKind kind)
         {
             Begin();
-            var doc = TryString();
             Match(token);
             var name = Identifier();
             var type = TypeAnnotation();
             var init = TryInitInfix();
+            var doc = TryString();
 
-            return new Field(End(), kind, doc, name, type, init);
+            return new Field(End(), kind, name, type, init, doc);
         }
 
-        private IMember? TryMethod()
+        private INamedMember? TryMethod()
         {
-            var token = CurrentIsDoc ? Next.Kind : Current.Kind;
-            switch (token)
+            return Current.Kind switch
             {
-                case TK.Fun:
-                    return Method(token, MethodKind.Fun);
-                case TK.New:
-                    return Method(token, MethodKind.New);
-                case TK.Be:
-                    return Method(token, MethodKind.Be);
-                default:
-                    return null;
-            }
+                TK.Fun => Method(Current.Kind, MethodKind.Fun),
+                TK.New => Method(Current.Kind, MethodKind.New),
+                TK.Be => Method(Current.Kind, MethodKind.Be),
+                _ => null,
+            };
         }
 
-        private IMember Method(TK token, MethodKind kind)
+        private INamedMember Method(TK token, MethodKind kind)
         {
             Begin();
-            var doc = TryString();
             Match(token);
             var name = Identifier();
             var typeParameters = TryTypeParameters();
             var parameters = ValueParameters();
             var @return = TryTypeAnnotation();
             var throws = TryThrows();
+            var doc = TryString();
             var body = TryBody();
 
-            return new Method(End(), kind, doc, name, typeParameters, parameters, @return, throws, body);
+            return new Method(End(), kind, name, typeParameters, parameters, @return, throws, doc, body);
         }
 
         private Throws? TryThrows()

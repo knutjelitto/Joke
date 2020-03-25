@@ -2,7 +2,7 @@
 
 namespace Joke.Joke.Tree
 {
-    public class TypeParameter
+    public class TypeParameter : INamed
     {
         public TypeParameter(TokenSpan span, Identifier name, IType? type, IType? @default)
         {
