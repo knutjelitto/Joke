@@ -6,9 +6,9 @@ namespace Joke.Joke.Syntax
 {
     public class ClassScope : IScope
     {
-        public ClassScope(IScope scope)
+        public ClassScope(IScope outer)
         {
-            Scope = scope;
+            Scope = outer;
         }
 
         public IScope Scope { get; }

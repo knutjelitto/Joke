@@ -144,7 +144,7 @@ namespace Joke.Outside
             return obj is Integers other && ranges.SequenceEqual(other.ranges);
         }
 
-        public bool Equals(Integers other)
+        public bool Equals(Integers? other)
         {
             return other != null && ranges.SequenceEqual(other.ranges);
         }

@@ -2,7 +2,7 @@
 
 using Joke.Joke.Tree;
 
-namespace Joke.Joke.Syntax
+namespace Joke.Joke.Syntaxn
 {
     public class TypeBuilder : Visitor
     {
@@ -22,13 +22,17 @@ namespace Joke.Joke.Syntax
 
         public override void Visit(NominalType type)
         {
+            Console.WriteLine($"T: {type.Name}");
             if (type.Name.Names.Count != 1)
             {
                 throw new NotImplementedException();
             }
             if (type.Arguments != null)
             {
-                throw new NotImplementedException();
+                foreach (var arg in type.Arguments.Items)
+                {
+                    arg.Accept(this);
+                }
             }
         }
     }

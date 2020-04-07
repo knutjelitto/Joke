@@ -21,7 +21,7 @@ namespace Joke.Joke.Syntax
         {
             foreach (var unit in Package.Units)
             {
-                var noNotNamed = unit.Items.All(m => m is INamedMember);
+                var noNotNamed = unit.Items.All(m => m is INamedMember && m is INamedType);
                 Debug.Assert(noNotNamed);
 
                 unit.Accept(this);

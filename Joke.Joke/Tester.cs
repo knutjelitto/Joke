@@ -40,7 +40,7 @@ namespace Joke.Joke
                 units.Add(unit);
             }
 
-            var package = new Package(units);
+            var package = new Package(null, units);
             package.Build();
 
             foreach (var unit in package.Units)
